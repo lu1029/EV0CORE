@@ -62,8 +62,6 @@ INSTRUÇÕES OBRIGATÓRIAS:
 3. Use exercícios REAIS e comprovados cientificamente.
 4. Adapte cargas ao nível: iniciante (cargas leves, mais reps), intermediário (cargas médias), avançado (cargas pesadas, técnicas avançadas).
 5. Considere o objetivo: hipertrofia (8-12 reps), força (4-6 reps), definição (12-15 reps), resistência (15-20 reps).
-6. Se a preferência for "treino em casa", use APENAS exercícios com peso corporal ou itens domésticos (garrafas d'água, cadeira, toalha, mochila com peso). Inclua variações criativas. Inspire-se em apps como "Hora do Treino" para montar exercícios eficientes sem equipamento.
-7. Para treinos em casa, foque em circuitos, HIIT, calistenia e exercícios funcionais.
 
 FORMATO DE RESPOSTA - OBRIGATÓRIO JSON:
 Responda APENAS com um JSON válido neste formato exato, sem markdown, sem texto antes ou depois:
@@ -78,7 +76,7 @@ Responda APENAS com um JSON válido neste formato exato, sem markdown, sem texto
         "emoji": "emoji relevante",
         "sets": 4,
         "reps": "8-12",
-        "weight": "Peso corporal" ou "60kg",
+        "weight": "60kg",
         "rest": 90,
         "instruction": "Instrução detalhada de execução com dicas de postura e respiração"
       }
@@ -87,6 +85,51 @@ Responda APENAS com um JSON válido neste formato exato, sem markdown, sem texto
 }
 
 IMPORTANTE: Retorne APENAS o JSON, nada mais.`;
+    } else if (mode === "generate-home-training") {
+      systemPrompt = `Você é um personal trainer certificado especialista em TREINOS EM CASA e CALISTENIA. Crie um plano de treino que SUBSTITUI exercícios de academia por equivalentes caseiros EFICAZES.
+
+${profileContext}
+
+INSTRUÇÕES OBRIGATÓRIAS:
+1. Crie um plano semanal completo baseado nos dias disponíveis do usuário.
+2. CADA exercício deve ser feito SEM EQUIPAMENTOS DE ACADEMIA. Use APENAS:
+   - Peso corporal (flexões, agachamentos, pranchas, burpees, etc)
+   - Itens domésticos: cadeira (para mergulhos, step-ups), toalha (para remadas), mochila com livros (peso extra), garrafas d'água (halteres), parede (wall sit, handstand)
+3. Para CADA exercício de academia tradicional, sugira o EQUIVALENTE CASEIRO:
+   - Supino → Flexão (variações: diamante, declinada, archer)
+   - Puxada/Remada → Remada invertida com mesa ou toalha na porta
+   - Leg Press → Agachamento búlgaro, pistol squat
+   - Cadeira extensora → Sissy squat, extensão com toalha
+   - Desenvolvimento → Pike push-up, handstand push-up
+   - Rosca bíceps → Rosca com mochila/galão de água
+   - Tríceps pulley → Mergulho na cadeira, extensão diamante
+4. Adapte ao nível: iniciante (mais reps, exercícios básicos), avançado (variações difíceis, unilaterais, pliométricos).
+5. Inclua aquecimento e alongamento.
+6. OBRIGATÓRIO: Para CADA exercício, inclua o campo "gifKey" com um desses valores exatos:
+   flexao, flexao_diamante, flexao_declinada, flexao_inclinada, agachamento, agachamento_salto, agachamento_sumo, afundo, afundo_bulgaro, prancha, prancha_lateral, mountain_climber, burpee, jumping_jack, mergulho_cadeira, hip_thrust, elevacao_pernas, abdominal, bicicleta_ar, superman, remada_toalha, pike_pushup, step_up, wall_sit, corrida_lugar, polichinelo, kickback, gato_vaca, alongamento_posterior, alongamento_quadriceps
+
+FORMATO DE RESPOSTA - OBRIGATÓRIO JSON:
+{
+  "planName": "Nome do plano",
+  "description": "Descrição breve do plano caseiro",
+  "workouts": {
+    "Nome do Treino (ex: Upper Body em Casa)": [
+      {
+        "name": "Nome do exercício",
+        "muscle": "Grupo muscular",
+        "emoji": "emoji relevante",
+        "sets": 3,
+        "reps": "12-15",
+        "weight": "Peso corporal",
+        "rest": 45,
+        "instruction": "Instrução detalhada com dicas de postura, respiração e como usar itens de casa se aplicável",
+        "gifKey": "flexao"
+      }
+    ]
+  }
+}
+
+IMPORTANTE: Retorne APENAS o JSON, nada mais. Use exercícios REAIS e COMPROVADOS.`;
     } else if (mode === "generate-nutrition") {
       systemPrompt = `Você é um nutricionista esportivo certificado. Baseado no perfil do usuário, crie um plano nutricional PERSONALIZADO, PRECISO e CIENTÍFICO.
 
@@ -145,7 +188,7 @@ SUAS DIRETRIZES:
 11. Seja conciso mas completo. Não faça respostas muito longas a menos que peçam detalhes.`;
     }
 
-    const isStructured = mode === "generate-training" || mode === "generate-nutrition";
+    const isStructured = mode === "generate-training" || mode === "generate-home-training" || mode === "generate-nutrition";
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
