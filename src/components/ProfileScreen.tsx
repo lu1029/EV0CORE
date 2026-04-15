@@ -7,10 +7,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import SettingsScreen from "@/components/settings/SettingsScreen";
 import { useProfileStats } from "@/hooks/useProfileStats";
+import { useAchievements } from "@/hooks/useAchievements";
 
 const ProfileScreen = () => {
   const { userProfile, setUserProfile, setIsLoggedIn, setHasOnboarded, isPremium, setCurrentTab, user } = useApp();
   const { stats, loading: statsLoading } = useProfileStats();
+  const { achievements, unlockedCount, totalCount, loading: achLoading } = useAchievements();
   const name = userProfile.name || "Atleta";
   const [isEditing, setIsEditing] = useState(false);
   const [editProfile, setEditProfile] = useState(userProfile);
@@ -230,6 +232,54 @@ const ProfileScreen = () => {
           <span className="text-xs text-muted-foreground">Treinos/semana</span>
           <span className="text-sm font-medium text-foreground">{userProfile.daysPerWeek}x</span>
         </div>
+      </div>
+
+      {/* Achievements / Conquistas */}
+      <div className="glass-card rounded-2xl p-4 mb-4 animate-fade-in" style={{ animationDelay: '220ms' }}>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Trophy className="w-4 h-4 text-primary" />
+            <span className="text-sm font-semibold text-foreground">Conquistas</span>
+          </div>
+          <span className="text-xs text-muted-foreground">{achLoading ? "..." : `${unlockedCount}/${totalCount}`}</span>
+        </div>
+        {/* Progress */}
+        <div className="h-1.5 bg-secondary rounded-full overflow-hidden mb-3">
+          <div className="h-full gradient-primary rounded-full transition-all duration-700" style={{ width: `${totalCount > 0 ? (unlockedCount / totalCount) * 100 : 0}%` }} />
+        </div>
+        <div className="grid grid-cols-4 gap-2">
+          {achievements.slice(0, 8).map((a) => (
+            <div
+              key={a.key}
+              className={`flex flex-col items-center p-2 rounded-xl transition-all ${
+                a.unlocked ? "glass-card-purple" : "opacity-40"
+              }`}
+              title={`${a.name}: ${a.description}`}
+            >
+              <span className="text-xl mb-0.5">{a.icon}</span>
+              <span className="text-[8px] text-muted-foreground text-center leading-tight truncate w-full">{a.name}</span>
+            </div>
+          ))}
+        </div>
+        {achievements.length > 8 && (
+          <details className="mt-2">
+            <summary className="text-xs text-primary cursor-pointer text-center">Ver todas ({totalCount})</summary>
+            <div className="grid grid-cols-4 gap-2 mt-2">
+              {achievements.slice(8).map((a) => (
+                <div
+                  key={a.key}
+                  className={`flex flex-col items-center p-2 rounded-xl transition-all ${
+                    a.unlocked ? "glass-card-purple" : "opacity-40"
+                  }`}
+                  title={`${a.name}: ${a.description}`}
+                >
+                  <span className="text-xl mb-0.5">{a.icon}</span>
+                  <span className="text-[8px] text-muted-foreground text-center leading-tight truncate w-full">{a.name}</span>
+                </div>
+              ))}
+            </div>
+          </details>
+        )}
       </div>
 
       {/* Premium CTA */}
