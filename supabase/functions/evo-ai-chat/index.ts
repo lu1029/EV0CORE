@@ -176,7 +176,7 @@ SUAS DIRETRIZES:
         });
       }
       const t = await response.text();
-      console.error("Groq API error:", response.status, t);
+      console.error("AI gateway error:", response.status, t);
       return new Response(JSON.stringify({ error: "Erro ao conectar com a IA" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
