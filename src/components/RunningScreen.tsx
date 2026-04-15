@@ -42,6 +42,7 @@ const RunningScreen = () => {
   const [maxSpeed, setMaxSpeed] = useState(0);
   const [elevationGain, setElevationGain] = useState(0);
   const [selectedActivity, setSelectedActivity] = useState("Corrida");
+  const [mapsApiKey, setMapsApiKey] = useState("");
 
   const watchIdRef = useRef<number | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -50,7 +51,13 @@ const RunningScreen = () => {
   const lastSegmentTimeRef = useRef(0);
   const lastSegmentIdxRef = useRef(0);
 
-  const { isLoaded } = useJsApiLoader({ googleMapsApiKey: GOOGLE_MAPS_API_KEY });
+  useEffect(() => {
+    supabase.functions.invoke("get-maps-key").then(({ data }) => {
+      if (data?.key) setMapsApiKey(data.key);
+    });
+  }, []);
+
+  const { isLoaded } = useJsApiLoader({ googleMapsApiKey: mapsApiKey });
 
   useEffect(() => {
     navigator.geolocation?.getCurrentPosition(
