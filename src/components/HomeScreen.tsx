@@ -1,17 +1,17 @@
 import React from "react";
 import { useApp } from "@/contexts/AppContext";
-import { Zap, Crown } from "lucide-react";
+import { Zap, Crown, Flame } from "lucide-react";
 import evoaiLogo from "@/assets/evoai-logo.png";
+import { useStreak } from "@/hooks/useStreak";
 
 const HomeScreen = () => {
   const { userProfile, setCurrentTab, isPremium } = useApp();
+  const { streak, trainedToday, weekDays: activeWeek } = useStreak();
   const name = userProfile.name || "Atleta";
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
 
-  const weekDays = ["S", "T", "Q", "Q", "S", "S", "D"];
-  // All days start as false - real data should come from DB
-  const activeToday = [false, false, false, false, false, false, false];
+  const weekDayLabels = ["S", "T", "Q", "Q", "S", "S", "D"];
 
   const motivations = [
     "Disciplina é escolher entre o que você quer agora e o que você quer mais.",
