@@ -39,11 +39,63 @@ export const workoutPlans = [
   { id: "full", name: "Full Body", desc: "Corpo inteiro", days: 3, level: "Todos", premium: false },
 ];
 
-export const homeWorkouts = [
-  { name: "HIIT Express", duration: "20 min", level: "Intermediário", icon: "🔥" },
-  { name: "Core Power", duration: "15 min", level: "Todos", icon: "💪" },
-  { name: "Alongamento", duration: "10 min", level: "Todos", icon: "🧘" },
-  { name: "Full Body", duration: "30 min", level: "Iniciante", icon: "⚡" },
-  { name: "Glúteos", duration: "25 min", level: "Intermediário", icon: "🍑" },
-  { name: "Cardio em casa", duration: "20 min", level: "Todos", icon: "❤️" },
+export const homeWorkouts: { name: string; duration: string; level: string; icon: string; exercises: Exercise[] }[] = [
+  {
+    name: "HIIT Express", duration: "20 min", level: "Intermediário", icon: "🔥",
+    exercises: [
+      { name: "Jumping Jacks", muscle: "Cardio", emoji: "⭐", sets: 3, reps: "30s", weight: "Corpo", rest: 20, instruction: "Salte abrindo braços e pernas simultaneamente. Mantenha ritmo constante.", gifUrl: "https://media.giphy.com/media/l0HlNQ03J5JxX2rRe/giphy.gif" },
+      { name: "Burpees", muscle: "Full Body", emoji: "🔥", sets: 3, reps: "10", weight: "Corpo", rest: 30, instruction: "Desça ao chão, faça uma flexão, salte e bata palma acima da cabeça.", gifUrl: `${GIF_BASE}/1160-3Mhi2Ll.gif` },
+      { name: "Mountain Climbers", muscle: "Core", emoji: "🏔️", sets: 3, reps: "30s", weight: "Corpo", rest: 20, instruction: "Em posição de prancha, alterne os joelhos em direção ao peito rapidamente.", gifUrl: `${GIF_BASE}/0658-DhU7Djj.gif` },
+      { name: "Agachamento com salto", muscle: "Pernas", emoji: "🦵", sets: 3, reps: "12", weight: "Corpo", rest: 25, instruction: "Agache até 90° e salte explosivamente. Aterrisse suavemente.", gifUrl: `${GIF_BASE}/0584-rQY78g5.gif` },
+      { name: "Prancha", muscle: "Core", emoji: "💪", sets: 3, reps: "40s", weight: "Corpo", rest: 20, instruction: "Mantenha o corpo reto como uma tábua. Core contraído o tempo todo.", gifUrl: `${GIF_BASE}/0262-v0A7CQRM.gif` },
+    ],
+  },
+  {
+    name: "Core Power", duration: "15 min", level: "Todos", icon: "💪",
+    exercises: [
+      { name: "Abdominal crunch", muscle: "Abdômen", emoji: "💪", sets: 3, reps: "15", weight: "Corpo", rest: 30, instruction: "Deite de costas, mãos atrás da cabeça, suba o tronco contraindo o abdômen.", gifUrl: `${GIF_BASE}/0274-bpjOyfA.gif` },
+      { name: "Prancha", muscle: "Core", emoji: "💪", sets: 3, reps: "45s", weight: "Corpo", rest: 30, instruction: "Mantenha o corpo reto, core contraído. Não deixe o quadril cair.", gifUrl: `${GIF_BASE}/0262-v0A7CQRM.gif` },
+      { name: "Elevação de pernas", muscle: "Abdômen inferior", emoji: "🦵", sets: 3, reps: "12", weight: "Corpo", rest: 30, instruction: "Deite e eleve as pernas estendidas até 90°. Desça devagar.", gifUrl: `${GIF_BASE}/0276-u3l5kZr.gif` },
+      { name: "Bicicleta no ar", muscle: "Oblíquos", emoji: "🚴", sets: 3, reps: "20", weight: "Corpo", rest: 25, instruction: "Alterne cotovelo-joelho oposto em movimento de pedal.", gifUrl: `${GIF_BASE}/0278-gA9kSAF.gif` },
+    ],
+  },
+  {
+    name: "Alongamento", duration: "10 min", level: "Todos", icon: "🧘",
+    exercises: [
+      { name: "Alongamento de isquiotibiais", muscle: "Posterior", emoji: "🧘", sets: 2, reps: "30s cada", weight: "Corpo", rest: 10, instruction: "Em pé, toque os dedos dos pés mantendo as pernas esticadas.", gifUrl: `${GIF_BASE}/1502-oaT3LDR.gif` },
+      { name: "Alongamento de quadríceps", muscle: "Anterior", emoji: "🧘", sets: 2, reps: "30s cada", weight: "Corpo", rest: 10, instruction: "Em pé, puxe o pé em direção ao glúteo segurando o tornozelo.", gifUrl: `${GIF_BASE}/1476-6e4HCrZ.gif` },
+      { name: "Gato-vaca", muscle: "Coluna", emoji: "🐱", sets: 2, reps: "10", weight: "Corpo", rest: 10, instruction: "Em 4 apoios, alterne entre arredondar e estender a coluna.", gifUrl: `${GIF_BASE}/3183-vZf4Soy.gif` },
+      { name: "Alongamento de peito", muscle: "Peito", emoji: "🤸", sets: 2, reps: "30s", weight: "Corpo", rest: 10, instruction: "Estenda os braços para trás entrelaçando os dedos. Abra o peito.", gifUrl: `${GIF_BASE}/3144-eRIkR7O.gif` },
+    ],
+  },
+  {
+    name: "Full Body", duration: "30 min", level: "Iniciante", icon: "⚡",
+    exercises: [
+      { name: "Agachamento livre", muscle: "Pernas", emoji: "🦵", sets: 3, reps: "15", weight: "Corpo", rest: 45, instruction: "Pés na largura dos ombros, desça até 90° nos joelhos.", gifUrl: `${GIF_BASE}/0029-qi996YS.gif` },
+      { name: "Flexão de braço", muscle: "Peito", emoji: "💪", sets: 3, reps: "10", weight: "Corpo", rest: 45, instruction: "Mãos na largura dos ombros, desça o peito até o chão.", gifUrl: `${GIF_BASE}/0662-qWvH8VX.gif` },
+      { name: "Afundo", muscle: "Pernas", emoji: "🦵", sets: 3, reps: "10 cada", weight: "Corpo", rest: 40, instruction: "Dê um passo à frente, desça até 90° em ambos os joelhos.", gifUrl: `${GIF_BASE}/1429-iqTgkwV.gif` },
+      { name: "Remada com toalha", muscle: "Costas", emoji: "🚣", sets: 3, reps: "12", weight: "Corpo", rest: 40, instruction: "Use uma toalha enrolada na porta. Puxe o corpo em direção à porta.", gifUrl: `${GIF_BASE}/0292-C0MA9bC.gif` },
+      { name: "Prancha lateral", muscle: "Oblíquos", emoji: "💪", sets: 3, reps: "30s cada", weight: "Corpo", rest: 30, instruction: "Apoie-se no antebraço, mantenha o corpo alinhado lateralmente.", gifUrl: `${GIF_BASE}/0266-0Y8Hfj5.gif` },
+    ],
+  },
+  {
+    name: "Glúteos", duration: "25 min", level: "Intermediário", icon: "🍑",
+    exercises: [
+      { name: "Hip Thrust no chão", muscle: "Glúteos", emoji: "🍑", sets: 4, reps: "15", weight: "Corpo", rest: 40, instruction: "Deite com joelhos dobrados, eleve o quadril apertando os glúteos no topo.", gifUrl: `${GIF_BASE}/3214-oJwt1gF.gif` },
+      { name: "Agachamento sumô", muscle: "Glúteos/Adutores", emoji: "🦵", sets: 3, reps: "15", weight: "Corpo", rest: 40, instruction: "Pés bem abertos, pontas para fora. Desça mantendo o tronco ereto.", gifUrl: `${GIF_BASE}/3216-IIfF0eo.gif` },
+      { name: "Afundo búlgaro", muscle: "Glúteos/Quadríceps", emoji: "🦵", sets: 3, reps: "12 cada", weight: "Corpo", rest: 45, instruction: "Pé de trás elevado no sofá. Desça até 90° no joelho da frente.", gifUrl: `${GIF_BASE}/1429-iqTgkwV.gif` },
+      { name: "Kickback", muscle: "Glúteos", emoji: "🍑", sets: 3, reps: "15 cada", weight: "Corpo", rest: 30, instruction: "Em 4 apoios, estenda a perna para trás apertando o glúteo.", gifUrl: `${GIF_BASE}/3231-T0kH1SN.gif` },
+      { name: "Abdução deitado", muscle: "Glúteo médio", emoji: "🍑", sets: 3, reps: "15 cada", weight: "Corpo", rest: 30, instruction: "Deitado de lado, eleve a perna mantendo-a reta.", gifUrl: `${GIF_BASE}/3218-V1rEPAA.gif` },
+    ],
+  },
+  {
+    name: "Cardio em casa", duration: "20 min", level: "Todos", icon: "❤️",
+    exercises: [
+      { name: "Polichinelo", muscle: "Cardio", emoji: "⭐", sets: 3, reps: "40s", weight: "Corpo", rest: 20, instruction: "Salte abrindo braços e pernas. Ritmo acelerado.", gifUrl: "https://media.giphy.com/media/l0HlNQ03J5JxX2rRe/giphy.gif" },
+      { name: "Corrida no lugar", muscle: "Cardio", emoji: "🏃", sets: 3, reps: "40s", weight: "Corpo", rest: 20, instruction: "Corra no lugar elevando bem os joelhos.", gifUrl: `${GIF_BASE}/1160-3Mhi2Ll.gif` },
+      { name: "Pular corda imaginária", muscle: "Cardio", emoji: "🪢", sets: 3, reps: "40s", weight: "Corpo", rest: 20, instruction: "Simule o movimento de pular corda com os punhos girando.", gifUrl: `${GIF_BASE}/2612-HBVfmCX.gif` },
+      { name: "Agachamento com salto", muscle: "Pernas/Cardio", emoji: "🦵", sets: 3, reps: "12", weight: "Corpo", rest: 25, instruction: "Agache e salte explosivamente. Aterrisse suave.", gifUrl: `${GIF_BASE}/0584-rQY78g5.gif` },
+      { name: "Mountain Climbers", muscle: "Core/Cardio", emoji: "🏔️", sets: 3, reps: "30s", weight: "Corpo", rest: 20, instruction: "Posição de prancha, alterne joelhos ao peito rapidamente.", gifUrl: `${GIF_BASE}/0658-DhU7Djj.gif` },
+    ],
+  },
 ];
