@@ -57,9 +57,67 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Listen for auth state changes
+    let mounted = true;
+
+    const loadProfile = async (userId: string, email: string, metadata: any) => {
+      try {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("user_id", userId)
+          .single();
+
+        if (!mounted) return;
+
+        if (profile) {
+          setUserProfile({
+            name: profile.name || metadata?.full_name || metadata?.name || "",
+            email: profile.email || email || "",
+            gender: (profile.gender as "male" | "female" | "") || "",
+            age: profile.age ?? 25,
+            weight: Number(profile.weight) ?? 70,
+            height: Number(profile.height) ?? 175,
+            goal: profile.goal || "",
+            level: profile.level || "",
+            preference: profile.preference || "",
+            daysPerWeek: profile.days_per_week ?? 4,
+          });
+          setIsPremium(profile.is_premium ?? false);
+          if (profile.goal) {
+            setHasOnboarded(true);
+          }
+        }
+      } catch (err) {
+        console.error("Error loading profile:", err);
+      }
+    };
+
+    // Get initial session first, then listen for changes
+    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+      if (!mounted) return;
+      setSession(initialSession);
+      setUser(initialSession?.user ?? null);
+      setIsLoggedIn(!!initialSession?.user);
+
+      if (initialSession?.user) {
+        setUserProfile((prev) => ({
+          ...prev,
+          email: initialSession.user.email ?? prev.email,
+          name: initialSession.user.user_metadata?.full_name ?? initialSession.user.user_metadata?.name ?? prev.name,
+        }));
+        loadProfile(
+          initialSession.user.id,
+          initialSession.user.email ?? "",
+          initialSession.user.user_metadata
+        ).finally(() => { if (mounted) setLoading(false); });
+      } else {
+        setLoading(false);
+      }
+    });
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, newSession) => {
+      (event, newSession) => {
+        if (!mounted) return;
         setSession(newSession);
         setUser(newSession?.user ?? null);
         setIsLoggedIn(!!newSession?.user);
@@ -70,50 +128,24 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             email: newSession.user.email ?? prev.email,
             name: newSession.user.user_metadata?.full_name ?? newSession.user.user_metadata?.name ?? prev.name,
           }));
-
-          // Load profile from DB
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("user_id", newSession.user.id)
-            .single();
-
-          if (profile) {
-            setUserProfile({
-              name: profile.name || newSession.user.user_metadata?.full_name || "",
-              email: profile.email || newSession.user.email || "",
-              gender: (profile.gender as "male" | "female" | "") || "",
-              age: profile.age ?? 25,
-              weight: Number(profile.weight) ?? 70,
-              height: Number(profile.height) ?? 175,
-              goal: profile.goal || "",
-              level: profile.level || "",
-              preference: profile.preference || "",
-              daysPerWeek: profile.days_per_week ?? 4,
-            });
-            setIsPremium(profile.is_premium ?? false);
-            // If profile has goal set, user has onboarded
-            if (profile.goal) {
-              setHasOnboarded(true);
-            }
-          }
+          // Don't await inside onAuthStateChange to avoid deadlocks
+          loadProfile(
+            newSession.user.id,
+            newSession.user.email ?? "",
+            newSession.user.user_metadata
+          );
         } else {
           setHasOnboarded(false);
           setUserProfile(defaultProfile);
           setIsPremium(false);
         }
-
-        setLoading(false);
       }
     );
 
-    // Check initial session
-    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
-      if (!initialSession) setLoading(false);
-      // onAuthStateChange will handle the rest
-    });
-
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   // Save profile to DB when onboarding completes
