@@ -126,8 +126,8 @@ const AIChatScreen = () => {
         <button onClick={() => setCurrentTab("home")} className="active:scale-90 transition-transform">
           <ArrowLeft className="w-5 h-5 text-muted-foreground" />
         </button>
-        <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center">
-          <Bot className="w-5 h-5 text-primary-foreground" />
+        <div className="w-9 h-9 rounded-xl overflow-hidden">
+          <img src={evoaiLogo} alt="EvoAI" className="w-full h-full object-cover" />
         </div>
         <div>
           <p className="text-sm font-semibold text-foreground">EvoAI</p>
@@ -167,8 +167,8 @@ const AIChatScreen = () => {
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} animate-fade-in`}>
             {msg.role === "assistant" && (
-              <div className="w-7 h-7 rounded-lg gradient-primary flex items-center justify-center mr-2 mt-1 shrink-0">
-                <Bot className="w-4 h-4 text-primary-foreground" />
+              <div className="w-7 h-7 rounded-lg overflow-hidden mr-2 mt-1 shrink-0">
+                <img src={evoaiLogo} alt="EvoAI" className="w-full h-full object-cover" />
               </div>
             )}
             <div
@@ -191,8 +191,8 @@ const AIChatScreen = () => {
 
         {isLoading && messages[messages.length - 1]?.role !== "assistant" && (
           <div className="flex items-center gap-2 animate-fade-in">
-            <div className="w-7 h-7 rounded-lg gradient-primary flex items-center justify-center shrink-0">
-              <Bot className="w-4 h-4 text-primary-foreground" />
+            <div className="w-7 h-7 rounded-lg overflow-hidden shrink-0">
+              <img src={evoaiLogo} alt="EvoAI" className="w-full h-full object-cover" />
             </div>
             <div className="glass-card rounded-2xl rounded-bl-md px-4 py-3">
               <div className="flex items-center gap-2">
