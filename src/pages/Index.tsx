@@ -2,6 +2,7 @@ import React from "react";
 import { AppProvider, useApp } from "@/contexts/AppContext";
 import LoginScreen from "@/components/LoginScreen";
 import OnboardingScreen from "@/components/OnboardingScreen";
+import evocoreLogo from "@/assets/evocore-logo.png";
 import HomeScreen from "@/components/HomeScreen";
 import TrainingScreen from "@/components/TrainingScreen";
 import RunningScreen from "@/components/RunningScreen";
@@ -37,6 +38,8 @@ const AppContent = () => {
       {/* Mesh gradient background */}
       <div className="mesh-bg">
         <div className="mesh-bg-extra" />
+        <div className="mesh-bg-orb-4" />
+        <div className="mesh-bg-orb-5" />
       </div>
       <div className="noise-overlay" />
 
@@ -44,7 +47,7 @@ const AppContent = () => {
       <div className="sticky top-0 z-40 glass border-0 border-b border-border/20">
         <div className="flex items-center justify-between px-4 py-3">
           <button onClick={() => setCurrentTab("home")} className="active:scale-95 transition-transform">
-            <h2 className="text-sm font-heading font-bold text-gradient tracking-wider">EVOCORE</h2>
+            <img src={evocoreLogo} alt="EvoCore" className="h-8 object-contain" />
           </button>
           <button
             onClick={() => setCurrentTab(currentTab === "profile" ? "home" : "profile")}
