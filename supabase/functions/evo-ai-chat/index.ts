@@ -10,8 +10,8 @@ serve(async (req) => {
 
   try {
     const { messages, userProfile, mode } = await req.json();
-    const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY");
-    if (!GROQ_API_KEY) throw new Error("GROQ_API_KEY is not configured");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const goals: Record<string, string> = {
       lose: "emagrecer e perder gordura",
@@ -147,22 +147,20 @@ SUAS DIRETRIZES:
 
     const isStructured = mode === "generate-training" || mode === "generate-nutrition";
 
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${GROQ_API_KEY}`,
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "meta-llama/llama-4-maverick-17b-128e-instruct",
+        model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemPrompt },
           ...messages.map((m: any) => ({ role: m.role, content: m.content })),
         ],
         stream: !isStructured,
         ...(isStructured ? { response_format: { type: "json_object" } } : {}),
-        temperature: 0.7,
-        max_tokens: 4096,
       }),
     });
 
@@ -178,7 +176,7 @@ SUAS DIRETRIZES:
         });
       }
       const t = await response.text();
-      console.error("Groq API error:", response.status, t);
+      console.error("AI gateway error:", response.status, t);
       return new Response(JSON.stringify({ error: "Erro ao conectar com a IA" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
