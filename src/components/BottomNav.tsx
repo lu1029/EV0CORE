@@ -14,7 +14,7 @@ const BottomNav = () => {
   const { currentTab, setCurrentTab } = useApp();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 glass border-t border-border/30 safe-area-bottom">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 glass border-0 border-t border-border/20 safe-area-bottom">
       <div className="max-w-lg mx-auto flex items-center justify-around py-2 px-2">
         {tabs.map((tab) => {
           const isActive = currentTab === tab.id;
@@ -28,7 +28,7 @@ const BottomNav = () => {
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <tab.icon className={`w-5 h-5 transition-all ${isActive ? "drop-shadow-[0_0_8px_hsl(142,71%,45%,0.5)]" : ""}`} />
+              <tab.icon className={`w-5 h-5 transition-all ${isActive ? "drop-shadow-[0_0_8px_hsl(239,84%,67%,0.5)]" : ""}`} />
               <span className={`text-[10px] font-medium transition-colors ${isActive ? "text-primary" : ""}`}>
                 {tab.label}
               </span>
