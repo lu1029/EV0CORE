@@ -86,9 +86,9 @@ const ProfileScreen = () => {
       <Button
         variant="glass"
         className="w-full h-12 rounded-xl text-destructive gap-2"
-        onClick={() => {
-          setIsLoggedIn(false);
-          setHasOnboarded(false);
+        onClick={async () => {
+          const { supabase } = await import("@/integrations/supabase/client");
+          await supabase.auth.signOut();
         }}
       >
         <LogOut className="w-4 h-4" /> Sair da conta
