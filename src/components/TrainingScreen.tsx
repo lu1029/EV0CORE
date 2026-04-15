@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useApp } from "@/contexts/AppContext";
 import {
   Dumbbell, Play, Home, Sparkles, Loader2, RotateCcw
@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import ActiveWorkout from "./training/ActiveWorkout";
 import type { Exercise } from "./training/ExerciseCard";
 import { getGifUrl } from "./training/homeExerciseGifs";
+import { useSavedPlan } from "@/hooks/useSavedPlan";
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/evo-ai-chat`;
 
@@ -15,6 +16,10 @@ const TrainingScreen = () => {
   const [tab, setTab] = useState<"gym" | "home">("gym");
   const [activeWorkout, setActiveWorkout] = useState<string | null>(null);
   const [activeExercises, setActiveExercises] = useState<Exercise[]>([]);
+
+  // Saved plans
+  const gymSaved = useSavedPlan("gym");
+  const homeSaved = useSavedPlan("home");
 
   // AI-generated plan state (gym)
   const [generatedPlan, setGeneratedPlan] = useState<Record<string, Exercise[]> | null>(null);
@@ -29,6 +34,33 @@ const TrainingScreen = () => {
   const [homePlanDesc, setHomePlanDesc] = useState("");
   const [isGeneratingHome, setIsGeneratingHome] = useState(false);
   const [homeError, setHomeError] = useState("");
+
+  // Load saved plans on mount
+  useEffect(() => {
+    if (gymSaved.plan && !generatedPlan) {
+      const data = gymSaved.plan.plan_data;
+      setGeneratedPlan(data.workouts || null);
+      setPlanName(data.planName || gymSaved.plan.plan_name);
+      setPlanDesc(data.description || gymSaved.plan.description);
+    }
+  }, [gymSaved.plan]);
+
+  useEffect(() => {
+    if (homeSaved.plan && !homePlan) {
+      const data = homeSaved.plan.plan_data;
+      // Re-map gifKeys
+      const mapped: Record<string, Exercise[]> = {};
+      for (const [name, exercises] of Object.entries(data.workouts || {})) {
+        mapped[name] = (exercises as any[]).map((ex) => ({
+          ...ex,
+          gifUrl: getGifUrl(ex.gifKey) || ex.gifUrl || undefined,
+        }));
+      }
+      setHomePlan(mapped);
+      setHomePlanName(data.planName || homeSaved.plan.plan_name);
+      setHomePlanDesc(data.description || homeSaved.plan.description);
+    }
+  }, [homeSaved.plan]);
 
   const generateTrainingPlan = async () => {
     setIsGenerating(true);
@@ -50,6 +82,12 @@ const TrainingScreen = () => {
         setGeneratedPlan(parsed.workouts);
         setPlanName(parsed.planName || "Seu Plano Personalizado");
         setPlanDesc(parsed.description || "");
+        // Save to DB
+        await gymSaved.savePlan(
+          parsed.planName || "Seu Plano Personalizado",
+          parsed.description || "",
+          parsed
+        );
       }
     } catch (err) {
       console.error(err);
@@ -76,7 +114,6 @@ const TrainingScreen = () => {
       const data = await res.json();
       const parsed = JSON.parse(data.result);
       if (parsed.workouts) {
-        // Map gifKey to actual GIF URLs
         const mappedWorkouts: Record<string, Exercise[]> = {};
         for (const [name, exercises] of Object.entries(parsed.workouts)) {
           mappedWorkouts[name] = (exercises as any[]).map((ex) => ({
@@ -87,6 +124,12 @@ const TrainingScreen = () => {
         setHomePlan(mappedWorkouts);
         setHomePlanName(parsed.planName || "Treino em Casa");
         setHomePlanDesc(parsed.description || "");
+        // Save to DB
+        await homeSaved.savePlan(
+          parsed.planName || "Treino em Casa",
+          parsed.description || "",
+          parsed
+        );
       }
     } catch (err) {
       console.error(err);
@@ -94,6 +137,16 @@ const TrainingScreen = () => {
     } finally {
       setIsGeneratingHome(false);
     }
+  };
+
+  const resetGymPlan = async () => {
+    setGeneratedPlan(null); setPlanName(""); setPlanDesc("");
+    await gymSaved.deletePlan();
+  };
+
+  const resetHomePlan = async () => {
+    setHomePlan(null); setHomePlanName(""); setHomePlanDesc("");
+    await homeSaved.deletePlan();
   };
 
   const startWorkout = (name: string, plan: Record<string, Exercise[]>) => {
@@ -117,78 +170,64 @@ const TrainingScreen = () => {
     isHome: boolean,
     loading: boolean,
     error: string,
-    onGenerate: () => void
+    onGenerate: () => void,
+    savedLoading: boolean
   ) => (
     <div className="flex flex-col items-center text-center py-8 animate-fade-in">
-      <div className="w-20 h-20 rounded-3xl gradient-primary flex items-center justify-center mb-6 animate-pulse-glow">
-        {isHome ? <Home className="w-10 h-10 text-primary-foreground" /> : <Sparkles className="w-10 h-10 text-primary-foreground" />}
-      </div>
-      <h2 className="text-xl font-heading font-bold text-foreground mb-2">
-        {isHome ? "Treino em Casa com IA" : "Crie seu treino personalizado"}
-      </h2>
-      <p className="text-sm text-muted-foreground mb-2 max-w-xs">
-        {isHome
-          ? "Nossa IA vai montar exercícios equivalentes aos de academia usando apenas seu peso corporal e itens de casa (cadeira, toalha, mochila). Cada exercício vem com GIF demonstrativo!"
-          : "Nossa IA vai montar um plano de treino completo baseado no seu perfil: objetivo, nível e disponibilidade."}
-      </p>
+      {savedLoading ? (
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Carregando plano salvo...</p>
+        </div>
+      ) : (
+        <>
+          <div className="w-20 h-20 rounded-3xl gradient-primary flex items-center justify-center mb-6 animate-pulse-glow">
+            {isHome ? <Home className="w-10 h-10 text-primary-foreground" /> : <Sparkles className="w-10 h-10 text-primary-foreground" />}
+          </div>
+          <h2 className="text-xl font-heading font-bold text-foreground mb-2">
+            {isHome ? "Treino em Casa com IA" : "Crie seu treino personalizado"}
+          </h2>
+          <p className="text-sm text-muted-foreground mb-2 max-w-xs">
+            {isHome
+              ? "Nossa IA vai montar exercícios equivalentes aos de academia usando apenas seu peso corporal e itens de casa."
+              : "Nossa IA vai montar um plano de treino completo baseado no seu perfil: objetivo, nível e disponibilidade."}
+          </p>
 
-      <div className="glass-card rounded-2xl p-4 mb-6 w-full text-left">
-        <p className="text-xs text-muted-foreground mb-2 font-medium">Seu perfil:</p>
-        <div className="space-y-1">
-          <p className="text-xs text-foreground">🎯 Objetivo: <span className="text-primary font-medium">{userProfile.goal || "não definido"}</span></p>
-          <p className="text-xs text-foreground">📊 Nível: <span className="text-primary font-medium">{userProfile.level || "não definido"}</span></p>
-          <p className="text-xs text-foreground">📅 Dias/semana: <span className="text-primary font-medium">{userProfile.daysPerWeek}</span></p>
-          <p className="text-xs text-foreground">⚖️ Peso: <span className="text-primary font-medium">{userProfile.weight}kg</span></p>
-          {isHome && (
-            <p className="text-xs text-foreground">🏠 Treino: <span className="text-accent font-medium">Em casa sem equipamentos</span></p>
+          <div className="glass-card rounded-2xl p-4 mb-6 w-full text-left">
+            <p className="text-xs text-muted-foreground mb-2 font-medium">Seu perfil:</p>
+            <div className="space-y-1">
+              <p className="text-xs text-foreground">🎯 Objetivo: <span className="text-primary font-medium">{userProfile.goal || "não definido"}</span></p>
+              <p className="text-xs text-foreground">📊 Nível: <span className="text-primary font-medium">{userProfile.level || "não definido"}</span></p>
+              <p className="text-xs text-foreground">📅 Dias/semana: <span className="text-primary font-medium">{userProfile.daysPerWeek}</span></p>
+              <p className="text-xs text-foreground">⚖️ Peso: <span className="text-primary font-medium">{userProfile.weight}kg</span></p>
+            </div>
+          </div>
+
+          {error && <p className="text-xs text-destructive mb-4">{error}</p>}
+
+          <Button
+            className="w-full h-14 rounded-2xl text-base gap-2 gradient-primary text-primary-foreground font-semibold"
+            onClick={onGenerate}
+            disabled={loading}
+          >
+            {loading ? (
+              <><Loader2 className="w-5 h-5 animate-spin" /> {isHome ? "Montando treino em casa..." : "Gerando seu plano..."}</>
+            ) : (
+              <><Sparkles className="w-5 h-5" /> {isHome ? "Gerar Treino em Casa com IA" : "Gerar Meu Treino com IA"}</>
+            )}
+          </Button>
+
+          {loading && (
+            <div className="mt-4 space-y-2 w-full">
+              {[0, 1].map(i => (
+                <div key={i} className="glass-card rounded-xl p-3 animate-pulse" style={{ animationDelay: `${i * 150}ms` }}>
+                  <div className="h-3 bg-secondary rounded w-3/4 mb-2" />
+                  <div className="h-2 bg-secondary rounded w-1/2" />
+                </div>
+              ))}
+            </div>
           )}
-        </div>
-      </div>
-
-      {isHome && (
-        <div className="glass-card rounded-2xl p-4 mb-6 w-full text-left">
-          <p className="text-xs text-muted-foreground mb-2 font-medium">🔄 Equivalências de academia:</p>
-          <div className="space-y-1 text-xs text-foreground">
-            <p>💪 Supino → <span className="text-primary">Flexões (variações)</span></p>
-            <p>🦵 Leg Press → <span className="text-primary">Agachamento búlgaro</span></p>
-            <p>🚣 Remada → <span className="text-primary">Remada com toalha</span></p>
-            <p>🏋️ Desenvolvimento → <span className="text-primary">Pike push-up</span></p>
-            <p>⬇️ Tríceps pulley → <span className="text-primary">Mergulho na cadeira</span></p>
-          </div>
-        </div>
-      )}
-
-      {error && <p className="text-xs text-destructive mb-4">{error}</p>}
-
-      <Button
-        className="w-full h-14 rounded-2xl text-base gap-2 gradient-primary text-primary-foreground font-semibold"
-        onClick={onGenerate}
-        disabled={loading}
-      >
-        {loading ? (
-          <>
-            <Loader2 className="w-5 h-5 animate-spin" />
-            {isHome ? "Montando treino em casa..." : "Gerando seu plano..."}
-          </>
-        ) : (
-          <>
-            <Sparkles className="w-5 h-5" />
-            {isHome ? "Gerar Treino em Casa com IA" : "Gerar Meu Treino com IA"}
-          </>
-        )}
-      </Button>
-
-      {loading && (
-        <div className="mt-4 space-y-2 w-full">
-          <div className="glass-card rounded-xl p-3 animate-pulse">
-            <div className="h-3 bg-secondary rounded w-3/4 mb-2" />
-            <div className="h-2 bg-secondary rounded w-1/2" />
-          </div>
-          <div className="glass-card rounded-xl p-3 animate-pulse" style={{ animationDelay: '150ms' }}>
-            <div className="h-3 bg-secondary rounded w-2/3 mb-2" />
-            <div className="h-2 bg-secondary rounded w-1/3" />
-          </div>
-        </div>
+        </>
       )}
     </div>
   );
@@ -206,10 +245,7 @@ const TrainingScreen = () => {
           <h2 className="font-heading font-bold text-foreground text-lg">{name}</h2>
           {desc && <p className="text-xs text-muted-foreground">{desc}</p>}
         </div>
-        <button
-          onClick={onReset}
-          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
-        >
+        <button onClick={onReset} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors">
           <RotateCcw className="w-3 h-3" /> Refazer
         </button>
       </div>
@@ -270,18 +306,14 @@ const TrainingScreen = () => {
       {tab === "gym" ? (
         <div className="animate-fade-in space-y-6">
           {!generatedPlan
-            ? renderEmptyState(false, isGenerating, generateError, generateTrainingPlan)
-            : renderPlanView(generatedPlan, planName, planDesc, () => {
-                setGeneratedPlan(null); setPlanName(""); setPlanDesc("");
-              }, false)}
+            ? renderEmptyState(false, isGenerating, generateError, generateTrainingPlan, gymSaved.loading)
+            : renderPlanView(generatedPlan, planName, planDesc, resetGymPlan, false)}
         </div>
       ) : (
         <div className="animate-fade-in space-y-6">
           {!homePlan
-            ? renderEmptyState(true, isGeneratingHome, homeError, generateHomePlan)
-            : renderPlanView(homePlan, homePlanName, homePlanDesc, () => {
-                setHomePlan(null); setHomePlanName(""); setHomePlanDesc("");
-              }, true)}
+            ? renderEmptyState(true, isGeneratingHome, homeError, generateHomePlan, homeSaved.loading)
+            : renderPlanView(homePlan, homePlanName, homePlanDesc, resetHomePlan, true)}
         </div>
       )}
     </div>

@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useApp } from "@/contexts/AppContext";
-import { Droplets, Plus, Sparkles, Loader2, RotateCcw, Coffee, Sun, Moon, Cookie, Apple } from "lucide-react";
+import { Droplets, Sparkles, Loader2, RotateCcw, Coffee, Sun, Moon, Cookie, Apple } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSavedPlan } from "@/hooks/useSavedPlan";
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/evo-ai-chat`;
 
@@ -43,6 +44,18 @@ const NutritionScreen = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateError, setGenerateError] = useState("");
 
+  const saved = useSavedPlan("nutrition");
+
+  // Load saved plan
+  useEffect(() => {
+    if (saved.plan && !nutritionPlan) {
+      const data = saved.plan.plan_data;
+      if (data.dailyCalories) {
+        setNutritionPlan(data as NutritionPlan);
+      }
+    }
+  }, [saved.plan]);
+
   const generateNutritionPlan = async () => {
     setIsGenerating(true);
     setGenerateError("");
@@ -61,6 +74,11 @@ const NutritionScreen = () => {
       const parsed = JSON.parse(data.result);
       if (parsed.dailyCalories) {
         setNutritionPlan(parsed);
+        await saved.savePlan(
+          parsed.planName || "Plano Nutricional",
+          `${parsed.dailyCalories} kcal/dia`,
+          parsed
+        );
       }
     } catch (err) {
       console.error(err);
@@ -70,6 +88,11 @@ const NutritionScreen = () => {
     }
   };
 
+  const resetPlan = async () => {
+    setNutritionPlan(null);
+    await saved.deletePlan();
+  };
+
   const waterGoal = nutritionPlan ? Math.round(nutritionPlan.waterLiters * 4) : 10;
 
   if (!nutritionPlan) {
@@ -77,66 +100,72 @@ const NutritionScreen = () => {
       <div className="pb-24 px-4 pt-6 max-w-lg mx-auto relative z-10">
         <h1 className="text-2xl font-heading font-bold text-foreground mb-6 animate-fade-in">Nutrição</h1>
 
-        <div className="flex flex-col items-center text-center py-8 animate-fade-in">
-          <div className="w-20 h-20 rounded-3xl gradient-green flex items-center justify-center mb-6 animate-pulse-glow">
-            <Sparkles className="w-10 h-10 text-primary-foreground" />
+        {saved.loading ? (
+          <div className="flex flex-col items-center py-12 gap-3">
+            <Loader2 className="w-8 h-8 animate-spin text-accent" />
+            <p className="text-sm text-muted-foreground">Carregando plano salvo...</p>
           </div>
-          <h2 className="text-xl font-heading font-bold text-foreground mb-2">
-            Crie sua dieta personalizada
-          </h2>
-          <p className="text-sm text-muted-foreground mb-2 max-w-xs">
-            Nossa IA vai calcular suas calorias, macros e montar refeições reais baseadas no seu perfil e objetivo.
-          </p>
-
-          <div className="glass-card rounded-2xl p-4 mb-6 w-full text-left">
-            <p className="text-xs text-muted-foreground mb-2 font-medium">Seu perfil:</p>
-            <div className="space-y-1">
-              <p className="text-xs text-foreground">🎯 Objetivo: <span className="text-accent font-medium">{userProfile.goal || "não definido"}</span></p>
-              <p className="text-xs text-foreground">⚖️ Peso: <span className="text-accent font-medium">{userProfile.weight}kg</span></p>
-              <p className="text-xs text-foreground">📏 Altura: <span className="text-accent font-medium">{userProfile.height}cm</span></p>
-              <p className="text-xs text-foreground">🎂 Idade: <span className="text-accent font-medium">{userProfile.age} anos</span></p>
-              <p className="text-xs text-foreground">📊 Nível: <span className="text-accent font-medium">{userProfile.level || "não definido"}</span></p>
+        ) : (
+          <div className="flex flex-col items-center text-center py-8 animate-fade-in">
+            <div className="w-20 h-20 rounded-3xl gradient-green flex items-center justify-center mb-6 animate-pulse-glow">
+              <Sparkles className="w-10 h-10 text-primary-foreground" />
             </div>
-          </div>
+            <h2 className="text-xl font-heading font-bold text-foreground mb-2">
+              Crie sua dieta personalizada
+            </h2>
+            <p className="text-sm text-muted-foreground mb-2 max-w-xs">
+              Nossa IA vai calcular suas calorias, macros e montar refeições reais baseadas no seu perfil e objetivo.
+            </p>
 
-          {generateError && <p className="text-xs text-destructive mb-4">{generateError}</p>}
+            <div className="glass-card rounded-2xl p-4 mb-6 w-full text-left">
+              <p className="text-xs text-muted-foreground mb-2 font-medium">Seu perfil:</p>
+              <div className="space-y-1">
+                <p className="text-xs text-foreground">🎯 Objetivo: <span className="text-accent font-medium">{userProfile.goal || "não definido"}</span></p>
+                <p className="text-xs text-foreground">⚖️ Peso: <span className="text-accent font-medium">{userProfile.weight}kg</span></p>
+                <p className="text-xs text-foreground">📏 Altura: <span className="text-accent font-medium">{userProfile.height}cm</span></p>
+                <p className="text-xs text-foreground">🎂 Idade: <span className="text-accent font-medium">{userProfile.age} anos</span></p>
+                <p className="text-xs text-foreground">📊 Nível: <span className="text-accent font-medium">{userProfile.level || "não definido"}</span></p>
+              </div>
+            </div>
 
-          <Button
-            className="w-full h-14 rounded-2xl text-base gap-2 gradient-green text-primary-foreground font-semibold"
-            onClick={generateNutritionPlan}
-            disabled={isGenerating}
-          >
-            {isGenerating ? (
-              <><Loader2 className="w-5 h-5 animate-spin" /> Gerando plano nutricional...</>
-            ) : (
-              <><Sparkles className="w-5 h-5" /> Gerar Minha Dieta com IA</>
+            {generateError && <p className="text-xs text-destructive mb-4">{generateError}</p>}
+
+            <Button
+              className="w-full h-14 rounded-2xl text-base gap-2 gradient-green text-primary-foreground font-semibold"
+              onClick={generateNutritionPlan}
+              disabled={isGenerating}
+            >
+              {isGenerating ? (
+                <><Loader2 className="w-5 h-5 animate-spin" /> Gerando plano nutricional...</>
+              ) : (
+                <><Sparkles className="w-5 h-5" /> Gerar Minha Dieta com IA</>
+              )}
+            </Button>
+
+            {isGenerating && (
+              <div className="mt-4 space-y-2 w-full">
+                <p className="text-xs text-muted-foreground">Calculando TMB, macros e montando refeições...</p>
+                {[0, 1, 2].map(i => (
+                  <div key={i} className="glass-card rounded-xl p-3 animate-pulse" style={{ animationDelay: `${i * 150}ms` }}>
+                    <div className="h-3 bg-secondary rounded w-3/4 mb-2" />
+                    <div className="h-2 bg-secondary rounded w-1/2" />
+                  </div>
+                ))}
+              </div>
             )}
-          </Button>
-
-          {isGenerating && (
-            <div className="mt-4 space-y-2 w-full">
-              <p className="text-xs text-muted-foreground">Calculando TMB, macros e montando refeições...</p>
-              {[0, 1, 2].map(i => (
-                <div key={i} className="glass-card rounded-xl p-3 animate-pulse" style={{ animationDelay: `${i * 150}ms` }}>
-                  <div className="h-3 bg-secondary rounded w-3/4 mb-2" />
-                  <div className="h-2 bg-secondary rounded w-1/2" />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     );
   }
 
   const consumed = nutritionPlan.meals.reduce((acc, m) => acc + m.calories, 0);
-  const remaining = nutritionPlan.dailyCalories - consumed;
 
   return (
     <div className="pb-24 px-4 pt-6 max-w-lg mx-auto relative z-10">
       <div className="flex items-center justify-between mb-6 animate-fade-in">
         <h1 className="text-2xl font-heading font-bold text-foreground">Nutrição</h1>
-        <button onClick={() => setNutritionPlan(null)} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors">
+        <button onClick={resetPlan} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors">
           <RotateCcw className="w-3 h-3" /> Refazer
         </button>
       </div>
@@ -182,7 +211,6 @@ const NutritionScreen = () => {
           </div>
         </div>
 
-        {/* Macros bars */}
         <div className="grid grid-cols-3 gap-3 mt-4">
           {[
             { label: "Proteína", g: nutritionPlan.macros.protein.grams, pct: nutritionPlan.macros.protein.percentage, color: "bg-primary" },
