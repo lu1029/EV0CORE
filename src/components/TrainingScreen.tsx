@@ -29,11 +29,11 @@ const TrainingScreen = () => {
   }
 
   return (
-    <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
+    <div className="pb-24 px-4 pt-6 max-w-lg mx-auto relative z-10">
       <h1 className="text-2xl font-heading font-bold text-foreground mb-6 animate-fade-in">Treino</h1>
 
       {/* Tab switch */}
-      <div className="flex bg-secondary rounded-2xl p-1 mb-6 animate-fade-in">
+      <div className="flex glass-card rounded-2xl p-1 mb-6 animate-fade-in">
         <button
           onClick={() => setTab("gym")}
           className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all ${
@@ -55,7 +55,7 @@ const TrainingScreen = () => {
       {tab === "gym" ? (
         <div className="animate-fade-in space-y-6">
           {/* Today's workout hero card */}
-          <div className="rounded-3xl border border-primary/20 bg-card p-5 relative overflow-hidden">
+          <div className="rounded-3xl glass-card-purple p-5 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-40 h-40 gradient-primary opacity-[0.06] rounded-full -translate-y-1/2 translate-x-1/2" />
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-blue-500/5 rounded-full translate-y-1/2 -translate-x-1/2" />
 
@@ -102,7 +102,7 @@ const TrainingScreen = () => {
                 <button
                   key={name}
                   onClick={() => setActiveWorkout(name)}
-                  className="w-full bg-card border border-border/50 rounded-2xl p-4 flex items-center gap-3 hover:border-primary/30 transition-all text-left"
+                  className="w-full glass-card rounded-2xl p-4 flex items-center gap-3 hover:border-primary/30 transition-all text-left"
                 >
                   <div className="w-12 h-12 rounded-xl bg-secondary/80 flex items-center justify-center text-xl border border-border/30">
                     {exercises[0].emoji}
@@ -123,7 +123,7 @@ const TrainingScreen = () => {
             <div className="space-y-2">
               {workoutPlans.map((p) => {
                 const card = (
-                  <div className="bg-card border border-border/50 rounded-2xl p-4 flex items-center justify-between hover:border-primary/30 transition-all">
+                  <div className="glass-card rounded-2xl p-4 flex items-center justify-between hover:border-primary/30 transition-all">
                     <div>
                       <h4 className="font-semibold text-foreground text-sm flex items-center gap-1.5">
                         {p.name}
