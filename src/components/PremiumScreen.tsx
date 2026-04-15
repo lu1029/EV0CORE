@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useApp } from "@/contexts/AppContext";
+import { toast } from "sonner";
 import { Crown, Check, X, Zap, Star, ChevronRight, Sparkles, Brain, Dumbbell, TrendingUp, Shield, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
