@@ -12,6 +12,7 @@ import { useAchievements } from "@/hooks/useAchievements";
 const ProfileScreen = () => {
   const { userProfile, setUserProfile, setIsLoggedIn, setHasOnboarded, isPremium, setCurrentTab, user } = useApp();
   const { stats, loading: statsLoading } = useProfileStats();
+  const { achievements, unlockedCount, totalCount, loading: achLoading } = useAchievements();
   const name = userProfile.name || "Atleta";
   const [isEditing, setIsEditing] = useState(false);
   const [editProfile, setEditProfile] = useState(userProfile);
