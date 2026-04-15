@@ -169,9 +169,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-3xl font-heading font-bold text-gradient mb-2">EVOCORE</h1>
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mt-4" />
+        <div className="text-center animate-fade-in">
+          <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center mx-auto mb-4 animate-pulse-glow">
+            <span className="text-2xl font-bold text-primary-foreground">E</span>
+          </div>
+          <h1 className="text-2xl font-heading font-bold text-gradient mb-2">EVOCORE</h1>
+          <p className="text-sm text-muted-foreground mb-4">Preparando seu treino...</p>
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
         </div>
       </div>
     );
