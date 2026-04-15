@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useApp } from "@/contexts/AppContext";
 import { Droplets, Plus, Flame, ChevronRight, Coffee, Sun, Moon, Cookie, Apple } from "lucide-react";
+import PremiumGate from "@/components/PremiumGate";
 import { Button } from "@/components/ui/button";
 
 const meals = [
@@ -150,13 +151,15 @@ const NutritionScreen = () => {
       </div>
 
       {/* Suggestions */}
-      <div className="mt-6 bg-card border border-primary/20 rounded-2xl p-4 animate-fade-in">
-        <div className="flex items-center gap-2 mb-2">
-          <Apple className="w-4 h-4 text-primary" />
-          <span className="text-xs text-primary font-medium">Sugestão para você</span>
+      <PremiumGate feature="sugestões personalizadas">
+        <div className="mt-6 bg-card border border-primary/20 rounded-2xl p-4 animate-fade-in">
+          <div className="flex items-center gap-2 mb-2">
+            <Apple className="w-4 h-4 text-primary" />
+            <span className="text-xs text-primary font-medium">Sugestão para você</span>
+          </div>
+          <p className="text-sm text-foreground">Ainda faltam <span className="text-primary font-bold">{macros.protein.target - macros.protein.current}g</span> de proteína hoje. Que tal um frango grelhado ou shake de whey no jantar?</p>
         </div>
-        <p className="text-sm text-foreground">Ainda faltam <span className="text-primary font-bold">{macros.protein.target - macros.protein.current}g</span> de proteína hoje. Que tal um frango grelhado ou shake de whey no jantar?</p>
-      </div>
+      </PremiumGate>
     </div>
   );
 };

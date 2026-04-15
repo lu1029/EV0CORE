@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useApp } from "@/contexts/AppContext";
-import { Dumbbell, ChevronRight, Clock, Flame, Trophy, Plus, Play, Check, Timer, Home } from "lucide-react";
+import { Dumbbell, ChevronRight, Clock, Flame, Trophy, Plus, Play, Check, Timer, Home, Crown } from "lucide-react";
+import PremiumGate from "@/components/PremiumGate";
 import { Button } from "@/components/ui/button";
 
 const muscleGroups = ["Peito", "Costas", "Ombros", "Bíceps", "Tríceps", "Pernas", "Glúteos", "Abdômen"];
@@ -151,15 +152,25 @@ const TrainingScreen = () => {
           {/* Plans */}
           <h3 className="font-semibold text-foreground mb-3">Planos de treino</h3>
           <div className="space-y-3 mb-6">
-            {workoutPlans.map((p) => (
-              <div key={p.id} className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between hover:border-primary/30 transition-all">
-                <div>
-                  <h4 className="font-semibold text-foreground text-sm">{p.name}</h4>
-                  <p className="text-xs text-muted-foreground">{p.desc} • {p.days}x/semana • {p.level}</p>
+            {workoutPlans.map((p) => {
+              const isAdvanced = p.id === "ppl" || p.id === "abcd";
+              const card = (
+                <div key={p.id} className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between hover:border-primary/30 transition-all">
+                  <div>
+                    <h4 className="font-semibold text-foreground text-sm flex items-center gap-1.5">
+                      {p.name}
+                      {isAdvanced && <Crown className="w-3 h-3 text-primary" />}
+                    </h4>
+                    <p className="text-xs text-muted-foreground">{p.desc} • {p.days}x/semana • {p.level}</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
                 </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground" />
-              </div>
-            ))}
+              );
+              if (isAdvanced) {
+                return <PremiumGate key={p.id} feature="planos avançados">{card}</PremiumGate>;
+              }
+              return card;
+            })}
           </div>
 
           {/* Muscle groups */}
