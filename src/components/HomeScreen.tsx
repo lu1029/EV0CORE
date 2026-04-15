@@ -1,10 +1,10 @@
 import React from "react";
 import { useApp } from "@/contexts/AppContext";
-import { Flame, Droplets, Dumbbell, MapPin, ChevronRight, Zap, Crown, TrendingUp, Clock, Target } from "lucide-react";
+import { Flame, Droplets, Dumbbell, MapPin, ChevronRight, Zap, Crown, TrendingUp, Clock, Target, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const HomeScreen = () => {
-  const { userProfile, setCurrentTab, isPremium, setIsPremium } = useApp();
+  const { userProfile, setCurrentTab, isPremium } = useApp();
   const name = userProfile.name || "Atleta";
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
@@ -24,14 +24,17 @@ const HomeScreen = () => {
           {!isPremium && (
             <button
               onClick={() => setCurrentTab("premium")}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-full gradient-primary text-primary-foreground text-xs font-semibold"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-full gradient-primary text-primary-foreground text-xs font-semibold active:scale-95 transition-transform"
             >
               <Crown className="w-3 h-3" /> PRO
             </button>
           )}
-          <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center">
+          <button
+            onClick={() => setCurrentTab("profile")}
+            className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center border border-border/50 active:scale-95 transition-transform"
+          >
             <span className="text-sm font-bold text-foreground">{name[0]?.toUpperCase()}</span>
-          </div>
+          </button>
         </div>
       </div>
 
@@ -45,7 +48,7 @@ const HomeScreen = () => {
           {weekDays.map((d, i) => (
             <div key={i} className="flex flex-col items-center gap-1">
               <span className="text-[10px] text-muted-foreground">{d}</span>
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold transition-all ${
                 activeToday[i]
                   ? "gradient-primary text-primary-foreground"
                   : "bg-secondary text-muted-foreground"
@@ -58,22 +61,18 @@ const HomeScreen = () => {
       </div>
 
       {/* Quick stats */}
-      <div className="grid grid-cols-3 gap-3 mb-4 animate-fade-in">
-        <div className="bg-card border border-border rounded-2xl p-3 text-center">
-          <Flame className="w-5 h-5 text-orange-400 mx-auto mb-1" />
-          <p className="text-lg font-bold text-foreground">460</p>
-          <p className="text-[10px] text-muted-foreground">Calorias</p>
-        </div>
-        <div className="bg-card border border-border rounded-2xl p-3 text-center">
-          <Droplets className="w-5 h-5 text-blue-400 mx-auto mb-1" />
-          <p className="text-lg font-bold text-foreground">1.5L</p>
-          <p className="text-[10px] text-muted-foreground">Água</p>
-        </div>
-        <div className="bg-card border border-border rounded-2xl p-3 text-center">
-          <TrendingUp className="w-5 h-5 text-primary mx-auto mb-1" />
-          <p className="text-lg font-bold text-foreground">128g</p>
-          <p className="text-[10px] text-muted-foreground">Proteína</p>
-        </div>
+      <div className="grid grid-cols-3 gap-3 mb-4">
+        {[
+          { icon: Flame, value: "460", label: "Calorias", iconColor: "text-orange-400" },
+          { icon: Droplets, value: "1.5L", label: "Água", iconColor: "text-blue-400" },
+          { icon: TrendingUp, value: "128g", label: "Proteína", iconColor: "text-primary" },
+        ].map((stat, i) => (
+          <div key={stat.label} className="bg-card border border-border rounded-2xl p-3 text-center animate-fade-in" style={{ animationDelay: `${i * 60}ms` }}>
+            <stat.icon className={`w-5 h-5 ${stat.iconColor} mx-auto mb-1`} />
+            <p className="text-lg font-bold text-foreground">{stat.value}</p>
+            <p className="text-[10px] text-muted-foreground">{stat.label}</p>
+          </div>
+        ))}
       </div>
 
       {/* Today's workout */}
@@ -84,17 +83,17 @@ const HomeScreen = () => {
               <Dumbbell className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
-              <h3 className="font-semibold text-foreground text-sm">Treino + Tríceps</h3>
-              <p className="text-xs text-muted-foreground">6 exercícios • ~45min</p>
+              <h3 className="font-semibold text-foreground text-sm">Peito + Tríceps</h3>
+              <p className="text-xs text-muted-foreground">7 exercícios • ~45min</p>
             </div>
           </div>
-          <Button variant="hero" size="sm" className="rounded-xl gap-1" onClick={() => setCurrentTab("training")}>
+          <Button variant="hero" size="sm" className="rounded-xl gap-1 active:scale-95 transition-transform" onClick={() => setCurrentTab("training")}>
             Iniciar <ChevronRight className="w-3 h-3" />
           </Button>
         </div>
         <div className="flex gap-2 overflow-x-auto hide-scrollbar">
-          {["Supino reto", "Supino inclinado", "Crossover", "Tríceps corda", "Tríceps testa", "Mergulho"].map((ex) => (
-            <div key={ex} className="bg-secondary rounded-lg px-3 py-2 text-xs text-foreground whitespace-nowrap">
+          {["Supino reto", "Supino inclinado", "Crossover", "Fly máquina", "Tríceps corda"].map((ex) => (
+            <div key={ex} className="bg-secondary rounded-lg px-3 py-2 text-xs text-foreground whitespace-nowrap border border-border/30">
               {ex}
             </div>
           ))}
@@ -102,22 +101,22 @@ const HomeScreen = () => {
       </div>
 
       {/* Quick actions */}
-      <div className="grid grid-cols-2 gap-3 mb-4 animate-fade-in">
+      <div className="grid grid-cols-2 gap-3 mb-4">
         <button
           onClick={() => setCurrentTab("running")}
-          className="bg-card border border-border rounded-2xl p-4 flex items-center gap-3 hover:border-primary/30 transition-all"
+          className="bg-card border border-border rounded-2xl p-4 flex items-center gap-3 hover:border-primary/30 active:scale-[0.98] transition-all"
         >
           <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
             <MapPin className="w-5 h-5 text-blue-400" />
           </div>
           <div className="text-left">
             <p className="text-sm font-medium text-foreground">Corrida</p>
-            <p className="text-[10px] text-muted-foreground">Iniciar corrida</p>
+            <p className="text-[10px] text-muted-foreground">Iniciar atividade</p>
           </div>
         </button>
         <button
           onClick={() => setCurrentTab("nutrition")}
-          className="bg-card border border-border rounded-2xl p-4 flex items-center gap-3 hover:border-primary/30 transition-all"
+          className="bg-card border border-border rounded-2xl p-4 flex items-center gap-3 hover:border-primary/30 active:scale-[0.98] transition-all"
         >
           <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
             <Flame className="w-5 h-5 text-orange-400" />
@@ -151,6 +150,30 @@ const HomeScreen = () => {
               </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Today's summary */}
+      <div className="bg-card border border-border rounded-2xl p-4 mb-4 animate-fade-in">
+        <div className="flex items-center gap-2 mb-3">
+          <Activity className="w-4 h-4 text-primary" />
+          <span className="text-sm font-medium text-foreground">Resumo do dia</span>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-secondary/50 rounded-xl p-3 border border-border/30">
+            <div className="flex items-center gap-2 mb-1">
+              <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-[10px] text-muted-foreground">Tempo ativo</span>
+            </div>
+            <p className="text-lg font-bold text-foreground">1h 15min</p>
+          </div>
+          <div className="bg-secondary/50 rounded-xl p-3 border border-border/30">
+            <div className="flex items-center gap-2 mb-1">
+              <Target className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-[10px] text-muted-foreground">Meta diária</span>
+            </div>
+            <p className="text-lg font-bold text-foreground">72%</p>
+          </div>
         </div>
       </div>
 

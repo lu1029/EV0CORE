@@ -35,10 +35,12 @@ const AppContent = () => {
       {/* Top bar */}
       <div className="sticky top-0 z-40 glass">
         <div className="flex items-center justify-between px-4 py-3">
-          <h2 className="text-sm font-heading font-bold text-gradient tracking-wider">EVOCORE</h2>
+          <button onClick={() => setCurrentTab("home")} className="active:scale-95 transition-transform">
+            <h2 className="text-sm font-heading font-bold text-gradient tracking-wider">EVOCORE</h2>
+          </button>
           <button
-            onClick={() => setCurrentTab("profile")}
-            className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center"
+            onClick={() => setCurrentTab(currentTab === "profile" ? "home" : "profile")}
+            className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center border border-border/50 active:scale-90 transition-transform"
           >
             <span className="text-xs font-bold text-foreground">
               {currentTab === "profile" ? "✕" : "☰"}
@@ -47,7 +49,9 @@ const AppContent = () => {
         </div>
       </div>
 
-      {renderScreen()}
+      <div className="animate-fade-in">
+        {renderScreen()}
+      </div>
       <BottomNav />
     </div>
   );
