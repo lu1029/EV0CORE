@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Check, ChevronDown, Play, Timer } from "lucide-react";
+import { Check, Timer, ChevronUp, ChevronDown, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ExercisePlaceholder from "./ExercisePlaceholder";
 
@@ -28,7 +28,7 @@ interface ExerciseCardProps {
 const ExerciseCard = ({
   exercise, index, isActive, completedSets, onCompleteSet, onStartRest, onCompleteExercise, isCompleted
 }: ExerciseCardProps) => {
-  const [showMedia, setShowMedia] = useState(isActive);
+  const [showInstruction, setShowInstruction] = useState(false);
   const allSetsCompleted = completedSets.size >= exercise.sets;
 
   if (!isActive) return null;
@@ -52,9 +52,21 @@ const ExerciseCard = ({
           </span>
         </div>
 
-        <p className="text-sm text-muted-foreground mt-2 mb-4 leading-relaxed">
-          {exercise.instruction}
-        </p>
+        {/* Instruction toggle */}
+        <button
+          onClick={() => setShowInstruction(!showInstruction)}
+          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground mt-2 mb-3 transition-colors"
+        >
+          <Info className="w-3.5 h-3.5" />
+          <span>{showInstruction ? "Ocultar instruções" : "Ver instruções"}</span>
+          {showInstruction ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+        </button>
+
+        {showInstruction && (
+          <div className="bg-secondary/50 rounded-xl p-3 mb-4 animate-fade-in border border-border/30">
+            <p className="text-sm text-muted-foreground leading-relaxed">{exercise.instruction}</p>
+          </div>
+        )}
 
         {/* Quick stats */}
         <div className="grid grid-cols-3 gap-2 mb-5">
@@ -89,7 +101,7 @@ const ExerciseCard = ({
                     onCompleteSet(setIdx);
                     if (!isDone) onStartRest();
                   }}
-                  className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-all ${
+                  className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-all active:scale-90 ${
                     isDone
                       ? "gradient-primary text-primary-foreground"
                       : "bg-secondary border border-border hover:border-primary/50"

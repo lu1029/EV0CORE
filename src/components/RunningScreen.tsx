@@ -1,14 +1,23 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   MapPin, Play, Clock, Flame, TrendingUp, Trophy, Pause, Square,
   Navigation, ChevronRight, Share2, Save, ArrowLeft, Zap, Heart,
-  Route, Timer, Footprints
+  Route, Timer, Footprints, Loader2, WifiOff, LocateFixed
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { GoogleMap, useJsApiLoader, Polyline, Marker } from "@react-google-maps/api";
 import { supabase } from "@/integrations/supabase/client";
 
-const mapStyle = { width: "100%", height: "100%" };
+type RunPhase = "idle" | "running" | "summary";
+type MapLoadState = "loading-key" | "loading-map" | "ready" | "error";
+
+interface Segment {
+  startIdx: number;
+  endIdx: number;
+  distance: number;
+  time: number;
+  pace: string;
+}
+
 const darkMapStyles = [
   { elementType: "geometry", stylers: [{ color: "#1a1a2e" }] },
   { elementType: "labels.text.stroke", stylers: [{ color: "#1a1a2e" }] },
@@ -20,21 +29,59 @@ const darkMapStyles = [
   { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#1a2e1a" }] },
 ];
 
-type RunPhase = "idle" | "running" | "summary";
+// Lazy load Google Maps API
+let mapsPromise: Promise<void> | null = null;
+let mapsLoaded = false;
 
-interface Segment {
-  startIdx: number;
-  endIdx: number;
-  distance: number;
-  time: number;
-  pace: string;
+function loadGoogleMaps(apiKey: string): Promise<void> {
+  if (mapsLoaded) return Promise.resolve();
+  if (mapsPromise) return mapsPromise;
+  
+  mapsPromise = new Promise((resolve, reject) => {
+    if (window.google?.maps) {
+      mapsLoaded = true;
+      resolve();
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=geometry`;
+    script.async = true;
+    script.defer = true;
+    script.onload = () => { mapsLoaded = true; resolve(); };
+    script.onerror = () => { mapsPromise = null; reject(new Error("Failed to load Google Maps")); };
+    document.head.appendChild(script);
+  });
+  return mapsPromise;
 }
+
+// Map skeleton loader
+const MapSkeleton = ({ message = "Carregando mapa..." }: { message?: string }) => (
+  <div className="w-full h-full bg-secondary/80 flex flex-col items-center justify-center gap-3 animate-fade-in">
+    <div className="relative">
+      <div className="w-12 h-12 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+      <MapPin className="w-5 h-5 text-primary absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+    </div>
+    <p className="text-muted-foreground text-sm">{message}</p>
+  </div>
+);
+
+const MapError = ({ message, onRetry }: { message: string; onRetry: () => void }) => (
+  <div className="w-full h-full bg-secondary/80 flex flex-col items-center justify-center gap-3 animate-fade-in">
+    <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
+      <WifiOff className="w-5 h-5 text-destructive" />
+    </div>
+    <p className="text-muted-foreground text-sm text-center px-4">{message}</p>
+    <Button variant="glass" size="sm" onClick={onRetry} className="rounded-xl text-xs">
+      Tentar novamente
+    </Button>
+  </div>
+);
 
 const RunningScreen = () => {
   const [phase, setPhase] = useState<RunPhase>("idle");
   const [isPaused, setIsPaused] = useState(false);
-  const [currentPosition, setCurrentPosition] = useState<google.maps.LatLngLiteral | null>(null);
-  const [routePath, setRoutePath] = useState<google.maps.LatLngLiteral[]>([]);
+  const [currentPosition, setCurrentPosition] = useState<{ lat: number; lng: number } | null>(null);
+  const [routePath, setRoutePath] = useState<{ lat: number; lng: number }[]>([]);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [distanceKm, setDistanceKm] = useState(0);
   const [calories, setCalories] = useState(0);
@@ -42,31 +89,98 @@ const RunningScreen = () => {
   const [maxSpeed, setMaxSpeed] = useState(0);
   const [elevationGain, setElevationGain] = useState(0);
   const [selectedActivity, setSelectedActivity] = useState("Corrida");
-  const [mapsApiKey, setMapsApiKey] = useState("");
+  const [mapLoadState, setMapLoadState] = useState<MapLoadState>("loading-key");
+  const [locationError, setLocationError] = useState("");
 
   const watchIdRef = useRef<number | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
   const lastSegmentDistRef = useRef(0);
   const lastSegmentTimeRef = useRef(0);
   const lastSegmentIdxRef = useRef(0);
+  const apiKeyRef = useRef("");
 
-  useEffect(() => {
-    supabase.functions.invoke("get-maps-key").then(({ data }) => {
-      if (data?.key) setMapsApiKey(data.key);
-    });
+  // Load API key and maps
+  const initMap = useCallback(async () => {
+    setMapLoadState("loading-key");
+    setLocationError("");
+    try {
+      if (!apiKeyRef.current) {
+        const { data } = await supabase.functions.invoke("get-maps-key");
+        if (!data?.key) {
+          setMapLoadState("error");
+          setLocationError("Chave do mapa não configurada");
+          return;
+        }
+        apiKeyRef.current = data.key;
+      }
+      setMapLoadState("loading-map");
+      await loadGoogleMaps(apiKeyRef.current);
+      setMapLoadState("ready");
+    } catch {
+      setMapLoadState("error");
+      setLocationError("Erro ao carregar o mapa. Verifique sua conexão.");
+    }
   }, []);
 
-  const { isLoaded } = useJsApiLoader({ googleMapsApiKey: mapsApiKey });
+  useEffect(() => { initMap(); }, [initMap]);
 
+  // Get user location
   useEffect(() => {
-    navigator.geolocation?.getCurrentPosition(
+    if (!navigator.geolocation) {
+      setCurrentPosition({ lat: -23.5505, lng: -46.6333 });
+      setLocationError("Geolocalização não suportada");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
       (pos) => setCurrentPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => setCurrentPosition({ lat: -23.5505, lng: -46.6333 })
+      (err) => {
+        setCurrentPosition({ lat: -23.5505, lng: -46.6333 });
+        if (err.code === 1) setLocationError("Permita o acesso à localização nas configurações");
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
     );
   }, []);
 
-  const haversine = (p1: google.maps.LatLngLiteral, p2: google.maps.LatLngLiteral) => {
+  // Render map when ready
+  useEffect(() => {
+    if (mapLoadState !== "ready" || !currentPosition || !mapContainerRef.current) return;
+    if (mapRef.current) return; // Already initialized
+
+    const map = new google.maps.Map(mapContainerRef.current, {
+      center: currentPosition,
+      zoom: phase === "running" ? 16 : 14,
+      disableDefaultUI: true,
+      styles: darkMapStyles,
+      zoomControl: false,
+      gestureHandling: "greedy",
+    });
+
+    new google.maps.Marker({
+      position: currentPosition,
+      map,
+      icon: {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: 8,
+        fillColor: "hsl(142, 71%, 45%)",
+        fillOpacity: 1,
+        strokeColor: "#fff",
+        strokeWeight: 2,
+      },
+    });
+
+    mapRef.current = map;
+  }, [mapLoadState, currentPosition, phase]);
+
+  // Re-center map when container changes
+  const recenterMap = useCallback(() => {
+    if (mapRef.current && currentPosition) {
+      mapRef.current.panTo(currentPosition);
+    }
+  }, [currentPosition]);
+
+  const haversine = (p1: { lat: number; lng: number }, p2: { lat: number; lng: number }) => {
     const R = 6371;
     const dLat = ((p2.lat - p1.lat) * Math.PI) / 180;
     const dLon = ((p2.lng - p1.lng) * Math.PI) / 180;
@@ -106,6 +220,9 @@ const RunningScreen = () => {
     lastSegmentTimeRef.current = 0;
     lastSegmentIdxRef.current = 0;
 
+    // Reset map for running view
+    mapRef.current = null;
+
     timerRef.current = setInterval(() => setElapsedSeconds((s) => s + 1), 1000);
 
     watchIdRef.current = navigator.geolocation.watchPosition(
@@ -121,7 +238,6 @@ const RunningScreen = () => {
             if (dist > 0.005) {
               setDistanceKm((d) => {
                 const newD = d + dist;
-                // Create segments every ~1km
                 if (Math.floor(newD) > Math.floor(d) && Math.floor(newD) > 0) {
                   setElapsedSeconds((t) => {
                     const segDist = newD - lastSegmentDistRef.current;
@@ -157,6 +273,7 @@ const RunningScreen = () => {
   const stopRun = useCallback(() => {
     if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current);
     if (timerRef.current) clearInterval(timerRef.current);
+    mapRef.current = null;
     setPhase("summary");
     setIsPaused(false);
   }, []);
@@ -173,6 +290,7 @@ const RunningScreen = () => {
   }, []);
 
   const discardRun = () => {
+    mapRef.current = null;
     setPhase("idle");
     setRoutePath([]);
     setDistanceKm(0);
@@ -186,15 +304,6 @@ const RunningScreen = () => {
     if (timerRef.current) clearInterval(timerRef.current);
   }, []);
 
-  const onMapLoad = useCallback((map: google.maps.Map) => { mapRef.current = map; }, []);
-
-  const fitRouteBounds = useCallback((map: google.maps.Map) => {
-    if (routePath.length < 2) return;
-    const bounds = new google.maps.LatLngBounds();
-    routePath.forEach((p) => bounds.extend(p));
-    map.fitBounds(bounds, { top: 40, bottom: 40, left: 40, right: 40 });
-  }, [routePath]);
-
   const avgSpeed = elapsedSeconds > 0 ? ((distanceKm / (elapsedSeconds / 3600)).toFixed(1)) : "0.0";
 
   const recentRuns = [
@@ -206,69 +315,61 @@ const RunningScreen = () => {
 
   const activities = ["Corrida", "Caminhada", "Bike", "Esteira", "Elíptico", "Escada"];
 
-  // ─── POST-RUN SUMMARY (Strava style) ───
+  const renderMap = (height: string, showControls = false) => {
+    if (mapLoadState === "error") {
+      return <MapError message={locationError || "Erro ao carregar mapa"} onRetry={initMap} />;
+    }
+    if (mapLoadState !== "ready" || !currentPosition) {
+      return <MapSkeleton message={mapLoadState === "loading-key" ? "Conectando..." : "Carregando mapa..."} />;
+    }
+    return (
+      <div className="relative w-full h-full">
+        <div ref={mapContainerRef} className="w-full h-full" />
+        {showControls && (
+          <button
+            onClick={recenterMap}
+            className="absolute bottom-3 right-3 w-10 h-10 rounded-full glass flex items-center justify-center active:scale-95 transition-transform"
+          >
+            <LocateFixed className="w-4 h-4 text-primary" />
+          </button>
+        )}
+      </div>
+    );
+  };
+
+  // ─── POST-RUN SUMMARY ───
   if (phase === "summary") {
     return (
-      <div className="min-h-screen bg-background pb-24">
-        {/* Header */}
+      <div className="min-h-screen bg-background pb-24 animate-fade-in">
         <div className="flex items-center justify-between px-4 pt-4 pb-2">
           <button onClick={discardRun} className="flex items-center gap-1 text-muted-foreground text-sm">
             <ArrowLeft className="w-4 h-4" /> Descartar
           </button>
           <h2 className="text-foreground font-heading font-bold text-base">{selectedActivity}</h2>
-          <button className="text-muted-foreground">
-            <Share2 className="w-5 h-5" />
-          </button>
+          <button className="text-muted-foreground"><Share2 className="w-5 h-5" /></button>
         </div>
 
-        {/* Route map (large, Strava-style) */}
-        <div className="w-full h-72 relative">
-          {isLoaded && routePath.length > 0 ? (
-            <GoogleMap
-              mapContainerStyle={mapStyle}
-              center={routePath[0]}
-              zoom={14}
-              onLoad={(map) => { onMapLoad(map); fitRouteBounds(map); }}
-              options={{ disableDefaultUI: true, styles: darkMapStyles, zoomControl: false }}
-            >
-              <Polyline
-                path={routePath}
-                options={{ strokeColor: "#FF4500", strokeWeight: 5, strokeOpacity: 1 }}
-              />
-              {/* Start marker */}
-              <Marker position={routePath[0]} icon={{
-                path: google.maps.SymbolPath.CIRCLE,
-                scale: 8,
-                fillColor: "#22c55e",
-                fillOpacity: 1,
-                strokeColor: "#fff",
-                strokeWeight: 2,
-              }} />
-              {/* End marker */}
-              <Marker position={routePath[routePath.length - 1]} icon={{
-                path: google.maps.SymbolPath.CIRCLE,
-                scale: 8,
-                fillColor: "#ef4444",
-                fillOpacity: 1,
-                strokeColor: "#fff",
-                strokeWeight: 2,
-              }} />
-            </GoogleMap>
+        <div className="w-full h-72 relative bg-secondary">
+          {routePath.length > 1 ? (
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="text-center">
+                <Route className="w-8 h-8 text-primary mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">Rota registrada: {routePath.length} pontos</p>
+              </div>
+            </div>
           ) : (
-            <div className="w-full h-full bg-secondary flex items-center justify-center">
+            <div className="w-full h-full flex items-center justify-center">
               <p className="text-muted-foreground text-sm">Rota não disponível</p>
             </div>
           )}
         </div>
 
-        {/* Save Route button */}
         <div className="px-4 -mt-5 relative z-10">
           <Button variant="hero" className="w-full h-12 rounded-xl text-base shadow-lg">
             <Save className="w-4 h-4 mr-2" /> Salvar Corrida
           </Button>
         </div>
 
-        {/* Main stats */}
         <div className="px-4 mt-6">
           <div className="bg-card border border-border rounded-2xl p-5">
             <div className="flex items-center gap-2 mb-4">
@@ -282,43 +383,26 @@ const RunningScreen = () => {
             </div>
 
             <div className="grid grid-cols-2 gap-y-5 gap-x-4">
-              <div>
-                <p className="text-muted-foreground text-[10px] uppercase tracking-wider mb-0.5">Distância</p>
-                <p className="text-2xl font-heading font-bold text-foreground">{distanceKm.toFixed(2)} <span className="text-sm font-normal text-muted-foreground">km</span></p>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-[10px] uppercase tracking-wider mb-0.5">Tempo</p>
-                <p className="text-2xl font-heading font-bold text-foreground">{formatTime(elapsedSeconds)}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-[10px] uppercase tracking-wider mb-0.5">Pace médio</p>
-                <p className="text-2xl font-heading font-bold text-foreground">{pace} <span className="text-sm font-normal text-muted-foreground">/km</span></p>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-[10px] uppercase tracking-wider mb-0.5">Calorias</p>
-                <p className="text-2xl font-heading font-bold text-foreground">{calories} <span className="text-sm font-normal text-muted-foreground">kcal</span></p>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-[10px] uppercase tracking-wider mb-0.5">Vel. máxima</p>
-                <p className="text-2xl font-heading font-bold text-foreground">{maxSpeed.toFixed(1)} <span className="text-sm font-normal text-muted-foreground">km/h</span></p>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-[10px] uppercase tracking-wider mb-0.5">Vel. média</p>
-                <p className="text-2xl font-heading font-bold text-foreground">{avgSpeed} <span className="text-sm font-normal text-muted-foreground">km/h</span></p>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-[10px] uppercase tracking-wider mb-0.5">Ganho de elevação</p>
-                <p className="text-2xl font-heading font-bold text-foreground">{elevationGain} <span className="text-sm font-normal text-muted-foreground">m</span></p>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-[10px] uppercase tracking-wider mb-0.5">Cadência</p>
-                <p className="text-2xl font-heading font-bold text-foreground">{distanceKm > 0 ? Math.round(160 + Math.random() * 20) : "--"} <span className="text-sm font-normal text-muted-foreground">spm</span></p>
-              </div>
+              {[
+                { label: "Distância", value: `${distanceKm.toFixed(2)}`, unit: "km" },
+                { label: "Tempo", value: formatTime(elapsedSeconds), unit: "" },
+                { label: "Pace médio", value: pace, unit: "/km" },
+                { label: "Calorias", value: `${calories}`, unit: "kcal" },
+                { label: "Vel. máxima", value: maxSpeed.toFixed(1), unit: "km/h" },
+                { label: "Vel. média", value: avgSpeed, unit: "km/h" },
+                { label: "Ganho de elevação", value: `${elevationGain}`, unit: "m" },
+                { label: "Cadência", value: distanceKm > 0 ? `${Math.round(160 + Math.random() * 20)}` : "--", unit: "spm" },
+              ].map((stat) => (
+                <div key={stat.label}>
+                  <p className="text-muted-foreground text-[10px] uppercase tracking-wider mb-0.5">{stat.label}</p>
+                  <p className="text-2xl font-heading font-bold text-foreground">{stat.value} {stat.unit && <span className="text-sm font-normal text-muted-foreground">{stat.unit}</span>}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Segments (like Strava splits) */}
+        {/* Segments */}
         <div className="px-4 mt-4">
           <div className="bg-card border border-border rounded-2xl p-4">
             <h3 className="font-heading font-bold text-foreground text-sm mb-3 flex items-center gap-2">
@@ -326,12 +410,8 @@ const RunningScreen = () => {
             </h3>
             {segments.length > 0 ? (
               <div className="space-y-0">
-                {/* Header */}
                 <div className="grid grid-cols-4 text-[10px] text-muted-foreground uppercase tracking-wider pb-2 border-b border-border">
-                  <span>KM</span>
-                  <span className="text-right">Dist</span>
-                  <span className="text-right">Pace</span>
-                  <span className="text-right">Tempo</span>
+                  <span>KM</span><span className="text-right">Dist</span><span className="text-right">Pace</span><span className="text-right">Tempo</span>
                 </div>
                 {segments.map((seg, i) => (
                   <div key={i} className="grid grid-cols-4 py-2.5 border-b border-border/50 items-center">
@@ -348,7 +428,7 @@ const RunningScreen = () => {
           </div>
         </div>
 
-        {/* Elevation chart placeholder */}
+        {/* Elevation placeholder */}
         <div className="px-4 mt-4">
           <div className="bg-card border border-border rounded-2xl p-4">
             <h3 className="font-heading font-bold text-foreground text-sm mb-3 flex items-center gap-2">
@@ -357,13 +437,7 @@ const RunningScreen = () => {
             <div className="flex items-end gap-[2px] h-20">
               {Array.from({ length: 40 }, (_, i) => {
                 const h = 20 + Math.sin(i * 0.3) * 15 + Math.random() * 10;
-                return (
-                  <div
-                    key={i}
-                    className="flex-1 rounded-t-sm bg-primary/40"
-                    style={{ height: `${h}%` }}
-                  />
-                );
+                return <div key={i} className="flex-1 rounded-t-sm bg-primary/40" style={{ height: `${h}%` }} />;
               })}
             </div>
             <div className="flex justify-between mt-1">
@@ -380,57 +454,24 @@ const RunningScreen = () => {
   if (phase === "running") {
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        {/* Live map (top half) */}
         <div className="w-full h-[45vh] relative">
-          {isLoaded && currentPosition ? (
-            <GoogleMap
-              mapContainerStyle={mapStyle}
-              center={currentPosition}
-              zoom={16}
-              onLoad={onMapLoad}
-              options={{ disableDefaultUI: true, styles: darkMapStyles, zoomControl: false }}
-            >
-              {routePath.length > 1 && (
-                <Polyline
-                  path={routePath}
-                  options={{ strokeColor: "#FF4500", strokeWeight: 4, strokeOpacity: 0.9 }}
-                />
-              )}
-              <Marker position={currentPosition} icon={{
-                path: google.maps.SymbolPath.CIRCLE,
-                scale: 8,
-                fillColor: "hsl(142, 71%, 45%)",
-                fillOpacity: 1,
-                strokeColor: "#fff",
-                strokeWeight: 3,
-              }} />
-            </GoogleMap>
-          ) : (
-            <div className="w-full h-full bg-secondary flex items-center justify-center">
-              <p className="text-muted-foreground text-sm">Carregando mapa...</p>
-            </div>
-          )}
-          {/* GPS badge */}
+          {renderMap("45vh", true)}
           <div className="absolute top-4 left-4 glass rounded-lg px-3 py-1.5">
             <div className="flex items-center gap-1 text-xs text-foreground">
               <Navigation className="w-3 h-3 text-primary" /> GPS ativo
             </div>
           </div>
-          {/* Activity badge */}
           <div className="absolute top-4 right-4 glass rounded-lg px-3 py-1.5">
             <span className="text-xs text-foreground">{selectedActivity}</span>
           </div>
         </div>
 
-        {/* Stats panel (bottom half) */}
         <div className="flex-1 bg-card border-t border-border rounded-t-3xl -mt-4 relative z-10 px-6 pt-6 pb-8 flex flex-col items-center justify-between">
-          {/* Distance hero */}
           <div className="text-center mb-4">
             <p className="text-6xl font-heading font-bold text-foreground tracking-tight">{distanceKm.toFixed(2)}</p>
             <p className="text-muted-foreground text-sm">quilômetros</p>
           </div>
 
-          {/* Stats grid */}
           <div className="grid grid-cols-3 gap-6 w-full max-w-sm mb-6">
             <div className="text-center">
               <Timer className="w-4 h-4 mx-auto mb-1 text-primary" />
@@ -449,7 +490,6 @@ const RunningScreen = () => {
             </div>
           </div>
 
-          {/* Controls */}
           <div className="flex items-center gap-5">
             <button onClick={togglePause} className="w-16 h-16 rounded-full bg-secondary border border-border flex items-center justify-center active:scale-95 transition-transform">
               {isPaused ? <Play className="w-7 h-7 text-foreground ml-0.5" /> : <Pause className="w-7 h-7 text-foreground" />}
@@ -457,7 +497,7 @@ const RunningScreen = () => {
             <button onClick={stopRun} className="w-20 h-20 rounded-full bg-destructive flex items-center justify-center active:scale-95 transition-transform shadow-lg">
               <Square className="w-8 h-8 text-destructive-foreground" />
             </button>
-            <div className="w-16 h-16" /> {/* spacer for balance */}
+            <div className="w-16 h-16" />
           </div>
         </div>
       </div>
@@ -467,44 +507,32 @@ const RunningScreen = () => {
   // ─── IDLE / PRE-RUN ───
   return (
     <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
-      <h1 className="text-2xl font-heading font-bold text-foreground mb-6">Corrida & Cardio</h1>
+      <h1 className="text-2xl font-heading font-bold text-foreground mb-6 animate-fade-in">Corrida & Cardio</h1>
 
       {/* Map preview + start */}
       <div className="bg-card border border-border rounded-2xl overflow-hidden mb-6 animate-fade-in">
         <div className="w-full h-44 relative">
-          {isLoaded && currentPosition ? (
-            <GoogleMap
-              mapContainerStyle={mapStyle}
-              center={currentPosition}
-              zoom={14}
-              options={{ disableDefaultUI: true, styles: darkMapStyles, zoomControl: false }}
-            >
-              <Marker position={currentPosition} icon={{
-                path: google.maps.SymbolPath.CIRCLE,
-                scale: 7,
-                fillColor: "hsl(142, 71%, 45%)",
-                fillOpacity: 1,
-                strokeColor: "#fff",
-                strokeWeight: 2,
-              }} />
-            </GoogleMap>
-          ) : (
-            <div className="w-full h-full bg-secondary flex items-center justify-center">
-              <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                <MapPin className="w-4 h-4" /> Carregando localização...
+          {renderMap("h-44", true)}
+          {locationError && mapLoadState !== "error" && (
+            <div className="absolute bottom-3 left-3 right-3 glass rounded-lg px-3 py-1.5">
+              <p className="text-[10px] text-muted-foreground text-center">{locationError}</p>
+            </div>
+          )}
+          {mapLoadState === "ready" && !locationError && (
+            <div className="absolute top-3 left-3 glass rounded-lg px-3 py-1">
+              <div className="flex items-center gap-1 text-[10px] text-foreground">
+                <Navigation className="w-3 h-3 text-primary" /> Sua localização
               </div>
             </div>
           )}
-          <div className="absolute top-3 left-3 glass rounded-lg px-3 py-1">
-            <div className="flex items-center gap-1 text-[10px] text-foreground">
-              <Navigation className="w-3 h-3 text-primary" /> Sua localização
-            </div>
-          </div>
         </div>
         <div className="p-5 text-center">
-          <div className="w-16 h-16 rounded-full gradient-primary flex items-center justify-center mx-auto mb-3 animate-pulse-glow">
+          <button
+            onClick={startRun}
+            className="w-16 h-16 rounded-full gradient-primary flex items-center justify-center mx-auto mb-3 animate-pulse-glow active:scale-95 transition-transform"
+          >
             <Play className="w-7 h-7 text-primary-foreground ml-0.5" />
-          </div>
+          </button>
           <h2 className="text-xl font-heading font-bold text-foreground mb-1">Iniciar {selectedActivity.toLowerCase()}</h2>
           <p className="text-sm text-muted-foreground mb-4">GPS • Pace • Distância • Splits • Calorias</p>
           <Button variant="hero" className="w-full h-12 rounded-xl text-base" onClick={startRun}>
@@ -578,7 +606,7 @@ const RunningScreen = () => {
       <h3 className="font-semibold text-foreground text-sm mb-3">Histórico</h3>
       <div className="space-y-3">
         {recentRuns.map((r, i) => (
-          <div key={i} className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between">
+          <div key={i} className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between animate-fade-in" style={{ animationDelay: `${i * 60}ms` }}>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                 <MapPin className="w-5 h-5 text-primary" />
