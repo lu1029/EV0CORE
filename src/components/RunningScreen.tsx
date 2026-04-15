@@ -33,6 +33,12 @@ const darkMapStyles = [
 let mapsPromise: Promise<void> | null = null;
 let mapsLoaded = false;
 
+declare global {
+  interface Window {
+    google?: any;
+  }
+}
+
 function loadGoogleMaps(apiKey: string): Promise<void> {
   if (mapsLoaded) return Promise.resolve();
   if (mapsPromise) return mapsPromise;
