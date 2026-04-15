@@ -43,9 +43,14 @@ const ExerciseList = ({ exercises, currentIndex, completedIndices, onSelect }: E
               {isDone ? <Check className="w-3.5 h-3.5" /> : isCurrent ? <Play className="w-3 h-3" /> : i + 1}
             </div>
 
-            {/* Emoji */}
-            <div className="w-9 h-9 rounded-xl bg-secondary/80 flex items-center justify-center text-base shrink-0 border border-border/30">
-              {ex.emoji}
+            {/* Thumbnail */}
+            <div className="w-9 h-9 rounded-xl bg-secondary/80 flex items-center justify-center text-base shrink-0 border border-border/30 overflow-hidden">
+              {ex.gifUrl ? (
+                <img src={ex.gifUrl} alt={ex.name} className="w-full h-full object-cover" loading="lazy" />
+              ) : (
+                ex.emoji
+              )}
+            </div>
             </div>
 
             {/* Info */}
