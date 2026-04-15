@@ -161,6 +161,7 @@ const TrainingScreen = () => {
       <ActiveWorkout
         workoutName={activeWorkout}
         exercises={activeExercises}
+        workoutType={tab}
         onBack={() => { setActiveWorkout(null); setActiveExercises([]); }}
       />
     );

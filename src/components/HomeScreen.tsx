@@ -64,26 +64,35 @@ const HomeScreen = () => {
         </div>
       </button>
 
-      {/* Weekly streak */}
-      <div className="glass-card rounded-2xl p-4 mb-4 animate-fade-in" style={{ animationDelay: '50ms' }}>
+      {/* Streak Widget */}
+      <div className="glass-card-purple rounded-2xl p-4 mb-4 animate-fade-in" style={{ animationDelay: '50ms' }}>
         <div className="flex items-center justify-between mb-3">
-          <span className="text-sm font-medium text-foreground">Semana atual</span>
-          <span className="text-xs text-muted-foreground font-medium">{activeToday.filter(Boolean).length}/7 dias</span>
+          <div className="flex items-center gap-2">
+            <Flame className={`w-5 h-5 ${streak > 0 ? "text-orange-500" : "text-muted-foreground"}`} />
+            <span className="text-sm font-medium text-foreground">
+              {streak > 0 ? `${streak} dia${streak > 1 ? "s" : ""} consecutivo${streak > 1 ? "s" : ""}` : "Comece sua streak!"}
+            </span>
+            {streak >= 3 && <span className="text-lg">🔥</span>}
+          </div>
+          <span className="text-xs text-muted-foreground font-medium">{activeWeek.filter(Boolean).length}/7 dias</span>
         </div>
         <div className="flex justify-between">
-          {weekDays.map((d, i) => (
+          {weekDayLabels.map((d, i) => (
             <div key={i} className="flex flex-col items-center gap-1">
               <span className="text-[10px] text-muted-foreground">{d}</span>
               <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold transition-all ${
-                activeToday[i]
+                activeWeek[i]
                   ? "gradient-primary text-primary-foreground shadow-lg shadow-primary/20"
                   : "bg-secondary/60 text-muted-foreground"
               }`}>
-                {activeToday[i] ? "✓" : ""}
+                {activeWeek[i] ? <Flame className="w-4 h-4" /> : ""}
               </div>
             </div>
           ))}
         </div>
+        {trainedToday && (
+          <p className="text-xs text-primary font-medium mt-2 text-center animate-fade-in">✅ Você já treinou hoje!</p>
+        )}
       </div>
 
       {/* Quick access cards */}
