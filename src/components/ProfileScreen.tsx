@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import SettingsScreen from "@/components/settings/SettingsScreen";
 import { useProfileStats } from "@/hooks/useProfileStats";
+import { useAchievements } from "@/hooks/useAchievements";
 
 const ProfileScreen = () => {
   const { userProfile, setUserProfile, setIsLoggedIn, setHasOnboarded, isPremium, setCurrentTab, user } = useApp();
