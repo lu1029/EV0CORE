@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import evocoreLogo from "@/assets/evocore-logo.png";
 import { useTheme, themeConfigs, ThemeBackground } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
 import {
