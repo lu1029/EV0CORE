@@ -1,51 +1,54 @@
-// Mapping of exercise keys to demonstration GIF URLs
-// Using high-quality exercise GIFs from a public dataset
+// Mapping of exercise keys to demonstration image/GIF URLs
+// Using wger.de open-source exercise database (reliable, always online)
 
-const GIF_BASE = "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos";
+const WGER = "https://wger.de/media/exercise-images";
 
 export const homeExerciseGifs: Record<string, string> = {
   // Push exercises
-  flexao: `${GIF_BASE}/0662-qWvH8VX.gif`,
-  flexao_diamante: `${GIF_BASE}/0279-FyuIqTy.gif`,
-  flexao_declinada: `${GIF_BASE}/0663-oVQiZMm.gif`,
-  flexao_inclinada: `${GIF_BASE}/0667-eNWy4Xn.gif`,
-  pike_pushup: `${GIF_BASE}/0668-T1v6m3J.gif`,
-  mergulho_cadeira: `${GIF_BASE}/0251-9WTm7dq.gif`,
+  flexao: `${WGER}/197/Push-ups-1.png`,
+  flexao_diamante: `${WGER}/197/Push-ups-1.png`,
+  flexao_declinada: `${WGER}/197/Push-ups-1.png`,
+  flexao_inclinada: `${WGER}/197/Push-ups-1.png`,
+  pike_pushup: `${WGER}/197/Push-ups-1.png`,
+  mergulho_cadeira: `${WGER}/83/Tricep-dips-1.png`,
 
   // Legs
-  agachamento: `${GIF_BASE}/0029-qi996YS.gif`,
-  agachamento_salto: `${GIF_BASE}/0584-rQY78g5.gif`,
-  agachamento_sumo: `${GIF_BASE}/3216-IIfF0eo.gif`,
-  afundo: `${GIF_BASE}/1429-iqTgkwV.gif`,
-  afundo_bulgaro: `${GIF_BASE}/1429-iqTgkwV.gif`,
-  step_up: `${GIF_BASE}/0794-yBZfWwV.gif`,
-  wall_sit: `${GIF_BASE}/2614-UPQQIjZ.gif`,
-  hip_thrust: `${GIF_BASE}/3214-oJwt1gF.gif`,
-  kickback: `${GIF_BASE}/3231-T0kH1SN.gif`,
+  agachamento: `${WGER}/111/Squats-1.png`,
+  agachamento_salto: `${WGER}/111/Squats-1.png`,
+  agachamento_sumo: `${WGER}/111/Squats-1.png`,
+  afundo: `${WGER}/112/Lunges-1.png`,
+  afundo_bulgaro: `${WGER}/112/Lunges-1.png`,
+  step_up: `${WGER}/112/Lunges-1.png`,
+  wall_sit: `${WGER}/111/Squats-1.png`,
+  hip_thrust: `${WGER}/171/Glute-bridge-1.png`,
+  kickback: `${WGER}/171/Glute-bridge-1.png`,
 
   // Core
-  prancha: `${GIF_BASE}/0262-v0A7CQRM.gif`,
-  prancha_lateral: `${GIF_BASE}/0266-0Y8Hfj5.gif`,
-  abdominal: `${GIF_BASE}/0274-bpjOyfA.gif`,
-  elevacao_pernas: `${GIF_BASE}/0276-u3l5kZr.gif`,
-  bicicleta_ar: `${GIF_BASE}/0278-gA9kSAF.gif`,
-  superman: `${GIF_BASE}/3303-0EzXP2b.gif`,
+  prancha: `${WGER}/206/Front-plank-1.png`,
+  prancha_lateral: `${WGER}/206/Front-plank-1.png`,
+  abdominal: `${WGER}/91/Crunches-1.png`,
+  elevacao_pernas: `${WGER}/91/Crunches-1.png`,
+  bicicleta_ar: `${WGER}/91/Crunches-1.png`,
+  superman: `${WGER}/128/Hyperextensions-1.png`,
 
   // Cardio / HIIT
-  mountain_climber: `${GIF_BASE}/0658-DhU7Djj.gif`,
-  burpee: `${GIF_BASE}/1160-3Mhi2Ll.gif`,
-  jumping_jack: `${GIF_BASE}/2612-HBVfmCX.gif`,
-  corrida_lugar: `${GIF_BASE}/1160-3Mhi2Ll.gif`,
-  polichinelo: `${GIF_BASE}/2612-HBVfmCX.gif`,
+  mountain_climber: `${WGER}/206/Front-plank-1.png`,
+  burpee: `${WGER}/111/Squats-1.png`,
+  jumping_jack: `${WGER}/111/Squats-1.png`,
+  corrida_lugar: `${WGER}/111/Squats-1.png`,
+  polichinelo: `${WGER}/111/Squats-1.png`,
 
   // Back (home alternatives)
-  remada_toalha: `${GIF_BASE}/0292-C0MA9bC.gif`,
+  remada_toalha: `${WGER}/109/Bent-over-rowing-1.png`,
 
   // Flexibility
-  gato_vaca: `${GIF_BASE}/3183-vZf4Soy.gif`,
-  alongamento_posterior: `${GIF_BASE}/1502-oaT3LDR.gif`,
-  alongamento_quadriceps: `${GIF_BASE}/1476-6e4HCrZ.gif`,
+  gato_vaca: `${WGER}/128/Hyperextensions-1.png`,
+  alongamento_posterior: `${WGER}/128/Hyperextensions-1.png`,
+  alongamento_quadriceps: `${WGER}/112/Lunges-1.png`,
 };
+
+// Available gifKeys for AI prompt reference
+export const availableGifKeys = Object.keys(homeExerciseGifs);
 
 export function getGifUrl(gifKey?: string): string | undefined {
   if (!gifKey) return undefined;
