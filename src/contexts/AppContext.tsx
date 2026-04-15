@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
+import evocoreLogo from "@/assets/evocore-logo.png";
 
 interface UserProfile {
   name: string;
@@ -168,14 +169,34 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center animate-fade-in">
-          <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center mx-auto mb-4 animate-pulse-glow shadow-lg shadow-primary/30">
-            <span className="text-2xl font-bold text-primary-foreground">E</span>
+      <div className="min-h-screen bg-background flex items-center justify-center overflow-hidden relative">
+        <div className="mesh-bg">
+          <div className="mesh-bg-extra" />
+          <div className="mesh-bg-orb-4" />
+        </div>
+        <div className="noise-overlay" />
+        <div className="relative z-10 text-center animate-fade-in">
+          <img
+            src={evocoreLogo}
+            alt="EvoCore"
+            className="h-20 w-auto object-contain mx-auto mb-6 drop-shadow-[0_0_40px_hsl(239,84%,67%,0.4)] animate-pulse-glow"
+            style={{ borderRadius: '1rem' }}
+          />
+          <p className="text-sm text-muted-foreground mb-6 animate-fade-in" style={{ animationDelay: '300ms' }}>
+            Preparando seu treino...
+          </p>
+          <div className="flex justify-center gap-1.5 animate-fade-in" style={{ animationDelay: '500ms' }}>
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="w-2 h-2 rounded-full bg-primary"
+                style={{
+                  animation: `pulse-glow 1.2s ease-in-out infinite ${i * 0.2}s`,
+                  opacity: 0.6,
+                }}
+              />
+            ))}
           </div>
-          <h1 className="text-2xl font-heading font-bold text-gradient mb-2">EVOCORE</h1>
-          <p className="text-sm text-muted-foreground mb-4">Preparando seu treino...</p>
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
         </div>
       </div>
     );
