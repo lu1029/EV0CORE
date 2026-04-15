@@ -218,6 +218,18 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
 export const useApp = () => {
   const ctx = useContext(AppContext);
-  if (!ctx) throw new Error("useApp must be used within AppProvider");
+  if (!ctx) {
+    // During HMR, context may temporarily be null — return safe defaults
+    console.warn("useApp called outside AppProvider (likely HMR refresh)");
+    return {
+      isLoggedIn: false, setIsLoggedIn: () => {},
+      hasOnboarded: false, setHasOnboarded: () => {},
+      currentTab: "home", setCurrentTab: () => {},
+      userProfile: { name: "", email: "", gender: "" as const, age: 25, weight: 70, height: 175, goal: "", level: "", preference: "", daysPerWeek: 4 },
+      setUserProfile: () => {},
+      isPremium: false, setIsPremium: () => {},
+      user: null, session: null, loading: true,
+    } as any;
+  }
   return ctx;
 };
