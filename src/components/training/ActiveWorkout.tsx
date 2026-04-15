@@ -104,6 +104,7 @@ const ActiveWorkout = ({ workoutName, exercises, onBack }: ActiveWorkoutProps) =
           <ExerciseCard
             exercise={currentExercise}
             index={currentIndex}
+            totalExercises={exercises.length}
             isActive={true}
             completedSets={currentSets}
             onCompleteSet={handleCompleteSet}
