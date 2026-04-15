@@ -10,6 +10,7 @@ import { useProfileStats } from "@/hooks/useProfileStats";
 
 const ProfileScreen = () => {
   const { userProfile, setUserProfile, setIsLoggedIn, setHasOnboarded, isPremium, setCurrentTab, user } = useApp();
+  const { stats, loading: statsLoading } = useProfileStats();
   const name = userProfile.name || "Atleta";
   const [isEditing, setIsEditing] = useState(false);
   const [editProfile, setEditProfile] = useState(userProfile);
