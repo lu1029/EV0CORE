@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { useApp } from "@/contexts/AppContext";
-import { User, Settings, Crown, ChevronRight, LogOut, Edit3, Save, X } from "lucide-react";
+import { User, Settings, Crown, ChevronRight, LogOut, Edit3, Save, X, Flame, Dumbbell, Route, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import SettingsScreen from "@/components/settings/SettingsScreen";
+import { useProfileStats } from "@/hooks/useProfileStats";
 
 const ProfileScreen = () => {
   const { userProfile, setUserProfile, setIsLoggedIn, setHasOnboarded, isPremium, setCurrentTab, user } = useApp();
