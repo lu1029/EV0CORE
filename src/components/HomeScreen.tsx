@@ -1,7 +1,6 @@
 import React from "react";
 import { useApp } from "@/contexts/AppContext";
 import { Zap, Crown } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import evoaiLogo from "@/assets/evoai-logo.png";
 
 const HomeScreen = () => {
@@ -11,15 +10,8 @@ const HomeScreen = () => {
   const greeting = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
 
   const weekDays = ["S", "T", "Q", "Q", "S", "S", "D"];
-  const today = new Date().getDay();
-  // Shift so Monday=0
-  const activeToday = [true, true, false, true, true, false, false];
-
-  const macros = [
-    { label: "Proteína", current: 128, target: 180, color: "from-primary to-blue-500" },
-    { label: "Carboidrato", current: 210, target: 300, color: "from-blue-400 to-cyan-400" },
-    { label: "Gordura", current: 45, target: 70, color: "from-accent to-emerald-400" },
-  ];
+  // All days start as false - real data should come from DB
+  const activeToday = [false, false, false, false, false, false, false];
 
   const motivations = [
     "Disciplina é escolher entre o que você quer agora e o que você quer mais.",
@@ -76,7 +68,7 @@ const HomeScreen = () => {
       <div className="glass-card rounded-2xl p-4 mb-4 animate-fade-in" style={{ animationDelay: '50ms' }}>
         <div className="flex items-center justify-between mb-3">
           <span className="text-sm font-medium text-foreground">Semana atual</span>
-          <span className="text-xs text-primary font-medium">{activeToday.filter(Boolean).length}/7 dias ✅</span>
+          <span className="text-xs text-muted-foreground font-medium">{activeToday.filter(Boolean).length}/7 dias</span>
         </div>
         <div className="flex justify-between">
           {weekDays.map((d, i) => (
@@ -94,25 +86,28 @@ const HomeScreen = () => {
         </div>
       </div>
 
-      {/* Macros */}
-      <div className="glass-card rounded-2xl p-4 mb-4 animate-fade-in" style={{ animationDelay: '100ms' }}>
-        <h3 className="font-semibold text-foreground text-sm mb-3">Macros do dia</h3>
-        <div className="space-y-3">
-          {macros.map((m) => (
-            <div key={m.label}>
-              <div className="flex justify-between text-xs mb-1">
-                <span className="text-muted-foreground">{m.label}</span>
-                <span className="text-foreground font-medium">{m.current}g / {m.target}g</span>
-              </div>
-              <div className="h-2 bg-secondary/60 rounded-full overflow-hidden">
-                <div
-                  className={`h-full rounded-full bg-gradient-to-r ${m.color} transition-all duration-700`}
-                  style={{ width: `${Math.min((m.current / m.target) * 100, 100)}%` }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
+      {/* Quick access cards */}
+      <div className="grid grid-cols-2 gap-3 mb-4 animate-fade-in" style={{ animationDelay: '100ms' }}>
+        <button onClick={() => setCurrentTab("training")} className="glass-card-purple rounded-2xl p-4 text-left active:scale-[0.97] transition-transform">
+          <span className="text-2xl mb-2 block">🏋️</span>
+          <p className="text-sm font-semibold text-foreground">Treino</p>
+          <p className="text-xs text-muted-foreground">Monte seu plano com IA</p>
+        </button>
+        <button onClick={() => setCurrentTab("running")} className="glass-card-blue rounded-2xl p-4 text-left active:scale-[0.97] transition-transform">
+          <span className="text-2xl mb-2 block">🏃</span>
+          <p className="text-sm font-semibold text-foreground">Corrida</p>
+          <p className="text-xs text-muted-foreground">Inicie sua atividade</p>
+        </button>
+        <button onClick={() => setCurrentTab("nutrition")} className="glass-card-green rounded-2xl p-4 text-left active:scale-[0.97] transition-transform">
+          <span className="text-2xl mb-2 block">🥗</span>
+          <p className="text-sm font-semibold text-foreground">Nutrição</p>
+          <p className="text-xs text-muted-foreground">Dieta personalizada</p>
+        </button>
+        <button onClick={() => setCurrentTab("progress")} className="glass-card rounded-2xl p-4 text-left active:scale-[0.97] transition-transform">
+          <span className="text-2xl mb-2 block">📊</span>
+          <p className="text-sm font-semibold text-foreground">Progresso</p>
+          <p className="text-xs text-muted-foreground">Acompanhe evolução</p>
+        </button>
       </div>
 
       {/* Motivation */}

@@ -1,27 +1,63 @@
 import React, { useState } from "react";
 import { useApp } from "@/contexts/AppContext";
 import {
-  Dumbbell, ChevronRight, Play, Crown, Home
+  Dumbbell, ChevronRight, Play, Crown, Home, Sparkles, Loader2, RotateCcw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PremiumGate from "@/components/PremiumGate";
 import ActiveWorkout from "./training/ActiveWorkout";
-import { exerciseDB, workoutPlans, homeWorkouts } from "./training/exerciseData";
+import { homeWorkouts } from "./training/exerciseData";
+import type { Exercise } from "./training/ExerciseCard";
+
+const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/evo-ai-chat`;
 
 const TrainingScreen = () => {
   const { userProfile } = useApp();
   const [tab, setTab] = useState<"gym" | "home">("gym");
   const [activeWorkout, setActiveWorkout] = useState<string | null>(null);
-  const [activeExercises, setActiveExercises] = useState<any[]>([]);
+  const [activeExercises, setActiveExercises] = useState<Exercise[]>([]);
 
-  const workoutNames = Object.keys(exerciseDB);
-  const todayIndex = new Date().getDay() % workoutNames.length;
-  const todayWorkout = workoutNames[todayIndex];
-  const todayExercises = exerciseDB[todayWorkout];
+  // AI-generated plan state
+  const [generatedPlan, setGeneratedPlan] = useState<Record<string, Exercise[]> | null>(null);
+  const [planName, setPlanName] = useState("");
+  const [planDesc, setPlanDesc] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState("");
+
+  const generateTrainingPlan = async () => {
+    setIsGenerating(true);
+    setGenerateError("");
+    try {
+      const res = await fetch(CHAT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: "generate-training",
+          userProfile,
+          messages: [{ role: "user", content: "Gere meu plano de treino personalizado completo." }],
+        }),
+      });
+      if (!res.ok) throw new Error("Erro ao gerar plano");
+      const data = await res.json();
+      const parsed = JSON.parse(data.result);
+      if (parsed.workouts) {
+        setGeneratedPlan(parsed.workouts);
+        setPlanName(parsed.planName || "Seu Plano Personalizado");
+        setPlanDesc(parsed.description || "");
+      }
+    } catch (err) {
+      console.error(err);
+      setGenerateError("Erro ao gerar plano. Tente novamente.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const startGymWorkout = (name: string) => {
-    setActiveExercises(exerciseDB[name] || []);
-    setActiveWorkout(name);
+    if (generatedPlan?.[name]) {
+      setActiveExercises(generatedPlan[name]);
+      setActiveWorkout(name);
+    }
   };
 
   const startHomeWorkout = (workout: typeof homeWorkouts[0]) => {
@@ -65,93 +101,104 @@ const TrainingScreen = () => {
 
       {tab === "gym" ? (
         <div className="animate-fade-in space-y-6">
-          {/* Today's workout hero card */}
-          <div className="rounded-3xl glass-card-purple p-5 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-40 h-40 gradient-primary opacity-[0.06] rounded-full -translate-y-1/2 translate-x-1/2" />
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-blue-500/5 rounded-full translate-y-1/2 -translate-x-1/2" />
+          {!generatedPlan ? (
+            /* Empty state - first time */
+            <div className="flex flex-col items-center text-center py-8">
+              <div className="w-20 h-20 rounded-3xl gradient-primary flex items-center justify-center mb-6 animate-pulse-glow">
+                <Sparkles className="w-10 h-10 text-primary-foreground" />
+              </div>
+              <h2 className="text-xl font-heading font-bold text-foreground mb-2">
+                Crie seu treino personalizado
+              </h2>
+              <p className="text-sm text-muted-foreground mb-2 max-w-xs">
+                Nossa IA vai montar um plano de treino completo baseado no seu perfil: objetivo, nível e disponibilidade.
+              </p>
+              <div className="glass-card rounded-2xl p-4 mb-6 w-full text-left">
+                <p className="text-xs text-muted-foreground mb-2 font-medium">Seu perfil:</p>
+                <div className="space-y-1">
+                  <p className="text-xs text-foreground">🎯 Objetivo: <span className="text-primary font-medium">{userProfile.goal || "não definido"}</span></p>
+                  <p className="text-xs text-foreground">📊 Nível: <span className="text-primary font-medium">{userProfile.level || "não definido"}</span></p>
+                  <p className="text-xs text-foreground">📅 Dias/semana: <span className="text-primary font-medium">{userProfile.daysPerWeek}</span></p>
+                  <p className="text-xs text-foreground">⚖️ Peso: <span className="text-primary font-medium">{userProfile.weight}kg</span></p>
+                </div>
+              </div>
 
-            <p className="text-[10px] text-primary font-semibold uppercase tracking-widest mb-2">Treino do dia</p>
-            <h3 className="font-heading font-bold text-foreground text-xl mb-1">{todayWorkout}</h3>
-            <p className="text-xs text-muted-foreground mb-4">{todayExercises.length} exercícios • ~{todayExercises.length * 7} min</p>
+              {generateError && (
+                <p className="text-xs text-destructive mb-4">{generateError}</p>
+              )}
 
-            {/* Exercise preview */}
-            <div className="space-y-1.5 mb-4">
-              {todayExercises.slice(0, 4).map((ex, i) => (
-                <div key={i} className="flex items-center gap-3 py-1.5" style={{ animationDelay: `${i * 80}ms` }}>
-                  <span className="text-xs text-muted-foreground w-4 text-right">{i + 1}</span>
-                  <div className="w-8 h-8 rounded-lg bg-secondary/80 flex items-center justify-center text-sm border border-border/30">
-                    {ex.emoji}
+              <Button
+                className="w-full h-14 rounded-2xl text-base gap-2 gradient-primary text-primary-foreground font-semibold"
+                onClick={generateTrainingPlan}
+                disabled={isGenerating}
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Gerando seu plano...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-5 h-5" />
+                    Gerar Meu Treino com IA
+                  </>
+                )}
+              </Button>
+
+              {isGenerating && (
+                <div className="mt-4 space-y-2 w-full">
+                  <div className="glass-card rounded-xl p-3 animate-pulse">
+                    <div className="h-3 bg-secondary rounded w-3/4 mb-2" />
+                    <div className="h-2 bg-secondary rounded w-1/2" />
                   </div>
-                  <p className="text-sm text-foreground flex-1 truncate">{ex.name}</p>
-                  <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                    <span>{ex.sets}×{ex.reps}</span>
-                    {ex.weight !== "Corpo" && (
-                      <span className="text-primary font-semibold">{ex.weight}</span>
-                    )}
+                  <div className="glass-card rounded-xl p-3 animate-pulse" style={{ animationDelay: '150ms' }}>
+                    <div className="h-3 bg-secondary rounded w-2/3 mb-2" />
+                    <div className="h-2 bg-secondary rounded w-1/3" />
                   </div>
                 </div>
-              ))}
-              {todayExercises.length > 4 && (
-                <p className="text-xs text-muted-foreground text-center pt-1">+{todayExercises.length - 4} mais</p>
               )}
             </div>
-
-            <Button
-              variant="hero"
-              className="w-full rounded-2xl h-12 text-sm gap-2"
-              onClick={() => startGymWorkout(todayWorkout)}
-            >
-              <Play className="w-4 h-4" /> Iniciar Treino
-            </Button>
-          </div>
-
-          {/* All workouts */}
-          <div>
-            <h3 className="font-semibold text-foreground mb-3 text-sm">Todos os treinos</h3>
-            <div className="space-y-2">
-              {Object.entries(exerciseDB).map(([name, exercises]) => (
+          ) : (
+            /* Generated plan view */
+            <>
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <h2 className="font-heading font-bold text-foreground text-lg">{planName}</h2>
+                  {planDesc && <p className="text-xs text-muted-foreground">{planDesc}</p>}
+                </div>
                 <button
-                  key={name}
-                  onClick={() => startGymWorkout(name)}
-                  className="w-full glass-card rounded-2xl p-4 flex items-center gap-3 hover:border-primary/30 transition-all text-left"
+                  onClick={() => { setGeneratedPlan(null); setPlanName(""); setPlanDesc(""); }}
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-secondary/80 flex items-center justify-center text-xl border border-border/30">
-                    {exercises[0].emoji}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-foreground text-sm">{name}</h4>
-                    <p className="text-xs text-muted-foreground">{exercises.length} exercícios • ~{exercises.length * 7} min</p>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                  <RotateCcw className="w-3 h-3" /> Refazer
                 </button>
-              ))}
-            </div>
-          </div>
+              </div>
 
-          {/* Plans */}
-          <div>
-            <h3 className="font-semibold text-foreground mb-3 text-sm">Planos de treino</h3>
-            <div className="space-y-2">
-              {workoutPlans.map((p) => {
-                const card = (
-                  <div className="glass-card rounded-2xl p-4 flex items-center justify-between hover:border-primary/30 transition-all">
-                    <div>
-                      <h4 className="font-semibold text-foreground text-sm flex items-center gap-1.5">
-                        {p.name}
-                        {p.premium && <Crown className="w-3 h-3 text-primary" />}
-                      </h4>
-                      <p className="text-xs text-muted-foreground">{p.desc} • {p.days}x/semana • {p.level}</p>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                );
-                if (p.premium) {
-                  return <PremiumGate key={p.id} feature="planos avançados">{card}</PremiumGate>;
-                }
-                return <React.Fragment key={p.id}>{card}</React.Fragment>;
-              })}
-            </div>
-          </div>
+              {/* Workout cards */}
+              <div className="space-y-3">
+                {Object.entries(generatedPlan).map(([name, exercises], idx) => {
+                  const firstEmoji = exercises[0]?.emoji || "💪";
+                  return (
+                    <button
+                      key={name}
+                      onClick={() => startGymWorkout(name)}
+                      className="w-full glass-card rounded-2xl p-4 flex items-center gap-3 hover:border-primary/30 transition-all text-left animate-fade-in active:scale-[0.98]"
+                      style={{ animationDelay: `${idx * 80}ms` }}
+                    >
+                      <div className="w-12 h-12 rounded-xl bg-secondary/80 flex items-center justify-center text-xl border border-border/30">
+                        {firstEmoji}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-foreground text-sm">{name}</h4>
+                        <p className="text-xs text-muted-foreground">{exercises.length} exercícios • ~{exercises.length * 7} min</p>
+                      </div>
+                      <Play className="w-4 h-4 text-primary shrink-0" />
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </div>
       ) : (
         <div className="animate-fade-in">
@@ -167,17 +214,6 @@ const TrainingScreen = () => {
                 </Button>
               </div>
             ))}
-          </div>
-
-          <div className="mt-6">
-            <h3 className="font-semibold text-foreground mb-3 text-sm">Filtrar por</h3>
-            <div className="flex flex-wrap gap-2">
-              {["Sem equipamento", "Com halteres", "10-15 min", "20-30 min", "Iniciante", "Avançado"].map((f) => (
-                <span key={f} className="bg-secondary text-muted-foreground text-xs px-3 py-1.5 rounded-full border border-border/50">
-                  {f}
-                </span>
-              ))}
-            </div>
           </div>
         </div>
       )}
