@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { TrendingUp, Trophy, Calendar, Target, Award, Flame, Dumbbell, MapPin, Camera } from "lucide-react";
+import PremiumGate from "@/components/PremiumGate";
 import { Button } from "@/components/ui/button";
 
 const ProgressScreen = () => {
@@ -98,24 +99,26 @@ const ProgressScreen = () => {
           </div>
 
           {/* Performance chart */}
-          <div className="bg-card border border-border rounded-2xl p-4">
-            <h3 className="font-semibold text-foreground text-sm mb-3">Evolução de carga</h3>
-            <div className="flex items-end gap-2 h-32">
-              {[40, 45, 50, 50, 55, 55, 60, 60, 65, 70, 70, 75].map((v, i) => (
-                <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                  <div
-                    className={`w-full rounded-sm ${i === 11 ? "gradient-primary" : "bg-secondary"}`}
-                    style={{ height: `${(v / 80) * 100}%` }}
-                  />
-                </div>
-              ))}
+          <PremiumGate feature="análises de evolução">
+            <div className="bg-card border border-border rounded-2xl p-4">
+              <h3 className="font-semibold text-foreground text-sm mb-3">Evolução de carga</h3>
+              <div className="flex items-end gap-2 h-32">
+                {[40, 45, 50, 50, 55, 55, 60, 60, 65, 70, 70, 75].map((v, i) => (
+                  <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                    <div
+                      className={`w-full rounded-sm ${i === 11 ? "gradient-primary" : "bg-secondary"}`}
+                      style={{ height: `${(v / 80) * 100}%` }}
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-between mt-2">
+                <span className="text-[10px] text-muted-foreground">Jan</span>
+                <span className="text-[10px] text-muted-foreground">Abr</span>
+              </div>
+              <p className="text-xs text-primary mt-2">Supino reto: +35kg desde janeiro 📈</p>
             </div>
-            <div className="flex justify-between mt-2">
-              <span className="text-[10px] text-muted-foreground">Jan</span>
-              <span className="text-[10px] text-muted-foreground">Abr</span>
-            </div>
-            <p className="text-xs text-primary mt-2">Supino reto: +35kg desde janeiro 📈</p>
-          </div>
+          </PremiumGate>
 
           {/* Streak */}
           <div className="bg-card border border-primary/20 rounded-2xl p-4 flex items-center gap-4">
@@ -131,69 +134,71 @@ const ProgressScreen = () => {
       )}
 
       {tab === "body" && (
-        <div className="animate-fade-in space-y-4">
-          {/* Weight chart */}
-          <div className="bg-card border border-border rounded-2xl p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-foreground text-sm">Peso corporal</h3>
-              <span className="text-xs text-primary">-3.2 kg</span>
-            </div>
-            <div className="flex items-end gap-1 h-24 mb-2">
-              {[78, 77.5, 77.8, 77.2, 76.8, 76.5, 76.2, 75.8, 75.5, 75.2, 75, 74.8].map((w, i) => (
-                <div key={i} className="flex-1">
-                  <div
-                    className={`w-full rounded-sm ${i === 11 ? "gradient-primary" : "bg-secondary"}`}
-                    style={{ height: `${((w - 73) / 6) * 100}%` }}
-                  />
-                </div>
-              ))}
-            </div>
-            <div className="flex justify-between">
-              <span className="text-[10px] text-muted-foreground">Jan</span>
-              <span className="text-[10px] text-primary font-medium">74.8 kg</span>
-            </div>
-          </div>
-
-          {/* Measurements */}
-          <div className="bg-card border border-border rounded-2xl p-4">
-            <h3 className="font-semibold text-foreground text-sm mb-3">Medidas</h3>
-            <div className="space-y-3">
-              {[
-                { part: "Peito", current: "98cm", change: "+2cm" },
-                { part: "Braço", current: "35cm", change: "+1.5cm" },
-                { part: "Cintura", current: "82cm", change: "-3cm" },
-                { part: "Coxa", current: "58cm", change: "+2cm" },
-              ].map((m) => (
-                <div key={m.part} className="flex items-center justify-between">
-                  <span className="text-sm text-foreground">{m.part}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-foreground">{m.current}</span>
-                    <span className={`text-xs font-medium ${m.change.startsWith("+") ? "text-primary" : "text-blue-400"}`}>
-                      {m.change}
-                    </span>
+        <PremiumGate mode="block" feature="acompanhamento corporal">
+          <div className="animate-fade-in space-y-4">
+            {/* Weight chart */}
+            <div className="bg-card border border-border rounded-2xl p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-foreground text-sm">Peso corporal</h3>
+                <span className="text-xs text-primary">-3.2 kg</span>
+              </div>
+              <div className="flex items-end gap-1 h-24 mb-2">
+                {[78, 77.5, 77.8, 77.2, 76.8, 76.5, 76.2, 75.8, 75.5, 75.2, 75, 74.8].map((w, i) => (
+                  <div key={i} className="flex-1">
+                    <div
+                      className={`w-full rounded-sm ${i === 11 ? "gradient-primary" : "bg-secondary"}`}
+                      style={{ height: `${((w - 73) / 6) * 100}%` }}
+                    />
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[10px] text-muted-foreground">Jan</span>
+                <span className="text-[10px] text-primary font-medium">74.8 kg</span>
+              </div>
             </div>
-          </div>
 
-          {/* Progress photos */}
-          <div className="bg-card border border-border rounded-2xl p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-foreground text-sm">Fotos de progresso</h3>
-              <Button variant="ghost" size="sm" className="text-primary gap-1">
-                <Camera className="w-4 h-4" /> Adicionar
-              </Button>
+            {/* Measurements */}
+            <div className="bg-card border border-border rounded-2xl p-4">
+              <h3 className="font-semibold text-foreground text-sm mb-3">Medidas</h3>
+              <div className="space-y-3">
+                {[
+                  { part: "Peito", current: "98cm", change: "+2cm" },
+                  { part: "Braço", current: "35cm", change: "+1.5cm" },
+                  { part: "Cintura", current: "82cm", change: "-3cm" },
+                  { part: "Coxa", current: "58cm", change: "+2cm" },
+                ].map((m) => (
+                  <div key={m.part} className="flex items-center justify-between">
+                    <span className="text-sm text-foreground">{m.part}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-foreground">{m.current}</span>
+                      <span className={`text-xs font-medium ${m.change.startsWith("+") ? "text-primary" : "text-blue-400"}`}>
+                        {m.change}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="grid grid-cols-3 gap-2">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="aspect-[3/4] bg-secondary rounded-xl flex items-center justify-center">
-                  <Camera className="w-6 h-6 text-muted-foreground" />
-                </div>
-              ))}
+
+            {/* Progress photos */}
+            <div className="bg-card border border-border rounded-2xl p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-foreground text-sm">Fotos de progresso</h3>
+                <Button variant="ghost" size="sm" className="text-primary gap-1">
+                  <Camera className="w-4 h-4" /> Adicionar
+                </Button>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="aspect-[3/4] bg-secondary rounded-xl flex items-center justify-center">
+                    <Camera className="w-6 h-6 text-muted-foreground" />
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        </PremiumGate>
       )}
 
       {tab === "achievements" && (
