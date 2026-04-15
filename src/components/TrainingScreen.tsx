@@ -12,18 +12,29 @@ const TrainingScreen = () => {
   const { userProfile } = useApp();
   const [tab, setTab] = useState<"gym" | "home">("gym");
   const [activeWorkout, setActiveWorkout] = useState<string | null>(null);
+  const [activeExercises, setActiveExercises] = useState<any[]>([]);
 
   const workoutNames = Object.keys(exerciseDB);
   const todayIndex = new Date().getDay() % workoutNames.length;
   const todayWorkout = workoutNames[todayIndex];
   const todayExercises = exerciseDB[todayWorkout];
 
+  const startGymWorkout = (name: string) => {
+    setActiveExercises(exerciseDB[name] || []);
+    setActiveWorkout(name);
+  };
+
+  const startHomeWorkout = (workout: typeof homeWorkouts[0]) => {
+    setActiveExercises(workout.exercises);
+    setActiveWorkout(workout.name);
+  };
+
   if (activeWorkout) {
     return (
       <ActiveWorkout
         workoutName={activeWorkout}
-        exercises={exerciseDB[activeWorkout] || []}
-        onBack={() => setActiveWorkout(null)}
+        exercises={activeExercises}
+        onBack={() => { setActiveWorkout(null); setActiveExercises([]); }}
       />
     );
   }
@@ -88,7 +99,7 @@ const TrainingScreen = () => {
             <Button
               variant="hero"
               className="w-full rounded-2xl h-12 text-sm gap-2"
-              onClick={() => setActiveWorkout(todayWorkout)}
+              onClick={() => startGymWorkout(todayWorkout)}
             >
               <Play className="w-4 h-4" /> Iniciar Treino
             </Button>
@@ -101,7 +112,7 @@ const TrainingScreen = () => {
               {Object.entries(exerciseDB).map(([name, exercises]) => (
                 <button
                   key={name}
-                  onClick={() => setActiveWorkout(name)}
+                  onClick={() => startGymWorkout(name)}
                   className="w-full glass-card rounded-2xl p-4 flex items-center gap-3 hover:border-primary/30 transition-all text-left"
                 >
                   <div className="w-12 h-12 rounded-xl bg-secondary/80 flex items-center justify-center text-xl border border-border/30">
