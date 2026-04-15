@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { ChevronLeft, Zap, Trophy, Play, Flame } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ChevronLeft, Trophy, Play, Flame } from "lucide-react";
 import ExerciseCard from "./ExerciseCard";
-import ExerciseList from "./ExerciseList";
-import WorkoutStats from "./WorkoutStats";
-import WorkoutNotes from "./WorkoutNotes";
 import RestTimerModal from "./RestTimerModal";
 import { useApp } from "@/contexts/AppContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,8 +36,6 @@ const ActiveWorkout = ({ workoutName, exercises, onBack, workoutType = "gym" }: 
 
   const currentExercise = exercises[currentIndex];
   const currentSets = completedSetsMap[currentIndex] || new Set();
-  const totalSets = exercises.reduce((a, e) => a + e.sets, 0);
-  const completedSetsTotal = Object.values(completedSetsMap).reduce((a, s) => a + s.size, 0);
   const progress = exercises.length > 0 ? (completedIndices.size / exercises.length) * 100 : 0;
 
   const estimatedVolume = exercises.reduce((acc, ex, i) => {
@@ -68,14 +62,15 @@ const ActiveWorkout = ({ workoutName, exercises, onBack, workoutType = "gym" }: 
   const handleCompleteExercise = () => {
     setCompletedIndices(prev => new Set(prev).add(currentIndex));
     if (currentIndex < exercises.length - 1) {
-      // Show rest timer between exercises
       setShowRest(true);
+    } else {
+      // Last exercise — finish
+      handleFinishWorkout();
     }
   };
 
   const handleRestEnd = () => {
     setShowRest(false);
-    // Move to next exercise after rest
     if (currentIndex < exercises.length - 1) {
       setCurrentIndex(currentIndex + 1);
     }
@@ -104,7 +99,6 @@ const ActiveWorkout = ({ workoutName, exercises, onBack, workoutType = "gym" }: 
 
         if (error) throw error;
 
-        // Save exercises
         if (workout) {
           const exerciseRows = exercises.map((ex, i) => ({
             workout_id: workout.id,
@@ -130,8 +124,6 @@ const ActiveWorkout = ({ workoutName, exercises, onBack, workoutType = "gym" }: 
     setPhase("finished");
   };
 
-  const isAllDone = completedIndices.size === exercises.length;
-
   // === PREVIEW PHASE ===
   if (phase === "preview") {
     return (
@@ -149,7 +141,6 @@ const ActiveWorkout = ({ workoutName, exercises, onBack, workoutType = "gym" }: 
             <p className="text-sm text-muted-foreground">{exercises.length} exercícios • ~{exercises.length * 7} min</p>
           </div>
 
-          {/* Exercise preview list */}
           <div className="space-y-2 mb-6">
             {exercises.map((ex, idx) => (
               <div
@@ -164,18 +155,16 @@ const ActiveWorkout = ({ workoutName, exercises, onBack, workoutType = "gym" }: 
                   <p className="text-sm font-semibold text-foreground truncate">{ex.name}</p>
                   <p className="text-xs text-muted-foreground">{ex.sets} séries × {ex.reps} reps • {ex.weight}</p>
                 </div>
-                <span className="text-xs text-muted-foreground">{ex.muscle}</span>
               </div>
             ))}
           </div>
 
-          <Button
-            variant="hero"
-            className="w-full h-14 rounded-2xl text-base gap-2 animate-scale-in"
+          <button
             onClick={handleStartWorkout}
+            className="w-full h-14 rounded-2xl gradient-primary text-primary-foreground font-semibold text-base flex items-center justify-center gap-2 active:scale-[0.97] transition-transform animate-scale-in"
           >
             <Play className="w-5 h-5" /> Começar Exercício
-          </Button>
+          </button>
         </div>
       </div>
     );
@@ -190,14 +179,10 @@ const ActiveWorkout = ({ workoutName, exercises, onBack, workoutType = "gym" }: 
           <div className="w-24 h-24 rounded-full gradient-primary flex items-center justify-center mx-auto mb-6 animate-scale-in">
             <Trophy className="w-12 h-12 text-primary-foreground" />
           </div>
-          <h2 className="text-2xl font-heading font-bold text-foreground mb-2 animate-fade-in">
-            Treino Concluído! 🎉
-          </h2>
-          <p className="text-muted-foreground mb-6 animate-fade-in" style={{ animationDelay: "100ms" }}>
-            Você arrasou hoje! Continue assim.
-          </p>
+          <h2 className="text-2xl font-heading font-bold text-foreground mb-2">Treino Concluído! 🎉</h2>
+          <p className="text-muted-foreground mb-6">Você arrasou hoje!</p>
 
-          <div className="grid grid-cols-3 gap-3 mb-8 animate-fade-in" style={{ animationDelay: "200ms" }}>
+          <div className="grid grid-cols-3 gap-3 mb-8">
             <div className="glass-card rounded-xl p-3 text-center">
               <p className="text-xs text-muted-foreground">Duração</p>
               <p className="text-lg font-heading font-bold text-foreground">{durationMin} min</p>
@@ -212,19 +197,18 @@ const ActiveWorkout = ({ workoutName, exercises, onBack, workoutType = "gym" }: 
             </div>
           </div>
 
-          <div className="flex items-center justify-center gap-2 mb-8 animate-fade-in" style={{ animationDelay: "300ms" }}>
+          <div className="flex items-center justify-center gap-2 mb-8 animate-fade-in">
             <Flame className="w-6 h-6 text-orange-500" />
             <span className="text-lg font-heading font-bold text-foreground">+1 dia de streak!</span>
             <Flame className="w-6 h-6 text-orange-500" />
           </div>
 
-          <Button
-            variant="hero"
-            className="w-full h-14 rounded-2xl text-base gap-2"
+          <button
             onClick={onBack}
+            className="w-full h-14 rounded-2xl gradient-primary text-primary-foreground font-semibold text-base flex items-center justify-center gap-2 active:scale-[0.97] transition-transform"
           >
             Voltar ao Menu
-          </Button>
+          </button>
         </div>
       </div>
     );
@@ -233,45 +217,31 @@ const ActiveWorkout = ({ workoutName, exercises, onBack, workoutType = "gym" }: 
   // === ACTIVE PHASE ===
   return (
     <div className="pb-28 max-w-lg mx-auto animate-fade-in">
-      {/* Header */}
-      <div className="sticky top-0 z-30 bg-background/90 backdrop-blur-xl border-b border-border/30 px-4 py-3">
-        <div className="flex items-center justify-between mb-2">
-          <button onClick={onBack} className="flex items-center gap-1 text-muted-foreground text-sm hover:text-foreground transition-colors">
-            <ChevronLeft className="w-5 h-5" /> Voltar
-          </button>
-          <div className="flex items-center gap-2">
-            <Zap className="w-4 h-4 text-primary" />
-            <span className="text-sm font-semibold text-foreground">{elapsed} min</span>
-          </div>
+      {/* Simple header like Fitness Online */}
+      <div className="sticky top-0 z-30 bg-background/90 backdrop-blur-xl px-4 py-3 flex items-center justify-between">
+        <button onClick={onBack} className="text-muted-foreground hover:text-foreground transition-colors">
+          <ChevronLeft className="w-6 h-6" />
+        </button>
+        <div className="text-center">
+          <p className="text-sm font-heading font-bold text-foreground">
+            {currentIndex + 1}/{exercises.length} {currentExercise?.muscle}
+          </p>
         </div>
+        <div className="w-6" /> {/* spacer */}
+      </div>
 
-        <div className="mb-1">
-          <h2 className="text-lg font-heading font-bold text-foreground">{workoutName}</h2>
-          <p className="text-xs text-muted-foreground">{exercises.length} exercícios • {completedIndices.size} concluídos</p>
-        </div>
-
-        {/* Progress bar */}
-        <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
+      {/* Progress bar */}
+      <div className="px-4 mb-2">
+        <div className="h-1 bg-secondary rounded-full overflow-hidden">
           <div
-            className="h-full gradient-primary rounded-full transition-all duration-700 ease-out"
+            className="h-full gradient-primary rounded-full transition-all duration-500 ease-out"
             style={{ width: `${progress}%` }}
           />
         </div>
-        <p className="text-[10px] text-primary font-medium mt-1 text-right">{Math.round(progress)}%</p>
       </div>
 
-      <div className="px-4 pt-4 space-y-5">
-        {/* Stats */}
-        <WorkoutStats
-          completedExercises={completedIndices.size}
-          totalExercises={exercises.length}
-          totalSets={totalSets}
-          completedSets={completedSetsTotal}
-          elapsedMinutes={elapsed}
-          estimatedVolume={Math.round(estimatedVolume)}
-        />
-
-        {/* Current exercise */}
+      {/* Current exercise - clean layout */}
+      <div className="px-4 pt-2">
         {currentExercise && (
           <ExerciseCard
             exercise={currentExercise}
@@ -284,33 +254,6 @@ const ActiveWorkout = ({ workoutName, exercises, onBack, workoutType = "gym" }: 
             onCompleteExercise={handleCompleteExercise}
             isCompleted={completedIndices.has(currentIndex)}
           />
-        )}
-
-        {/* Exercise list */}
-        <ExerciseList
-          exercises={exercises}
-          currentIndex={currentIndex}
-          completedIndices={completedIndices}
-          onSelect={setCurrentIndex}
-        />
-
-        {/* Notes */}
-        <WorkoutNotes notes={notes} onNotesChange={setNotes} />
-
-        {/* Finish button */}
-        {isAllDone && (
-          <Button
-            variant="hero"
-            className="w-full h-14 rounded-2xl text-base gap-2 animate-scale-in"
-            onClick={handleFinishWorkout}
-            disabled={saving}
-          >
-            {saving ? (
-              <>Salvando...</>
-            ) : (
-              <><Trophy className="w-5 h-5" /> Finalizar Exercícios 🎉</>
-            )}
-          </Button>
         )}
       </div>
 
