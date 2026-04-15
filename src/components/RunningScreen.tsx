@@ -154,7 +154,10 @@ const RunningScreen = () => {
     if (mapLoadState !== "ready" || !currentPosition || !mapContainerRef.current) return;
     if (mapRef.current) return; // Already initialized
 
-    const map = new google.maps.Map(mapContainerRef.current, {
+    const g = (window as any).google;
+    if (!g?.maps) return;
+
+    const map = new g.maps.Map(mapContainerRef.current, {
       center: currentPosition,
       zoom: phase === "running" ? 16 : 14,
       disableDefaultUI: true,
@@ -163,11 +166,11 @@ const RunningScreen = () => {
       gestureHandling: "greedy",
     });
 
-    new google.maps.Marker({
+    new g.maps.Marker({
       position: currentPosition,
       map,
       icon: {
-        path: google.maps.SymbolPath.CIRCLE,
+        path: g.maps.SymbolPath.CIRCLE,
         scale: 8,
         fillColor: "hsl(142, 71%, 45%)",
         fillOpacity: 1,
