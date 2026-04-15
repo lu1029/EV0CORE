@@ -1,5 +1,6 @@
 import React from "react";
 import { AppProvider, useApp } from "@/contexts/AppContext";
+import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 import LoginScreen from "@/components/LoginScreen";
 import OnboardingScreen from "@/components/OnboardingScreen";
 import evocoreLogo from "@/assets/evocore-logo.png";
@@ -12,6 +13,41 @@ import PremiumScreen from "@/components/PremiumScreen";
 import ProfileScreen from "@/components/ProfileScreen";
 import AIChatScreen from "@/components/AIChatScreen";
 import BottomNav from "@/components/BottomNav";
+
+const DynamicBackground = () => {
+  const { config } = useTheme();
+
+  return (
+    <>
+      <div
+        className="fixed inset-0 z-0 overflow-hidden pointer-events-none transition-all duration-1000"
+        style={{ background: config.baseBg }}
+      >
+        <div
+          className="absolute w-[800px] h-[800px] -top-[300px] -left-[200px] blur-[100px]"
+          style={{ background: config.orb1, animation: "float-orb-1 25s ease-in-out infinite" }}
+        />
+        <div
+          className="absolute w-[700px] h-[700px] -bottom-[200px] -right-[200px] blur-[100px]"
+          style={{ background: config.orb2, animation: "float-orb-2 30s ease-in-out infinite" }}
+        />
+        <div
+          className="absolute w-[600px] h-[600px] top-[30%] left-[60%] -translate-x-1/2 -translate-y-1/2 blur-[80px]"
+          style={{ background: config.orb3, animation: "float-orb-3 20s ease-in-out infinite" }}
+        />
+        <div
+          className="absolute w-[500px] h-[500px] top-[60%] -left-[10%] blur-[90px]"
+          style={{ background: config.orb4, animation: "float-orb-4 22s ease-in-out infinite" }}
+        />
+        <div
+          className="absolute w-[400px] h-[400px] top-[10%] -right-[5%] blur-[80px]"
+          style={{ background: config.orb5, animation: "float-orb-1 18s ease-in-out infinite reverse" }}
+        />
+      </div>
+      <div className="noise-overlay" />
+    </>
+  );
+};
 
 const AppContent = () => {
   const { isLoggedIn, hasOnboarded, currentTab, setCurrentTab } = useApp();
@@ -35,13 +71,7 @@ const AppContent = () => {
 
   return (
     <div className="min-h-screen bg-background max-w-lg mx-auto relative">
-      {/* Mesh gradient background */}
-      <div className="mesh-bg">
-        <div className="mesh-bg-extra" />
-        <div className="mesh-bg-orb-4" />
-        <div className="mesh-bg-orb-5" />
-      </div>
-      <div className="noise-overlay" />
+      <DynamicBackground />
 
       {/* Top bar */}
       <div className="sticky top-0 z-40 glass border-0 border-b border-border/20">
@@ -60,7 +90,7 @@ const AppContent = () => {
         </div>
       </div>
 
-      <div className="animate-fade-in">
+      <div className="animate-fade-in" key={currentTab}>
         {renderScreen()}
       </div>
       <BottomNav />
@@ -70,7 +100,9 @@ const AppContent = () => {
 
 const Index = () => (
   <AppProvider>
-    <AppContent />
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   </AppProvider>
 );
 
