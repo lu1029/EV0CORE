@@ -6,8 +6,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GoogleMap, useJsApiLoader, Polyline, Marker } from "@react-google-maps/api";
-
-const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
+import { supabase } from "@/integrations/supabase/client";
 
 const mapStyle = { width: "100%", height: "100%" };
 const darkMapStyles = [
