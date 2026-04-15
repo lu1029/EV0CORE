@@ -1,14 +1,16 @@
 import React, { useState } from "react";
 import { useApp } from "@/contexts/AppContext";
-import { User, Settings, Crown, ChevronRight, LogOut, Edit3, Save, X } from "lucide-react";
+import { User, Settings, Crown, ChevronRight, LogOut, Edit3, Save, X, Flame, Dumbbell, Route, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import SettingsScreen from "@/components/settings/SettingsScreen";
+import { useProfileStats } from "@/hooks/useProfileStats";
 
 const ProfileScreen = () => {
   const { userProfile, setUserProfile, setIsLoggedIn, setHasOnboarded, isPremium, setCurrentTab, user } = useApp();
+  const { stats, loading: statsLoading } = useProfileStats();
   const name = userProfile.name || "Atleta";
   const [isEditing, setIsEditing] = useState(false);
   const [editProfile, setEditProfile] = useState(userProfile);
@@ -183,13 +185,29 @@ const ProfileScreen = () => {
         </Button>
       </div>
 
+      {/* Real stats */}
+      <div className="grid grid-cols-4 gap-2 mb-4">
+        {[
+          { label: "Treinos", value: stats.totalWorkouts.toString(), icon: <Dumbbell className="w-4 h-4 text-primary" />, delay: 50 },
+          { label: "Streak", value: `${stats.streak}🔥`, icon: <Flame className="w-4 h-4 text-orange-500" />, delay: 100 },
+          { label: "Volume", value: stats.totalVolume > 1000 ? `${(stats.totalVolume / 1000).toFixed(1)}t` : `${stats.totalVolume}kg`, icon: <Trophy className="w-4 h-4 text-accent" />, delay: 150 },
+          { label: "Distância", value: `${stats.totalDistanceKm}km`, icon: <Route className="w-4 h-4 text-blue-400" />, delay: 200 },
+        ].map((card) => (
+          <div key={card.label} className="glass-card rounded-2xl p-3 text-center animate-fade-in" style={{ animationDelay: `${card.delay}ms` }}>
+            <div className="flex justify-center mb-1">{card.icon}</div>
+            <p className="text-sm font-heading font-bold text-foreground">{statsLoading ? "—" : card.value}</p>
+            <p className="text-[9px] text-muted-foreground">{card.label}</p>
+          </div>
+        ))}
+      </div>
+
       {/* Info cards */}
       <div className="grid grid-cols-2 gap-3 mb-4">
         {[
-          { label: "Gênero", value: userProfile.gender === "male" ? "Masculino" : userProfile.gender === "female" ? "Feminino" : "—", delay: 50 },
-          { label: "Idade", value: `${userProfile.age} anos`, delay: 100 },
-          { label: "Peso", value: `${userProfile.weight} kg`, delay: 150 },
-          { label: "Altura", value: `${userProfile.height} cm`, delay: 200 },
+          { label: "Gênero", value: userProfile.gender === "male" ? "Masculino" : userProfile.gender === "female" ? "Feminino" : "—", delay: 250 },
+          { label: "Idade", value: `${userProfile.age} anos`, delay: 300 },
+          { label: "Peso", value: `${userProfile.weight} kg`, delay: 350 },
+          { label: "Altura", value: `${userProfile.height} cm`, delay: 400 },
         ].map((card) => (
           <div key={card.label} className="glass-card rounded-2xl p-3 animate-fade-in" style={{ animationDelay: `${card.delay}ms` }}>
             <p className="text-[10px] text-muted-foreground">{card.label}</p>
