@@ -188,7 +188,7 @@ SUAS DIRETRIZES:
 11. Seja conciso mas completo. Não faça respostas muito longas a menos que peçam detalhes.`;
     }
 
-    const isStructured = mode === "generate-training" || mode === "generate-nutrition";
+    const isStructured = mode === "generate-training" || mode === "generate-home-training" || mode === "generate-nutrition";
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
