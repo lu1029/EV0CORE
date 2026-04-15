@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Check, Timer, ChevronUp, ChevronDown, Info } from "lucide-react";
+import { Check, Timer, ChevronUp, ChevronDown, Info, ArrowRight, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ExercisePlaceholder from "./ExercisePlaceholder";
 
@@ -18,6 +18,7 @@ export interface Exercise {
 interface ExerciseCardProps {
   exercise: Exercise;
   index: number;
+  totalExercises: number;
   isActive: boolean;
   completedSets: Set<number>;
   onCompleteSet: (setIdx: number) => void;
@@ -54,7 +55,7 @@ const ExerciseMedia = ({ exercise }: { exercise: Exercise }) => {
 };
 
 const ExerciseCard = ({
-  exercise, index, isActive, completedSets, onCompleteSet, onStartRest, onCompleteExercise, isCompleted
+  exercise, index, totalExercises, isActive, completedSets, onCompleteSet, onStartRest, onCompleteExercise, isCompleted
 }: ExerciseCardProps) => {
   const [showInstruction, setShowInstruction] = useState(false);
   const allSetsCompleted = completedSets.size >= exercise.sets;
@@ -146,21 +147,32 @@ const ExerciseCard = ({
         </div>
 
         {/* Actions */}
-        <div className="flex gap-2">
-          <Button
-            variant="glass"
-            className="flex-1 rounded-2xl h-12 gap-2"
-            onClick={onStartRest}
-          >
-            <Timer className="w-4 h-4" /> Descanso ({exercise.rest}s)
-          </Button>
+        <div className="space-y-2">
+          <div className="flex gap-2">
+            <Button
+              variant="glass"
+              className="flex-1 rounded-2xl h-12 gap-2"
+              onClick={onStartRest}
+            >
+              <Timer className="w-4 h-4" /> Descanso ({exercise.rest}s)
+            </Button>
+          </div>
+
           {allSetsCompleted && (
             <Button
               variant="hero"
-              className="flex-1 rounded-2xl h-12 gap-2 animate-scale-in"
+              className="w-full rounded-2xl h-14 gap-2 text-base font-semibold animate-scale-in"
               onClick={onCompleteExercise}
             >
-              <Check className="w-4 h-4" /> Concluir
+              {index < totalExercises - 1 ? (
+                <>
+                  Próximo Exercício <ArrowRight className="w-5 h-5" />
+                </>
+              ) : (
+                <>
+                  <Trophy className="w-5 h-5" /> Finalizar Treino 🎉
+                </>
+              )}
             </Button>
           )}
         </div>
