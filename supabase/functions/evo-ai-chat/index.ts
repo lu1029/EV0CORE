@@ -10,8 +10,8 @@ serve(async (req) => {
 
   try {
     const { messages, userProfile, mode } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY");
+    if (!GROQ_API_KEY) throw new Error("GROQ_API_KEY is not configured");
 
     const goals: Record<string, string> = {
       lose: "emagrecer e perder gordura",
@@ -62,6 +62,8 @@ INSTRUÇÕES OBRIGATÓRIAS:
 3. Use exercícios REAIS e comprovados cientificamente.
 4. Adapte cargas ao nível: iniciante (cargas leves, mais reps), intermediário (cargas médias), avançado (cargas pesadas, técnicas avançadas).
 5. Considere o objetivo: hipertrofia (8-12 reps), força (4-6 reps), definição (12-15 reps), resistência (15-20 reps).
+6. Se a preferência for "treino em casa", use APENAS exercícios com peso corporal ou itens domésticos (garrafas d'água, cadeira, toalha, mochila com peso). Inclua variações criativas. Inspire-se em apps como "Hora do Treino" para montar exercícios eficientes sem equipamento.
+7. Para treinos em casa, foque em circuitos, HIIT, calistenia e exercícios funcionais.
 
 FORMATO DE RESPOSTA - OBRIGATÓRIO JSON:
 Responda APENAS com um JSON válido neste formato exato, sem markdown, sem texto antes ou depois:
@@ -76,9 +78,9 @@ Responda APENAS com um JSON válido neste formato exato, sem markdown, sem texto
         "emoji": "emoji relevante",
         "sets": 4,
         "reps": "8-12",
-        "weight": "60kg",
+        "weight": "Peso corporal" ou "60kg",
         "rest": 90,
-        "instruction": "Instrução detalhada de execução"
+        "instruction": "Instrução detalhada de execução com dicas de postura e respiração"
       }
     ]
   }
@@ -133,31 +135,34 @@ SUAS DIRETRIZES:
 1. PERSONALIZE tudo baseado no perfil do usuário acima. Nunca dê respostas genéricas.
 2. Seja HUMANO, simpático e motivador. Use emojis com moderação.
 3. Ao montar treinos, seja ESPECÍFICO: exercício, séries, repetições, carga sugerida e descanso.
-4. Ao sugerir dietas, considere peso, objetivo e nível de atividade.
-5. Use linguagem informal brasileira (pt-BR), como se fosse um amigo personal.
-6. Se o usuário perguntar algo fora do escopo fitness/saúde, responda brevemente e redirecione.
-7. Calcule TMB e macros baseado nos dados reais do perfil quando relevante.
-8. Sempre dê orientações seguras. Recomende procurar um profissional para situações médicas.
-9. Formate respostas com markdown: use **negrito**, listas e cabeçalhos para organizar.
-10. Seja conciso mas completo. Não faça respostas muito longas a menos que peçam detalhes.`;
+4. Se o usuário treina em casa, PRIORIZE exercícios com peso corporal, calistenia, HIIT e circuitos. Sugira itens domésticos como peso extra (garrafas, mochilas, cadeiras).
+5. Ao sugerir dietas, considere peso, objetivo e nível de atividade.
+6. Use linguagem informal brasileira (pt-BR), como se fosse um amigo personal.
+7. Se o usuário perguntar algo fora do escopo fitness/saúde, responda brevemente e redirecione.
+8. Calcule TMB e macros baseado nos dados reais do perfil quando relevante.
+9. Sempre dê orientações seguras. Recomende procurar um profissional para situações médicas.
+10. Formate respostas com markdown: use **negrito**, listas e cabeçalhos para organizar.
+11. Seja conciso mas completo. Não faça respostas muito longas a menos que peçam detalhes.`;
     }
 
     const isStructured = mode === "generate-training" || mode === "generate-nutrition";
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${GROQ_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "meta-llama/llama-4-maverick-17b-128e-instruct",
         messages: [
           { role: "system", content: systemPrompt },
           ...messages.map((m: any) => ({ role: m.role, content: m.content })),
         ],
         stream: !isStructured,
         ...(isStructured ? { response_format: { type: "json_object" } } : {}),
+        temperature: 0.7,
+        max_tokens: 4096,
       }),
     });
 
@@ -173,7 +178,7 @@ SUAS DIRETRIZES:
         });
       }
       const t = await response.text();
-      console.error("AI gateway error:", response.status, t);
+      console.error("Groq API error:", response.status, t);
       return new Response(JSON.stringify({ error: "Erro ao conectar com a IA" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
