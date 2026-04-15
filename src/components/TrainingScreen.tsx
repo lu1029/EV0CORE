@@ -157,11 +157,12 @@ const TrainingScreen = () => {
         <div className="animate-fade-in">
           <div className="grid grid-cols-2 gap-3">
             {homeWorkouts.map((w) => (
-              <div key={w.name} className="bg-card border border-border/50 rounded-2xl p-4 hover:border-primary/30 transition-all cursor-pointer">
+              <div key={w.name} className="glass-card rounded-2xl p-4 hover:border-primary/30 transition-all cursor-pointer active:scale-[0.97]">
                 <span className="text-2xl mb-2 block">{w.icon}</span>
                 <h4 className="font-semibold text-foreground text-sm">{w.name}</h4>
                 <p className="text-xs text-muted-foreground">{w.duration} • {w.level}</p>
-                <Button variant="hero" size="sm" className="mt-3 w-full rounded-xl text-xs">
+                <p className="text-[10px] text-muted-foreground mt-1">{w.exercises.length} exercícios</p>
+                <Button variant="hero" size="sm" className="mt-3 w-full rounded-xl text-xs" onClick={() => startHomeWorkout(w)}>
                   Começar
                 </Button>
               </div>
