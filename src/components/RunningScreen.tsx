@@ -100,7 +100,7 @@ const RunningScreen = () => {
 
   const watchIdRef = useRef<number | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const mapRef = useRef<google.maps.Map | null>(null);
+  const mapRef = useRef<any>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const lastSegmentDistRef = useRef(0);
   const lastSegmentTimeRef = useRef(0);
