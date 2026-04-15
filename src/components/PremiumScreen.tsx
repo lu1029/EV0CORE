@@ -1,8 +1,13 @@
 import React, { useState } from "react";
 import { useApp } from "@/contexts/AppContext";
+import { useSubscription } from "@/hooks/useSubscription";
+import { getStripeEnvironment } from "@/lib/stripe";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Crown, Check, X, Zap, Star, ChevronRight, Sparkles, Brain, Dumbbell, TrendingUp, Shield, Gift } from "lucide-react";
+import { Crown, Check, X, Sparkles, Brain, Dumbbell, TrendingUp, Star, Shield, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
 const features = [
   { name: "Treinos básicos", free: true, premium: true },
@@ -20,10 +25,53 @@ const features = [
 ];
 
 const PremiumScreen = () => {
-  const { setCurrentTab, setIsPremium, isPremium } = useApp();
+  const { setCurrentTab, isPremium, user } = useApp();
+  const { subscription, isActive } = useSubscription();
   const [selectedPlan, setSelectedPlan] = useState<"annual" | "monthly">("annual");
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [loadingPortal, setLoadingPortal] = useState(false);
 
-  if (isPremium) {
+  const handleManageSubscription = async () => {
+    setLoadingPortal(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-portal-session", {
+        body: {
+          returnUrl: window.location.origin,
+          environment: getStripeEnvironment(),
+        },
+      });
+      if (error || !data?.url) throw new Error("Erro ao abrir portal");
+      window.open(data.url, "_blank");
+    } catch {
+      toast.error("Não foi possível abrir o gerenciamento da assinatura.");
+    } finally {
+      setLoadingPortal(false);
+    }
+  };
+
+  if (showCheckout) {
+    const priceId = selectedPlan === "annual" ? "premium_annual" : "premium_monthly";
+    return (
+      <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
+        <PaymentTestModeBanner />
+        <div className="flex items-center gap-3 mb-6">
+          <Button variant="ghost" onClick={() => setShowCheckout(false)} className="rounded-xl">
+            ← Voltar
+          </Button>
+          <h2 className="text-lg font-bold text-foreground">Finalizar assinatura</h2>
+        </div>
+        <StripeEmbeddedCheckout
+          priceId={priceId}
+          quantity={1}
+          customerEmail={user?.email || ""}
+          userId={user?.id || ""}
+          returnUrl={`${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`}
+        />
+      </div>
+    );
+  }
+
+  if (isPremium || isActive) {
     return (
       <div className="pb-24 px-4 pt-6 max-w-lg mx-auto text-center">
         <div className="w-24 h-24 rounded-full gradient-primary flex items-center justify-center mx-auto mb-4 animate-pulse-glow">
@@ -31,6 +79,11 @@ const PremiumScreen = () => {
         </div>
         <h1 className="text-3xl font-heading font-bold text-foreground mb-2">Você é PRO! 🎉</h1>
         <p className="text-muted-foreground text-sm mb-2">Aproveite todos os recursos premium do EVOCORE.</p>
+        {subscription?.cancel_at_period_end && subscription.current_period_end && (
+          <p className="text-sm text-orange-400 mb-4">
+            Sua assinatura expira em {new Date(subscription.current_period_end).toLocaleDateString("pt-BR")}
+          </p>
+        )}
         <div className="bg-card border border-primary/30 rounded-2xl p-4 mt-6 mb-4">
           <div className="flex items-center gap-2 mb-3">
             <Gift className="w-4 h-4 text-primary" />
@@ -45,16 +98,27 @@ const PremiumScreen = () => {
             ))}
           </div>
         </div>
-        <Button variant="glass" onClick={() => setCurrentTab("home")} className="rounded-xl">
-          Voltar para home
-        </Button>
+        <div className="flex gap-3">
+          <Button variant="glass" onClick={() => setCurrentTab("home")} className="rounded-xl flex-1">
+            Voltar para home
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleManageSubscription}
+            disabled={loadingPortal}
+            className="rounded-xl flex-1"
+          >
+            {loadingPortal ? "Carregando..." : "Gerenciar assinatura"}
+          </Button>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
-      {/* Header with animated gradient */}
+      <PaymentTestModeBanner />
+      {/* Header */}
       <div className="text-center mb-6 animate-fade-in">
         <div className="relative inline-block">
           <div className="w-20 h-20 rounded-full gradient-primary flex items-center justify-center mx-auto mb-4 animate-pulse-glow">
@@ -68,20 +132,7 @@ const PremiumScreen = () => {
         <p className="text-muted-foreground text-sm">Desbloqueie sua evolução completa</p>
       </div>
 
-      {/* Free trial banner */}
-      <div className="bg-primary/10 border border-primary/30 rounded-2xl p-4 mb-6 animate-fade-in">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shrink-0">
-            <Gift className="w-5 h-5 text-primary-foreground" />
-          </div>
-          <div>
-            <p className="font-bold text-foreground text-sm">7 dias grátis!</p>
-            <p className="text-xs text-muted-foreground">Teste todos os recursos PRO sem pagar nada. Cancele quando quiser.</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Premium features highlights */}
+      {/* Premium features */}
       <div className="space-y-3 mb-6 animate-fade-in">
         {[
           { icon: Brain, title: "IA Personal Trainer", desc: "Treinos personalizados com inteligência artificial", gradient: true },
@@ -194,15 +245,12 @@ const PremiumScreen = () => {
       <Button
         variant="hero"
         className="w-full h-14 rounded-xl text-base"
-        onClick={() => {
-          // Payment integration required - premium cannot be granted client-side
-          toast.info("Integração de pagamento em breve! 🚀");
-        }}
+        onClick={() => setShowCheckout(true)}
       >
-        Começar 7 dias grátis 🚀
+        Assinar agora 🚀
       </Button>
       <p className="text-center text-[10px] text-muted-foreground mt-3">
-        Após o período de teste, {selectedPlan === "annual" ? "R$ 238,80/ano (R$ 19,90/mês)" : "R$ 39,90/mês"}
+        {selectedPlan === "annual" ? "R$ 238,80/ano (R$ 19,90/mês)" : "R$ 39,90/mês"}
       </p>
     </div>
   );
