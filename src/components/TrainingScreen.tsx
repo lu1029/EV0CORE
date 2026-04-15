@@ -12,18 +12,29 @@ const TrainingScreen = () => {
   const { userProfile } = useApp();
   const [tab, setTab] = useState<"gym" | "home">("gym");
   const [activeWorkout, setActiveWorkout] = useState<string | null>(null);
+  const [activeExercises, setActiveExercises] = useState<any[]>([]);
 
   const workoutNames = Object.keys(exerciseDB);
   const todayIndex = new Date().getDay() % workoutNames.length;
   const todayWorkout = workoutNames[todayIndex];
   const todayExercises = exerciseDB[todayWorkout];
 
+  const startGymWorkout = (name: string) => {
+    setActiveExercises(exerciseDB[name] || []);
+    setActiveWorkout(name);
+  };
+
+  const startHomeWorkout = (workout: typeof homeWorkouts[0]) => {
+    setActiveExercises(workout.exercises);
+    setActiveWorkout(workout.name);
+  };
+
   if (activeWorkout) {
     return (
       <ActiveWorkout
         workoutName={activeWorkout}
-        exercises={exerciseDB[activeWorkout] || []}
-        onBack={() => setActiveWorkout(null)}
+        exercises={activeExercises}
+        onBack={() => { setActiveWorkout(null); setActiveExercises([]); }}
       />
     );
   }
@@ -88,7 +99,7 @@ const TrainingScreen = () => {
             <Button
               variant="hero"
               className="w-full rounded-2xl h-12 text-sm gap-2"
-              onClick={() => setActiveWorkout(todayWorkout)}
+              onClick={() => startGymWorkout(todayWorkout)}
             >
               <Play className="w-4 h-4" /> Iniciar Treino
             </Button>
@@ -101,7 +112,7 @@ const TrainingScreen = () => {
               {Object.entries(exerciseDB).map(([name, exercises]) => (
                 <button
                   key={name}
-                  onClick={() => setActiveWorkout(name)}
+                  onClick={() => startGymWorkout(name)}
                   className="w-full glass-card rounded-2xl p-4 flex items-center gap-3 hover:border-primary/30 transition-all text-left"
                 >
                   <div className="w-12 h-12 rounded-xl bg-secondary/80 flex items-center justify-center text-xl border border-border/30">
@@ -146,11 +157,12 @@ const TrainingScreen = () => {
         <div className="animate-fade-in">
           <div className="grid grid-cols-2 gap-3">
             {homeWorkouts.map((w) => (
-              <div key={w.name} className="bg-card border border-border/50 rounded-2xl p-4 hover:border-primary/30 transition-all cursor-pointer">
+              <div key={w.name} className="glass-card rounded-2xl p-4 hover:border-primary/30 transition-all cursor-pointer active:scale-[0.97]">
                 <span className="text-2xl mb-2 block">{w.icon}</span>
                 <h4 className="font-semibold text-foreground text-sm">{w.name}</h4>
                 <p className="text-xs text-muted-foreground">{w.duration} • {w.level}</p>
-                <Button variant="hero" size="sm" className="mt-3 w-full rounded-xl text-xs">
+                <p className="text-[10px] text-muted-foreground mt-1">{w.exercises.length} exercícios</p>
+                <Button variant="hero" size="sm" className="mt-3 w-full rounded-xl text-xs" onClick={() => startHomeWorkout(w)}>
                   Começar
                 </Button>
               </div>
