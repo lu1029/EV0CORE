@@ -10,8 +10,8 @@ serve(async (req) => {
 
   try {
     const { messages, userProfile, mode } = await req.json();
-    const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY");
-    if (!GROQ_API_KEY) throw new Error("GROQ_API_KEY is not configured");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const goals: Record<string, string> = {
       lose: "emagrecer e perder gordura",
