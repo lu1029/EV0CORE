@@ -16,11 +16,11 @@ const ProgressScreen = () => {
   ];
 
   return (
-    <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
+    <div className="pb-24 px-4 pt-6 max-w-lg mx-auto relative z-10">
       <h1 className="text-2xl font-heading font-bold text-foreground mb-6">Progresso</h1>
 
       {/* Tabs */}
-      <div className="flex bg-secondary rounded-xl p-1 mb-6">
+      <div className="flex glass-card rounded-xl p-1 mb-6">
         {[
           { id: "overview" as const, label: "Geral" },
           { id: "body" as const, label: "Corporal" },

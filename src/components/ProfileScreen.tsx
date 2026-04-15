@@ -183,9 +183,9 @@ const ProfileScreen = () => {
   }
 
   return (
-    <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
+    <div className="pb-24 px-4 pt-6 max-w-lg mx-auto relative z-10">
       {/* Profile header */}
-      <div className="bg-card border border-border rounded-2xl p-6 mb-4 text-center animate-fade-in">
+      <div className="glass-card-purple rounded-2xl p-6 mb-4 text-center animate-fade-in">
         <div className="w-20 h-20 rounded-full bg-secondary flex items-center justify-center mx-auto mb-3">
           <span className="text-2xl font-bold text-foreground">{name[0]?.toUpperCase()}</span>
         </div>

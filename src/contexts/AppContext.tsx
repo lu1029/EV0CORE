@@ -170,7 +170,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center animate-fade-in">
-          <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center mx-auto mb-4 animate-pulse-glow">
+          <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center mx-auto mb-4 animate-pulse-glow shadow-lg shadow-primary/30">
             <span className="text-2xl font-bold text-primary-foreground">E</span>
           </div>
           <h1 className="text-2xl font-heading font-bold text-gradient mb-2">EVOCORE</h1>

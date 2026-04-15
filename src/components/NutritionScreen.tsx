@@ -27,11 +27,11 @@ const NutritionScreen = () => {
   };
 
   return (
-    <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
+    <div className="pb-24 px-4 pt-6 max-w-lg mx-auto relative z-10">
       <h1 className="text-2xl font-heading font-bold text-foreground mb-6">Nutrição</h1>
 
       {/* Calorie ring */}
-      <div className="bg-card border border-border rounded-2xl p-6 mb-4 animate-fade-in">
+      <div className="glass-card-green rounded-2xl p-6 mb-4 animate-fade-in">
         <div className="flex items-center gap-6">
           <div className="relative w-28 h-28">
             <svg className="w-28 h-28 transform -rotate-90" viewBox="0 0 100 100">
@@ -91,7 +91,7 @@ const NutritionScreen = () => {
       </div>
 
       {/* Water */}
-      <div className="bg-card border border-border rounded-2xl p-4 mb-4 animate-fade-in">
+      <div className="glass-card-blue rounded-2xl p-4 mb-4 animate-fade-in">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Droplets className="w-5 h-5 text-blue-400" />
@@ -124,7 +124,7 @@ const NutritionScreen = () => {
       <h3 className="font-semibold text-foreground text-sm mb-3">Refeições</h3>
       <div className="space-y-3">
         {meals.map((m) => (
-          <div key={m.id} className="bg-card border border-border rounded-2xl p-4 animate-fade-in">
+          <div key={m.id} className="glass-card rounded-2xl p-4 animate-fade-in">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
