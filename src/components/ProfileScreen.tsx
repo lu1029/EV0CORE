@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { useApp } from "@/contexts/AppContext";
-import { User, Settings, Crown, Bell, ChevronRight, LogOut, Shield, HelpCircle, Star, Edit3, Save, X } from "lucide-react";
+import { User, Settings, Crown, ChevronRight, LogOut, Edit3, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import SettingsScreen from "@/components/settings/SettingsScreen";
 
 const ProfileScreen = () => {
   const { userProfile, setUserProfile, setIsLoggedIn, setHasOnboarded, isPremium, setCurrentTab, user } = useApp();
@@ -12,6 +13,7 @@ const ProfileScreen = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editProfile, setEditProfile] = useState(userProfile);
   const [saving, setSaving] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   const startEditing = () => {
     setEditProfile({ ...userProfile });
@@ -52,18 +54,14 @@ const ProfileScreen = () => {
     beginner: "Iniciante", intermediate: "Intermediário", advanced: "Avançado"
   };
 
-  const menuItems = [
-    { icon: Bell, label: "Notificações", action: () => {} },
-    { icon: Settings, label: "Configurações", action: () => {} },
-    { icon: Shield, label: "Privacidade", action: () => {} },
-    { icon: HelpCircle, label: "Ajuda & suporte", action: () => {} },
-    { icon: Star, label: "Avaliar app", action: () => {} },
-  ];
+  if (showSettings) {
+    return <SettingsScreen onBack={() => setShowSettings(false)} />;
+  }
 
   if (isEditing) {
     return (
       <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-6 animate-fade-in">
           <button onClick={() => setIsEditing(false)} className="text-muted-foreground text-sm flex items-center gap-1">
             <X className="w-4 h-4" /> Cancelar
           </button>
@@ -74,15 +72,13 @@ const ProfileScreen = () => {
         </div>
 
         <div className="space-y-4 animate-fade-in">
-          {/* Avatar */}
           <div className="flex justify-center mb-2">
-            <div className="w-20 h-20 rounded-full bg-secondary flex items-center justify-center relative">
+            <div className="w-20 h-20 rounded-full bg-secondary flex items-center justify-center">
               <span className="text-2xl font-bold text-foreground">{(editProfile.name || "A")[0]?.toUpperCase()}</span>
             </div>
           </div>
 
-          {/* Name */}
-          <div className="bg-card border border-border rounded-2xl p-4 space-y-3">
+          <div className="glass-card rounded-2xl p-4 space-y-3 animate-fade-in" style={{ animationDelay: '50ms' }}>
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">Nome</label>
               <Input value={editProfile.name} onChange={(e) => setEditProfile({ ...editProfile, name: e.target.value })}
@@ -94,47 +90,35 @@ const ProfileScreen = () => {
             </div>
           </div>
 
-          {/* Physical */}
-          <div className="bg-card border border-border rounded-2xl p-4 space-y-3">
+          <div className="glass-card rounded-2xl p-4 space-y-3 animate-fade-in" style={{ animationDelay: '100ms' }}>
             <h3 className="font-semibold text-foreground text-sm">Informações físicas</h3>
             <div className="flex gap-3">
-              <button
-                onClick={() => setEditProfile({ ...editProfile, gender: "male" })}
-                className={`flex-1 p-3 rounded-xl border text-center text-sm transition-all ${
-                  editProfile.gender === "male" ? "border-primary bg-primary/10 text-foreground" : "border-border bg-secondary text-muted-foreground"
-                }`}
-              >🙋‍♂️ Homem</button>
-              <button
-                onClick={() => setEditProfile({ ...editProfile, gender: "female" })}
-                className={`flex-1 p-3 rounded-xl border text-center text-sm transition-all ${
-                  editProfile.gender === "female" ? "border-primary bg-primary/10 text-foreground" : "border-border bg-secondary text-muted-foreground"
-                }`}
-              >🙋‍♀️ Mulher</button>
+              {(["male", "female"] as const).map((g) => (
+                <button key={g}
+                  onClick={() => setEditProfile({ ...editProfile, gender: g })}
+                  className={`flex-1 p-3 rounded-xl border text-center text-sm transition-all ${
+                    editProfile.gender === g ? "border-primary bg-primary/10 text-foreground" : "border-border bg-secondary text-muted-foreground"
+                  }`}
+                >{g === "male" ? "🙋‍♂️ Homem" : "🙋‍♀️ Mulher"}</button>
+              ))}
             </div>
             <div className="grid grid-cols-3 gap-3">
-              <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Idade</label>
-                <Input type="number" value={editProfile.age}
-                  onChange={(e) => setEditProfile({ ...editProfile, age: +e.target.value })}
-                  className="h-10 bg-secondary border-border/50 rounded-xl text-center" />
-              </div>
-              <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Peso (kg)</label>
-                <Input type="number" value={editProfile.weight}
-                  onChange={(e) => setEditProfile({ ...editProfile, weight: +e.target.value })}
-                  className="h-10 bg-secondary border-border/50 rounded-xl text-center" />
-              </div>
-              <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Altura (cm)</label>
-                <Input type="number" value={editProfile.height}
-                  onChange={(e) => setEditProfile({ ...editProfile, height: +e.target.value })}
-                  className="h-10 bg-secondary border-border/50 rounded-xl text-center" />
-              </div>
+              {[
+                { label: "Idade", key: "age" as const, value: editProfile.age },
+                { label: "Peso (kg)", key: "weight" as const, value: editProfile.weight },
+                { label: "Altura (cm)", key: "height" as const, value: editProfile.height },
+              ].map((field) => (
+                <div key={field.key}>
+                  <label className="text-xs text-muted-foreground mb-1 block">{field.label}</label>
+                  <Input type="number" value={field.value}
+                    onChange={(e) => setEditProfile({ ...editProfile, [field.key]: +e.target.value })}
+                    className="h-10 bg-secondary border-border/50 rounded-xl text-center" />
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Goals */}
-          <div className="bg-card border border-border rounded-2xl p-4 space-y-3">
+          <div className="glass-card rounded-2xl p-4 space-y-3 animate-fade-in" style={{ animationDelay: '150ms' }}>
             <h3 className="font-semibold text-foreground text-sm">Objetivo</h3>
             <div className="flex flex-wrap gap-2">
               {Object.entries(goals).map(([id, label]) => (
@@ -148,8 +132,7 @@ const ProfileScreen = () => {
             </div>
           </div>
 
-          {/* Level */}
-          <div className="bg-card border border-border rounded-2xl p-4 space-y-3">
+          <div className="glass-card rounded-2xl p-4 space-y-3 animate-fade-in" style={{ animationDelay: '200ms' }}>
             <h3 className="font-semibold text-foreground text-sm">Nível</h3>
             <div className="flex gap-2">
               {Object.entries(levels).map(([id, label]) => (
@@ -163,8 +146,7 @@ const ProfileScreen = () => {
             </div>
           </div>
 
-          {/* Days per week */}
-          <div className="bg-card border border-border rounded-2xl p-4 space-y-3">
+          <div className="glass-card rounded-2xl p-4 space-y-3 animate-fade-in" style={{ animationDelay: '250ms' }}>
             <h3 className="font-semibold text-foreground text-sm">Dias por semana</h3>
             <div className="flex gap-2">
               {[2, 3, 4, 5, 6].map((d) => (
@@ -186,13 +168,13 @@ const ProfileScreen = () => {
     <div className="pb-24 px-4 pt-6 max-w-lg mx-auto relative z-10">
       {/* Profile header */}
       <div className="glass-card-purple rounded-2xl p-6 mb-4 text-center animate-fade-in">
-        <div className="w-20 h-20 rounded-full bg-secondary flex items-center justify-center mx-auto mb-3">
+        <div className="w-20 h-20 rounded-full bg-secondary flex items-center justify-center mx-auto mb-3 animate-scale-in">
           <span className="text-2xl font-bold text-foreground">{name[0]?.toUpperCase()}</span>
         </div>
         <h2 className="text-xl font-heading font-bold text-foreground">{name}</h2>
         <p className="text-sm text-muted-foreground">{userProfile.email || "atleta@evocore.app"}</p>
         {isPremium && (
-          <span className="inline-flex items-center gap-1 mt-2 px-3 py-1 rounded-full gradient-primary text-primary-foreground text-xs font-semibold">
+          <span className="inline-flex items-center gap-1 mt-2 px-3 py-1 rounded-full gradient-primary text-primary-foreground text-xs font-semibold animate-scale-in">
             <Crown className="w-3 h-3" /> PRO
           </span>
         )}
@@ -202,43 +184,22 @@ const ProfileScreen = () => {
       </div>
 
       {/* Info cards */}
-      <div className="grid grid-cols-2 gap-3 mb-4 animate-fade-in">
-        <div className="bg-card border border-border rounded-2xl p-3">
-          <p className="text-[10px] text-muted-foreground">Gênero</p>
-          <p className="text-sm font-medium text-foreground">{userProfile.gender === "male" ? "Masculino" : userProfile.gender === "female" ? "Feminino" : "—"}</p>
-        </div>
-        <div className="bg-card border border-border rounded-2xl p-3">
-          <p className="text-[10px] text-muted-foreground">Idade</p>
-          <p className="text-sm font-medium text-foreground">{userProfile.age} anos</p>
-        </div>
-        <div className="bg-card border border-border rounded-2xl p-3">
-          <p className="text-[10px] text-muted-foreground">Peso</p>
-          <p className="text-sm font-medium text-foreground">{userProfile.weight} kg</p>
-        </div>
-        <div className="bg-card border border-border rounded-2xl p-3">
-          <p className="text-[10px] text-muted-foreground">Altura</p>
-          <p className="text-sm font-medium text-foreground">{userProfile.height} cm</p>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-3 mb-4 animate-fade-in">
-        <div className="bg-card border border-border rounded-2xl p-3 text-center">
-          <p className="text-lg font-bold text-foreground">48</p>
-          <p className="text-[10px] text-muted-foreground">Treinos</p>
-        </div>
-        <div className="bg-card border border-border rounded-2xl p-3 text-center">
-          <p className="text-lg font-bold text-foreground">12</p>
-          <p className="text-[10px] text-muted-foreground">Streak</p>
-        </div>
-        <div className="bg-card border border-border rounded-2xl p-3 text-center">
-          <p className="text-lg font-bold text-foreground">86km</p>
-          <p className="text-[10px] text-muted-foreground">Corrida</p>
-        </div>
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        {[
+          { label: "Gênero", value: userProfile.gender === "male" ? "Masculino" : userProfile.gender === "female" ? "Feminino" : "—", delay: 50 },
+          { label: "Idade", value: `${userProfile.age} anos`, delay: 100 },
+          { label: "Peso", value: `${userProfile.weight} kg`, delay: 150 },
+          { label: "Altura", value: `${userProfile.height} cm`, delay: 200 },
+        ].map((card) => (
+          <div key={card.label} className="glass-card rounded-2xl p-3 animate-fade-in" style={{ animationDelay: `${card.delay}ms` }}>
+            <p className="text-[10px] text-muted-foreground">{card.label}</p>
+            <p className="text-sm font-medium text-foreground">{card.value}</p>
+          </div>
+        ))}
       </div>
 
       {/* Objective & Level */}
-      <div className="bg-card border border-border rounded-2xl p-4 mb-4 animate-fade-in">
+      <div className="glass-card rounded-2xl p-4 mb-4 animate-fade-in" style={{ animationDelay: '200ms' }}>
         <div className="flex justify-between items-center mb-2">
           <span className="text-xs text-muted-foreground">Objetivo</span>
           <span className="text-sm font-medium text-primary">{goals[userProfile.goal] || "Não definido"}</span>
@@ -257,7 +218,8 @@ const ProfileScreen = () => {
       {!isPremium && (
         <button
           onClick={() => setCurrentTab("premium")}
-          className="w-full bg-card border border-primary/30 rounded-2xl p-4 mb-4 flex items-center gap-3 hover:border-primary/50 transition-all animate-fade-in"
+          className="w-full glass-card rounded-2xl p-4 mb-4 flex items-center gap-3 border-primary/30 hover:border-primary/50 transition-all animate-fade-in"
+          style={{ animationDelay: '250ms' }}
         >
           <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center animate-pulse-glow">
             <Crown className="w-5 h-5 text-primary-foreground" />
@@ -270,27 +232,27 @@ const ProfileScreen = () => {
         </button>
       )}
 
-      {/* Menu */}
-      <div className="bg-card border border-border rounded-2xl overflow-hidden mb-4 animate-fade-in">
-        {menuItems.map((item, i) => (
-          <button
-            key={item.label}
-            onClick={item.action}
-            className={`w-full flex items-center gap-3 px-4 py-3.5 hover:bg-secondary/50 transition-all ${
-              i < menuItems.length - 1 ? "border-b border-border/50" : ""
-            }`}
-          >
-            <item.icon className="w-5 h-5 text-muted-foreground" />
-            <span className="flex-1 text-left text-sm text-foreground">{item.label}</span>
-            <ChevronRight className="w-4 h-4 text-muted-foreground" />
-          </button>
-        ))}
-      </div>
+      {/* Settings */}
+      <button
+        onClick={() => setShowSettings(true)}
+        className="w-full glass-card rounded-2xl p-4 mb-4 flex items-center gap-3 hover:border-primary/30 transition-all animate-fade-in active:scale-[0.98]"
+        style={{ animationDelay: '300ms' }}
+      >
+        <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
+          <Settings className="w-5 h-5 text-muted-foreground" />
+        </div>
+        <div className="flex-1 text-left">
+          <p className="text-sm font-semibold text-foreground">Configurações</p>
+          <p className="text-xs text-muted-foreground">Aparência, treino, notificações</p>
+        </div>
+        <ChevronRight className="w-4 h-4 text-muted-foreground" />
+      </button>
 
       {/* Logout */}
       <Button
         variant="glass"
-        className="w-full h-12 rounded-xl text-destructive gap-2"
+        className="w-full h-12 rounded-xl text-destructive gap-2 animate-fade-in"
+        style={{ animationDelay: '350ms' }}
         onClick={async () => {
           await supabase.auth.signOut();
         }}
@@ -298,7 +260,7 @@ const ProfileScreen = () => {
         <LogOut className="w-4 h-4" /> Sair da conta
       </Button>
 
-      <p className="text-center text-[10px] text-muted-foreground mt-4">EVOCORE v1.0.0</p>
+      <p className="text-center text-[10px] text-muted-foreground mt-4 animate-fade-in" style={{ animationDelay: '400ms' }}>EVOCORE v1.0.0</p>
     </div>
   );
 };
