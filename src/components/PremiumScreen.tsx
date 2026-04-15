@@ -195,10 +195,8 @@ const PremiumScreen = () => {
         variant="hero"
         className="w-full h-14 rounded-xl text-base"
         onClick={() => {
-          // TODO: integrate real payment
-          setIsPremium(true);
-          setCurrentTab("home");
-          // toast.success("Bem-vindo ao PRO! 🎉");
+          // Payment integration required - premium cannot be granted client-side
+          toast.info("Integração de pagamento em breve! 🚀");
         }}
       >
         Começar 7 dias grátis 🚀
