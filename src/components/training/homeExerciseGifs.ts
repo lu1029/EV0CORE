@@ -5,7 +5,7 @@ const W = "https://wger.de/media/exercise-images";
 
 export const homeExerciseGifs: Record<string, string> = {
   // Push exercises
-  flexao: `${W}/192/Bench-press-1.png`,
+  flexao: `${W}/97/Dumbbell-bench-press-1.png`,
   flexao_diamante: `${W}/61/Close-grip-bench-press-1.png`,
   flexao_declinada: `${W}/100/Decline-bench-press-1.png`,
   flexao_inclinada: `${W}/41/Incline-bench-press-1.png`,
@@ -24,8 +24,8 @@ export const homeExerciseGifs: Record<string, string> = {
   kickback: `${W}/116/Good-mornings-2.png`,
 
   // Core
-  prancha: `${W}/206/Front-plank-1.png`,
-  prancha_lateral: `${W}/206/Front-plank-1.png`,
+  prancha: `${W}/91/Crunches-1.png`,
+  prancha_lateral: `${W}/91/Crunches-1.png`,
   abdominal: `${W}/91/Crunches-1.png`,
   elevacao_pernas: `${W}/125/Leg-raises-2.png`,
   bicicleta_ar: `${W}/176/Cross-body-crunch-1.png`,
