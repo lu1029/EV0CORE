@@ -1,7 +1,8 @@
 import React from "react";
 import { useApp } from "@/contexts/AppContext";
-import { Zap, Crown, Bot } from "lucide-react";
+import { Zap, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import evoaiLogo from "@/assets/evoai-logo.png";
 
 const HomeScreen = () => {
   const { userProfile, setCurrentTab, isPremium } = useApp();
@@ -59,8 +60,8 @@ const HomeScreen = () => {
         onClick={() => setCurrentTab("ai")}
         className="w-full glass-card-purple rounded-2xl p-4 mb-4 flex items-center gap-3 hover:border-primary/40 active:scale-[0.98] transition-all animate-fade-in"
       >
-        <div className="w-12 h-12 rounded-2xl gradient-primary flex items-center justify-center animate-pulse-glow">
-          <Bot className="w-6 h-6 text-primary-foreground" />
+        <div className="w-12 h-12 rounded-2xl overflow-hidden animate-pulse-glow">
+          <img src={evoaiLogo} alt="EvoAI" className="w-full h-full object-cover" />
         </div>
         <div className="flex-1 text-left">
           <p className="text-sm font-semibold text-foreground">EvoAI — Seu Personal</p>
