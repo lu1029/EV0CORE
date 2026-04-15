@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import evocoreLogo from "@/assets/evocore-logo.png";
 import { useTheme, themeConfigs, ThemeBackground } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
 import {
@@ -250,36 +251,27 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
       </button>
 
       <div className="glass-card-purple rounded-2xl p-6 text-center">
-        <div className="w-16 h-16 rounded-2xl gradient-primary mx-auto mb-3 flex items-center justify-center animate-pulse-glow">
-          <Smartphone className="w-8 h-8 text-primary-foreground" />
-        </div>
+        <img
+          src={evocoreLogo}
+          alt="EvoCore"
+          className="w-16 h-16 rounded-2xl mx-auto mb-3 object-contain drop-shadow-[0_0_20px_hsl(239,84%,67%,0.3)]"
+        />
         <h3 className="font-heading font-bold text-foreground text-xl">EvoCore</h3>
-        <p className="text-xs text-muted-foreground mt-1">Seu personal trainer com IA</p>
+        <p className="text-xs text-muted-foreground mt-1">Seu companheiro fitness do dia a dia</p>
         <p className="text-xs text-primary mt-2 font-medium">Versão 1.0.0</p>
       </div>
 
       <div className="glass-card rounded-2xl p-4 space-y-2">
-        <p className="text-xs text-muted-foreground">
-          EvoCore combina inteligência artificial com ciência do exercício para criar planos de treino, nutrição e corrida 100% personalizados.
+        <p className="text-sm text-foreground font-medium">Treinar ficou mais simples.</p>
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          O EvoCore foi criado pra quem quer cuidar do corpo sem complicação. 
+          Ele monta seu treino, organiza sua dieta e acompanha sua corrida — tudo no mesmo lugar, 
+          direto no celular, prático pro seu dia a dia.
         </p>
-        <p className="text-xs text-muted-foreground">
-          Desenvolvido com ❤️ usando tecnologia de ponta.
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          Seja na academia ou em casa, o app se adapta ao seu nível e objetivo. 
+          É como ter um personal no bolso, disponível a qualquer hora.
         </p>
-      </div>
-
-      <div className="glass-card rounded-2xl p-4 space-y-1">
-        <div className="flex justify-between text-xs">
-          <span className="text-muted-foreground">Motor IA</span>
-          <span className="text-foreground font-medium">Google Gemini</span>
-        </div>
-        <div className="flex justify-between text-xs">
-          <span className="text-muted-foreground">Backend</span>
-          <span className="text-foreground font-medium">Lovable Cloud</span>
-        </div>
-        <div className="flex justify-between text-xs">
-          <span className="text-muted-foreground">Pagamentos</span>
-          <span className="text-foreground font-medium">Stripe</span>
-        </div>
       </div>
     </div>
   );
