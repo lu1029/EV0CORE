@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useApp } from "@/contexts/AppContext";
-import { User, Settings, Crown, ChevronRight, LogOut, Edit3, Save, X, Flame, Dumbbell, Route, Trophy } from "lucide-react";
+import { User, Settings, Crown, ChevronRight, LogOut, Edit3, Save, X, Flame, Dumbbell, Route, Trophy, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
