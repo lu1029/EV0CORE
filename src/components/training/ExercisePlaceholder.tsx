@@ -62,11 +62,11 @@ const ExercisePlaceholder = ({ exerciseName, muscleGroup, className = "" }: Exer
 
       {/* Center content */}
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-        <div className="w-14 h-14 rounded-2xl bg-secondary/60 flex items-center justify-center text-2xl backdrop-blur-sm border border-border/40 shadow-lg">
+        <div className="w-14 h-14 rounded-2xl bg-secondary/80 flex items-center justify-center text-2xl border border-border/40 shadow-lg">
           {muscleIcons[muscleGroup] || "🏋️"}
         </div>
         <p className="text-xs font-medium text-muted-foreground/70">{exerciseName}</p>
-        <div className="px-3 py-0.5 rounded-full bg-secondary/40 backdrop-blur-sm border border-border/20">
+        <div className="px-3 py-0.5 rounded-full bg-secondary/60 border border-border/20">
           <span className="text-[9px] font-medium text-muted-foreground/60 uppercase tracking-widest">
             📹 Em breve
           </span>
