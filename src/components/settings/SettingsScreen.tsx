@@ -116,7 +116,7 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
       {/* Links */}
       <div className="glass-card rounded-2xl overflow-hidden">
         {[
-          { icon: Shield, label: "Política de Privacidade", action: () => toast.info("Em breve") },
+          { icon: Shield, label: "Política de Privacidade", action: () => window.open("/privacidade", "_blank") },
           { icon: HelpCircle, label: "Ajuda & Suporte", action: () => toast.info("Entre em contato: suporte@evocore.app") },
           { icon: Star, label: "Avaliar o app", action: () => toast.success("Obrigado! ⭐") },
           { icon: Share2, label: "Compartilhar app", action: () => {

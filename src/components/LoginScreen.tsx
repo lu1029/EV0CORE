@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Mail, Lock, Eye, EyeOff, User } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, User, CheckSquare, Square } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
+import { validatePassword, getPasswordStrength, validateEmail, sanitizeText } from "@/lib/sanitize";
 import evocoreLogo from "@/assets/evocore-logo.png";
 
 const LoginScreen = () => {
@@ -17,6 +18,7 @@ const LoginScreen = () => {
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   useEffect(() => {
     // Staggered entrance animations
@@ -25,18 +27,29 @@ const LoginScreen = () => {
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
+  const passwordStrength = getPasswordStrength(password);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
       toast.error("Preencha todos os campos");
       return;
     }
+    if (!validateEmail(email)) {
+      toast.error("Formato de e-mail inválido");
+      return;
+    }
+    if (isSignUp) {
+      const pwError = validatePassword(password);
+      if (pwError) { toast.error(pwError); return; }
+      if (!acceptedTerms) { toast.error("Aceite os Termos de Uso e Política de Privacidade"); return; }
+    }
     setLoading(true);
     try {
       if (isSignUp) {
         const { error } = await supabase.auth.signUp({
           email, password,
-          options: { data: { full_name: name } },
+          options: { data: { full_name: sanitizeText(name) } },
         });
         if (error) throw error;
         toast.success("Conta criada! Verifique seu e-mail para confirmar.");
@@ -158,8 +171,29 @@ const LoginScreen = () => {
         <div className="flex-1 h-px bg-border/30" />
         <span className="text-xs text-muted-foreground">ou continue com</span>
         <div className="flex-1 h-px bg-border/30" />
-      </div>
-
+        </div>
+        {/* Password strength indicator */}
+        {isSignUp && password.length > 0 && (
+          <div className="space-y-1 animate-fade-in">
+            <div className="flex gap-1">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className={`h-1 flex-1 rounded-full transition-all ${i < passwordStrength.level ? passwordStrength.color : 'bg-secondary'}`} />
+              ))}
+            </div>
+            <p className="text-[10px] text-muted-foreground">{passwordStrength.label}</p>
+          </div>
+        )}
+        {/* Terms checkbox for signup */}
+        {isSignUp && (
+          <button type="button" onClick={() => setAcceptedTerms(!acceptedTerms)} className="flex items-start gap-2 text-left animate-fade-in">
+            {acceptedTerms ? <CheckSquare className="w-4 h-4 text-primary shrink-0 mt-0.5" /> : <Square className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />}
+            <span className="text-[11px] text-muted-foreground leading-tight">
+              Li e aceito os{" "}
+              <a href="/termos" target="_blank" className="text-primary underline">Termos de Uso</a>{" "}e a{" "}
+              <a href="/privacidade" target="_blank" className="text-primary underline">Política de Privacidade</a>
+            </span>
+          </button>
+        )}
       <div className="flex gap-3">
         <button onClick={handleGoogleLogin} disabled={loading}
           className="flex-1 h-12 rounded-xl glass-card flex items-center justify-center gap-2 text-sm text-foreground font-medium active:scale-95 transition-all hover:border-primary/30">

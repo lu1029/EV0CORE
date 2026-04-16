@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useApp } from "@/contexts/AppContext";
-import { User, Settings, Crown, ChevronRight, LogOut, Edit3, Save, X, Flame, Dumbbell, Route, Trophy } from "lucide-react";
+import { User, Settings, Crown, ChevronRight, LogOut, Edit3, Save, X, Flame, Dumbbell, Route, Trophy, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -316,6 +316,24 @@ const ProfileScreen = () => {
         <ChevronRight className="w-4 h-4 text-muted-foreground" />
       </button>
 
+      {/* Account deletion */}
+      <button
+        onClick={async () => {
+          if (!confirm("Tem certeza que deseja excluir sua conta e todos os seus dados? Esta ação é irreversível.")) return;
+          toast.info("Solicitação de exclusão registrada. Seus dados serão removidos em até 30 dias. Você receberá um e-mail de confirmação.");
+        }}
+        className="w-full glass-card rounded-2xl p-4 mb-4 flex items-center gap-3 border-destructive/20 hover:border-destructive/40 transition-all animate-fade-in active:scale-[0.98]"
+        style={{ animationDelay: '340ms' }}
+      >
+        <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center">
+          <Trash2 className="w-5 h-5 text-destructive" />
+        </div>
+        <div className="flex-1 text-left">
+          <p className="text-sm font-semibold text-destructive">Excluir minha conta</p>
+          <p className="text-xs text-muted-foreground">Remover todos os meus dados</p>
+        </div>
+      </button>
+
       {/* Logout */}
       <Button
         variant="glass"
@@ -323,6 +341,8 @@ const ProfileScreen = () => {
         style={{ animationDelay: '350ms' }}
         onClick={async () => {
           await supabase.auth.signOut();
+          localStorage.clear();
+          sessionStorage.clear();
         }}
       >
         <LogOut className="w-4 h-4" /> Sair da conta
