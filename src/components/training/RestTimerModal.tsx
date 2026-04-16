@@ -130,7 +130,7 @@ const RestTimerModal = ({ isOpen, initialSeconds, onClose, onSkip }: RestTimerMo
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 backdrop-blur-xl animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 animate-fade-in">
       {/* Animated background rings */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
         <div
