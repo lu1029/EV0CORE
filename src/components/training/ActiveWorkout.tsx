@@ -218,7 +218,7 @@ const ActiveWorkout = ({ workoutName, exercises, onBack, workoutType = "gym" }: 
   return (
     <div className="pb-28 max-w-lg mx-auto animate-fade-in">
       {/* Simple header like Fitness Online */}
-      <div className="sticky top-0 z-30 bg-background/90 backdrop-blur-xl px-4 py-3 flex items-center justify-between">
+      <div className="sticky top-0 z-30 bg-background/95 px-4 py-3 flex items-center justify-between">
         <button onClick={onBack} className="text-muted-foreground hover:text-foreground transition-colors">
           <ChevronLeft className="w-6 h-6" />
         </button>
