@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Mail, Lock, Eye, EyeOff, User } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, User, CheckSquare, Square } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
+import { validatePassword, getPasswordStrength, validateEmail, sanitizeText } from "@/lib/sanitize";
 import evocoreLogo from "@/assets/evocore-logo.png";
 
 const LoginScreen = () => {
@@ -17,6 +18,7 @@ const LoginScreen = () => {
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   useEffect(() => {
     // Staggered entrance animations
@@ -25,18 +27,29 @@ const LoginScreen = () => {
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
+  const passwordStrength = getPasswordStrength(password);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
       toast.error("Preencha todos os campos");
       return;
     }
+    if (!validateEmail(email)) {
+      toast.error("Formato de e-mail inválido");
+      return;
+    }
+    if (isSignUp) {
+      const pwError = validatePassword(password);
+      if (pwError) { toast.error(pwError); return; }
+      if (!acceptedTerms) { toast.error("Aceite os Termos de Uso e Política de Privacidade"); return; }
+    }
     setLoading(true);
     try {
       if (isSignUp) {
         const { error } = await supabase.auth.signUp({
           email, password,
-          options: { data: { full_name: name } },
+          options: { data: { full_name: sanitizeText(name) } },
         });
         if (error) throw error;
         toast.success("Conta criada! Verifique seu e-mail para confirmar.");
