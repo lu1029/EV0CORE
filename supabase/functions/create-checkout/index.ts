@@ -29,10 +29,16 @@ serve(async (req) => {
     const stripePrice = prices.data[0];
     const isRecurring = stripePrice.type === "recurring";
 
+    // Payment methods: card, pix, boleto (popular in Brazil)
+    const paymentMethodTypes = isRecurring
+      ? ["card"] // Pix and boleto only work for one-time payments
+      : ["card", "pix", "boleto"];
+
     const session = await stripe.checkout.sessions.create({
       line_items: [{ price: stripePrice.id, quantity: quantity || 1 }],
       mode: isRecurring ? "subscription" : "payment",
       ui_mode: "embedded",
+      payment_method_types: paymentMethodTypes,
       return_url: returnUrl || `${req.headers.get("origin")}/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
       ...(customerEmail && { customer_email: customerEmail }),
       ...(userId && {
