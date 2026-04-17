@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Shield } from "lucide-react";
+import { logSecurityEvent } from "@/lib/auditLog";
 
 const CONSENT_KEY = "evocore_lgpd_consent";
 
@@ -13,7 +14,9 @@ const ConsentBanner = () => {
   }, []);
 
   const handleAccept = () => {
-    localStorage.setItem(CONSENT_KEY, new Date().toISOString());
+    const ts = new Date().toISOString();
+    localStorage.setItem(CONSENT_KEY, ts);
+    logSecurityEvent("consent_accepted", { version: "1.0", accepted_at: ts });
     setShow(false);
   };
 
