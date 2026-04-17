@@ -223,6 +223,22 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       user, session, loading,
     }}>
       {children}
+      {showExpiredModal && (
+        <div className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm flex items-center justify-center p-6">
+          <div className="glass-card max-w-sm w-full p-6 rounded-2xl text-center space-y-4">
+            <h2 className="text-xl font-heading font-bold text-foreground">Sessão expirada</h2>
+            <p className="text-sm text-muted-foreground">
+              Você ficou inativo por 30 minutos. Por segurança, faça login novamente.
+            </p>
+            <button
+              onClick={() => { setShowExpiredModal(false); window.location.reload(); }}
+              className="w-full h-12 rounded-xl gradient-primary text-primary-foreground font-semibold"
+            >
+              Fazer login
+            </button>
+          </div>
+        </div>
+      )}
     </AppContext.Provider>
   );
 };
