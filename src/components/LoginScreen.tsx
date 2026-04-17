@@ -85,7 +85,9 @@ const LoginScreen = () => {
     if (!email) { toast.error("Digite seu e-mail"); return; }
     setLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
       if (error) throw error;
       toast.success("Link de recuperação enviado para seu e-mail!");
       setIsForgotPassword(false);
