@@ -50,13 +50,22 @@ const LoginScreen = () => {
       if (isSignUp) {
         const { error } = await supabase.auth.signUp({
           email, password,
-          options: { data: { full_name: sanitizeText(name) } },
+          options: {
+            data: { full_name: sanitizeText(name) },
+            emailRedirectTo: `${window.location.origin}/`,
+          },
         });
         if (error) throw error;
-        toast.success("Conta criada! Verifique seu e-mail para confirmar.");
+        toast.success("Conta criada! Verifique seu e-mail para confirmar antes de entrar.");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        if (data.user && !data.user.email_confirmed_at) {
+          await supabase.auth.signOut();
+          toast.error("Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.");
+          logSecurityEvent("login_failure", { reason: "email_not_confirmed" });
+          return;
+        }
       }
     } catch (error: any) {
       const msg = error.message?.includes("Invalid login")
@@ -76,7 +85,9 @@ const LoginScreen = () => {
     if (!email) { toast.error("Digite seu e-mail"); return; }
     setLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
       if (error) throw error;
       toast.success("Link de recuperação enviado para seu e-mail!");
       setIsForgotPassword(false);
