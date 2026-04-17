@@ -157,6 +157,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
+  // Inactivity logout (30 min)
+  const { showExpiredModal, setShowExpiredModal } = useInactivityLogout(isLoggedIn);
+
   // Save profile to DB when onboarding completes
   const handleSetHasOnboarded = async (v: boolean) => {
     setHasOnboarded(v);
