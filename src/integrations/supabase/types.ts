@@ -451,6 +451,7 @@ export type Database = {
         Args: { check_env?: string; user_uuid: string }
         Returns: boolean
       }
+      is_email_confirmed: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
