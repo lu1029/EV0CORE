@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
+import { useInactivityLogout } from "@/hooks/useInactivityLogout";
+import { logSecurityEvent } from "@/lib/auditLog";
 import evocoreLogo from "@/assets/evocore-logo.png";
 
 interface UserProfile {
@@ -124,6 +126,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         setIsLoggedIn(!!newSession?.user);
 
         if (newSession?.user) {
+          if (event === "SIGNED_IN") {
+            logSecurityEvent("login_success", { provider: newSession.user.app_metadata?.provider });
+          }
           setUserProfile((prev) => ({
             ...prev,
             email: newSession.user.email ?? prev.email,
@@ -136,6 +141,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             newSession.user.user_metadata
           );
         } else {
+          if (event === "SIGNED_OUT") {
+            logSecurityEvent("logout", {});
+          }
           setHasOnboarded(false);
           setUserProfile(defaultProfile);
           setIsPremium(false);
@@ -148,6 +156,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       subscription.unsubscribe();
     };
   }, []);
+
+  // Inactivity logout (30 min)
+  const { showExpiredModal, setShowExpiredModal } = useInactivityLogout(isLoggedIn);
 
   // Save profile to DB when onboarding completes
   const handleSetHasOnboarded = async (v: boolean) => {
@@ -212,6 +223,22 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       user, session, loading,
     }}>
       {children}
+      {showExpiredModal && (
+        <div className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm flex items-center justify-center p-6">
+          <div className="glass-card max-w-sm w-full p-6 rounded-2xl text-center space-y-4">
+            <h2 className="text-xl font-heading font-bold text-foreground">Sessão expirada</h2>
+            <p className="text-sm text-muted-foreground">
+              Você ficou inativo por 30 minutos. Por segurança, faça login novamente.
+            </p>
+            <button
+              onClick={() => { setShowExpiredModal(false); window.location.reload(); }}
+              className="w-full h-12 rounded-xl gradient-primary text-primary-foreground font-semibold"
+            >
+              Fazer login
+            </button>
+          </div>
+        </div>
+      )}
     </AppContext.Provider>
   );
 };

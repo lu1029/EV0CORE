@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { logSecurityEvent } from "@/lib/auditLog";
 
 const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 
@@ -8,6 +9,7 @@ export function useInactivityLogout(isLoggedIn: boolean) {
   const [showExpiredModal, setShowExpiredModal] = useState(false);
 
   const handleLogout = useCallback(async () => {
+    logSecurityEvent("logout_inactivity", {});
     setShowExpiredModal(true);
     await supabase.auth.signOut();
     localStorage.clear();

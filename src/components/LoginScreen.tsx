@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 import { validatePassword, getPasswordStrength, validateEmail, sanitizeText } from "@/lib/sanitize";
+import { logSecurityEvent } from "@/lib/auditLog";
 import evocoreLogo from "@/assets/evocore-logo.png";
 
 const LoginScreen = () => {
@@ -63,6 +64,7 @@ const LoginScreen = () => {
         : error.message?.includes("already registered")
         ? "Este e-mail já está cadastrado"
         : error.message || "Erro ao autenticar";
+      if (!isSignUp) logSecurityEvent("login_failure", { reason: msg });
       toast.error(msg);
     } finally {
       setLoading(false);
