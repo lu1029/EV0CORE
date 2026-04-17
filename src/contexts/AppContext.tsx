@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
+import { useInactivityLogout } from "@/hooks/useInactivityLogout";
+import { logSecurityEvent } from "@/lib/auditLog";
 import evocoreLogo from "@/assets/evocore-logo.png";
 
 interface UserProfile {
@@ -124,6 +126,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         setIsLoggedIn(!!newSession?.user);
 
         if (newSession?.user) {
+          if (event === "SIGNED_IN") {
+            logSecurityEvent("login_success", { provider: newSession.user.app_metadata?.provider });
+          }
           setUserProfile((prev) => ({
             ...prev,
             email: newSession.user.email ?? prev.email,
@@ -136,6 +141,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             newSession.user.user_metadata
           );
         } else {
+          if (event === "SIGNED_OUT") {
+            logSecurityEvent("logout", {});
+          }
           setHasOnboarded(false);
           setUserProfile(defaultProfile);
           setIsPremium(false);
