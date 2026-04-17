@@ -96,8 +96,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     };
 
     // Get initial session first, then listen for changes
-    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+    supabase.auth.getSession().then(async ({ data: { session: initialSession } }) => {
       if (!mounted) return;
+      // Block unconfirmed email users (except OAuth providers which don't require confirmation)
+      const provider = initialSession?.user?.app_metadata?.provider;
+      const needsConfirm = initialSession?.user && !initialSession.user.email_confirmed_at && provider === "email";
+      if (needsConfirm) {
+        await supabase.auth.signOut();
+        setLoading(false);
+        return;
+      }
       setSession(initialSession);
       setUser(initialSession?.user ?? null);
       setIsLoggedIn(!!initialSession?.user);
