@@ -7,18 +7,25 @@ export function initSentry() {
   Sentry.init({
     dsn,
     environment: import.meta.env.MODE,
-    // Capture 10% of transactions in prod, 100% in dev
+    integrations: [
+      Sentry.browserTracingIntegration(),
+      Sentry.httpClientIntegration(),
+    ],
     tracesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
-    // Privacy: don't send PII
     sendDefaultPii: false,
     beforeSend(event) {
-      // Strip query strings that might contain tokens
       if (event.request?.url) {
         try {
           const u = new URL(event.request.url);
           u.search = "";
           event.request.url = u.toString();
         } catch { /* ignore */ }
+      }
+      // Drop auth tokens from headers if any
+      if (event.request?.headers) {
+        delete (event.request.headers as any).Authorization;
+        delete (event.request.headers as any).authorization;
+        delete (event.request.headers as any).cookie;
       }
       return event;
     },
