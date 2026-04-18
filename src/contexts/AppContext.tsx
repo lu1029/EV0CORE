@@ -66,9 +66,15 @@ const defaultProfile: UserProfile = {
 const AppContext = createContext<AppContextType | null>(null);
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [hasOnboarded, setHasOnboarded] = useState(false);
-  const [currentTab, setCurrentTab] = useState("home");
+  const currentTab = PATH_TO_TAB[location.pathname] ?? "home";
+  const setCurrentTab = useCallback((tab: string) => {
+    const path = TAB_TO_PATH[tab] ?? "/home";
+    navigate(path);
+  }, [navigate]);
   const [userProfile, setUserProfile] = useState<UserProfile>(defaultProfile);
   const [isPremium, setIsPremium] = useState(false);
   const [user, setUser] = useState<User | null>(null);
