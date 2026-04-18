@@ -227,6 +227,7 @@ const RunningScreen = () => {
   const discardRun = () => {
     mapRef.current = null;
     setPhase("idle"); setRoutePath([]); setDistanceKm(0); setElapsedSeconds(0); setCalories(0); setSegments([]);
+    setSaved(false); setSaving(false);
   };
 
   useEffect(() => () => {
