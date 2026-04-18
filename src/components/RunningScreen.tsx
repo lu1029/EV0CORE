@@ -335,21 +335,24 @@ const RunningScreen = () => {
         </div>
         <div className="w-full h-72 relative bg-secondary">
           {routePath.length > 1 ? (
-            <div className="w-full h-full flex items-center justify-center">
-              <div className="text-center">
-                <Route className="w-8 h-8 text-primary mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">Rota registrada: {routePath.length} pontos</p>
-              </div>
-            </div>
+            <div ref={summaryMapRef} className="w-full h-full" />
           ) : (
-            <div className="w-full h-full flex items-center justify-center">
+            <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+              <Route className="w-8 h-8 text-muted-foreground/40" />
               <p className="text-muted-foreground text-sm">Rota não disponível</p>
             </div>
           )}
         </div>
         <div className="px-4 -mt-5 relative z-10">
-          <Button variant="hero" className="w-full h-12 rounded-xl text-base shadow-lg">
-            <Save className="w-4 h-4 mr-2" /> Salvar {selectedActivity}
+          <Button
+            variant="hero"
+            className="w-full h-12 rounded-xl text-base shadow-lg"
+            onClick={saveRun}
+            disabled={saving || saved}
+          >
+            {saving ? (<><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Salvando...</>)
+              : saved ? (<><Save className="w-4 h-4 mr-2" /> Salvo ✓</>)
+              : (<><Save className="w-4 h-4 mr-2" /> Salvar {selectedActivity}</>)}
           </Button>
         </div>
         <div className="px-4 mt-6">
