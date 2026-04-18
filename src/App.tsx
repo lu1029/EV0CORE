@@ -21,6 +21,7 @@ import CheckoutReturn from "./pages/CheckoutReturn";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfUse from "./pages/TermsOfUse";
 import ResetPassword from "./pages/ResetPassword";
+import LanguageSettings from "./pages/LanguageSettings";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +53,7 @@ const App = () => (
                   <Route path="/perfil" element={<ProfileScreen />} />
                   <Route path="/ai" element={<AIChatScreen />} />
                   <Route path="/assinatura" element={<Navigate to="/premium" replace />} />
+                  <Route path="/configuracoes/idioma" element={<LanguageSettings />} />
                 </Route>
 
                 <Route path="*" element={<NotFound />} />
