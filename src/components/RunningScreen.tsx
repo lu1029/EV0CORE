@@ -320,6 +320,7 @@ const RunningScreen = () => {
       });
       if (error) throw error;
       setSaved(true);
+      refreshHistory();
     } catch (e) {
       console.error("Erro ao salvar corrida:", e);
       alert("Erro ao salvar corrida. Tente novamente.");
