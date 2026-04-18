@@ -6,6 +6,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { useRunHistory } from "@/hooks/useRunHistory";
 
 type RunPhase = "idle" | "running" | "summary";
 type MapLoadState = "loading-key" | "loading-map" | "ready" | "error";
@@ -87,6 +89,8 @@ const RunningScreen = () => {
   const [mapLoadState, setMapLoadState] = useState<MapLoadState>("loading-key");
   const [locationError, setLocationError] = useState("");
 
+  const navigate = useNavigate();
+  const { runs, loading: historyLoading, weekStats, refresh: refreshHistory } = useRunHistory();
   const watchIdRef = useRef<number | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const mapRef = useRef<any>(null);
