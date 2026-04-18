@@ -249,6 +249,80 @@ const RunningScreen = () => {
     );
   };
 
+  // ─── SUMMARY MAP (renders polyline of completed route) ───
+  const summaryMapRef = useRef<HTMLDivElement>(null);
+  const summaryMapInstanceRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (phase !== "summary") { summaryMapInstanceRef.current = null; return; }
+    if (mapLoadState !== "ready" || !summaryMapRef.current || routePath.length < 2) return;
+    const g = (window as any).google;
+    if (!g?.maps) return;
+
+    const bounds = new g.maps.LatLngBounds();
+    routePath.forEach((p) => bounds.extend(p));
+
+    const map = new g.maps.Map(summaryMapRef.current, {
+      disableDefaultUI: true, styles: darkMapStyles, gestureHandling: "greedy", zoomControl: false,
+    });
+    new g.maps.Polyline({
+      path: routePath, map,
+      strokeColor: "hsl(142, 71%, 45%)", strokeOpacity: 0.95, strokeWeight: 5,
+    });
+    new g.maps.Marker({
+      position: routePath[0], map,
+      icon: { path: g.maps.SymbolPath.CIRCLE, scale: 7, fillColor: "#22c55e", fillOpacity: 1, strokeColor: "#fff", strokeWeight: 2 },
+      title: "Início",
+    });
+    new g.maps.Marker({
+      position: routePath[routePath.length - 1], map,
+      icon: { path: g.maps.SymbolPath.CIRCLE, scale: 7, fillColor: "#ef4444", fillOpacity: 1, strokeColor: "#fff", strokeWeight: 2 },
+      title: "Fim",
+    });
+    map.fitBounds(bounds, 40);
+    summaryMapInstanceRef.current = map;
+  }, [phase, mapLoadState, routePath]);
+
+  // ─── SAVE RUN TO DATABASE ───
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const saveRun = useCallback(async () => {
+    if (saving || saved) return;
+    setSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Não autenticado");
+
+      const activityMap: Record<string, string> = {
+        "Corrida": "run", "Caminhada": "walk", "Bike": "bike",
+        "Esteira": "treadmill", "Elíptico": "elliptical", "Escada": "stairs",
+      };
+
+      const paceNum = distanceKm > 0 ? elapsedSeconds / 60 / distanceKm : null;
+      const avgSpeedNum = elapsedSeconds > 0 ? distanceKm / (elapsedSeconds / 3600) : null;
+
+      const { error } = await supabase.from("runs").insert({
+        user_id: user.id,
+        activity_type: activityMap[selectedActivity] ?? "run",
+        distance_km: Number(distanceKm.toFixed(3)),
+        duration_seconds: elapsedSeconds,
+        calories_burned: calories,
+        pace_min_km: paceNum ? Number(paceNum.toFixed(2)) : null,
+        avg_speed_kmh: avgSpeedNum ? Number(avgSpeedNum.toFixed(2)) : null,
+        route_data: { points: routePath, max_speed_kmh: maxSpeed, elevation_gain_m: elevationGain },
+        started_at: new Date(Date.now() - elapsedSeconds * 1000).toISOString(),
+      });
+      if (error) throw error;
+      setSaved(true);
+    } catch (e) {
+      console.error("Erro ao salvar corrida:", e);
+      alert("Erro ao salvar corrida. Tente novamente.");
+    } finally {
+      setSaving(false);
+    }
+  }, [saving, saved, distanceKm, elapsedSeconds, calories, selectedActivity, routePath, maxSpeed, elevationGain]);
+
   // ─── POST-RUN SUMMARY ───
   if (phase === "summary") {
     return (
