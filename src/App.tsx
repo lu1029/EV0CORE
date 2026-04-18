@@ -22,6 +22,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfUse from "./pages/TermsOfUse";
 import ResetPassword from "./pages/ResetPassword";
 import LanguageSettings from "./pages/LanguageSettings";
+import RunResult from "./pages/RunResult";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +55,7 @@ const App = () => (
                   <Route path="/ai" element={<AIChatScreen />} />
                   <Route path="/assinatura" element={<Navigate to="/premium" replace />} />
                   <Route path="/configuracoes/idioma" element={<LanguageSettings />} />
+                  <Route path="/corrida/resultado/:id" element={<RunResult />} />
                 </Route>
 
                 <Route path="*" element={<NotFound />} />
