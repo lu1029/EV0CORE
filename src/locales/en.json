@@ -1,0 +1,35 @@
+{
+  "common": {
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading...",
+    "error": "Error",
+    "retry": "Retry"
+  },
+  "nav": {
+    "home": "Home",
+    "training": "Workout",
+    "running": "Running",
+    "nutrition": "Nutrition",
+    "progress": "Progress",
+    "premium": "Premium",
+    "profile": "Profile"
+  },
+  "settings": {
+    "language": "Language",
+    "languageDescription": "Choose the app language",
+    "saved": "Language saved"
+  },
+  "languages": {
+    "pt-BR": "Português (Brasil)",
+    "en": "English",
+    "es": "Español",
+    "fr": "Français",
+    "de": "Deutsch",
+    "it": "Italiano",
+    "ja": "日本語",
+    "ko": "한국어",
+    "zh-CN": "中文 (简体)"
+  }
+}

@@ -1,9 +1,25 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 import { useInactivityLogout } from "@/hooks/useInactivityLogout";
 import { logSecurityEvent } from "@/lib/auditLog";
 import evocoreLogo from "@/assets/evocore-logo.png";
+
+// Map legacy tab ids to real routes so all existing setCurrentTab() calls keep working
+const TAB_TO_PATH: Record<string, string> = {
+  home: "/home",
+  training: "/treinos",
+  running: "/corrida",
+  nutrition: "/nutricao",
+  progress: "/evolucao",
+  premium: "/premium",
+  profile: "/perfil",
+  ai: "/ai",
+};
+const PATH_TO_TAB: Record<string, string> = Object.fromEntries(
+  Object.entries(TAB_TO_PATH).map(([k, v]) => [v, k])
+);
 
 interface UserProfile {
   name: string;
@@ -50,9 +66,15 @@ const defaultProfile: UserProfile = {
 const AppContext = createContext<AppContextType | null>(null);
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [hasOnboarded, setHasOnboarded] = useState(false);
-  const [currentTab, setCurrentTab] = useState("home");
+  const currentTab = PATH_TO_TAB[location.pathname] ?? "home";
+  const setCurrentTab = useCallback((tab: string) => {
+    const path = TAB_TO_PATH[tab] ?? "/home";
+    navigate(path);
+  }, [navigate]);
   const [userProfile, setUserProfile] = useState<UserProfile>(defaultProfile);
   const [isPremium, setIsPremium] = useState(false);
   const [user, setUser] = useState<User | null>(null);
