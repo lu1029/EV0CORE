@@ -1,0 +1,44 @@
+{
+  "common": { "back": "Volver", "save": "Guardar", "cancel": "Cancelar", "loading": "Cargando...", "error": "Error", "retry": "Reintentar", "continue": "Continuar" },
+  "nav": { "home": "Inicio", "training": "Entreno", "running": "Carrera", "nutrition": "Nutrición", "progress": "Progreso", "premium": "Premium", "profile": "Perfil" },
+  "auth": {
+    "welcomeBack": "Bienvenido de nuevo", "createAccount": "Crear cuenta", "loginSubtitle": "Inicia sesión para continuar", "signupSubtitle": "Comienza tu evolución ahora",
+    "name": "Tu nombre", "email": "Tu correo", "password": "Contraseña", "login": "Entrar", "signup": "Crear cuenta", "loginLoading": "Cargando...",
+    "continueWith": "o continúa con", "google": "Google", "apple": "Apple",
+    "haveAccount": "¿Ya tienes cuenta? ", "noAccount": "¿No tienes cuenta? ", "doLogin": "Iniciar sesión", "doSignup": "Crear cuenta",
+    "forgotPassword": "Olvidé mi contraseña", "recoverPassword": "Recuperar contraseña", "recoverDescription": "Ingresa tu correo para recibir el enlace",
+    "sendLink": "Enviar enlace", "sendingLink": "Enviando...", "backToLogin": "Volver al inicio de sesión",
+    "acceptTerms": "He leído y acepto los ", "termsOfUse": "Términos de Uso", "and": " y la ", "privacyPolicy": "Política de Privacidad",
+    "tagline": "Evoluciona tu cuerpo. Domina tu rutina."
+  },
+  "home": {
+    "goodMorning": "Buenos días", "goodAfternoon": "Buenas tardes", "goodEvening": "Buenas noches", "athlete": "Atleta",
+    "evoaiTitle": "EvoAI — Tu Entrenador", "evoaiSubtitle": "Habla con tu IA para entrenamientos y nutrición personalizados",
+    "streakStart": "¡Comienza tu racha!", "streakDay": "{{count}} día consecutivo", "streakDays": "{{count}} días consecutivos",
+    "weekDays": "{{done}}/7 días", "trainedToday": "✅ ¡Ya entrenaste hoy!",
+    "training": "Entreno", "trainingDesc": "Crea tu plan con IA", "running": "Carrera", "runningDesc": "Inicia tu actividad",
+    "nutrition": "Nutrición", "nutritionDesc": "Dieta personalizada", "progress": "Progreso", "progressDesc": "Sigue tu evolución",
+    "motivation": "Motivación del día"
+  },
+  "premium": {
+    "title": "EVOCORE PRO", "subtitle": "Desbloquea tu evolución completa", "youArePro": "¡Eres PRO! 🎉",
+    "proDescription": "Disfruta todas las funciones premium de EVOCORE.", "expiresOn": "Tu suscripción expira el {{date}}",
+    "activeBenefits": "Tus beneficios activos", "backHome": "Volver al inicio", "manageSubscription": "Gestionar suscripción", "loadingPortal": "Cargando...",
+    "choosePlan": "Elige tu plan", "annual": "Anual", "monthly": "Mensual", "save60": "Ahorra 60%", "cancelAnytime": "Cancela cuando quieras",
+    "mostPopular": "MÁS POPULAR", "perMonth": "/mes", "comparison": "Comparación de planes", "feature": "Función", "free": "Free", "pro": "PRO",
+    "subscribe": "Suscribirse 🚀", "securePayment": "Pago seguro", "checkoutTitle": "Finalizar suscripción",
+    "annualSummary": "$59.88/año ($4.99/mes)", "monthlySummary": "$9.99/mes"
+  },
+  "running": {
+    "title": "Carrera y Cardio", "startActivity": "Iniciar {{activity}}", "gpsInfo": "GPS • Ritmo • Distancia • Calorías", "startNow": "Empezar ahora 🏃",
+    "thisWeek": "Esta semana", "kmTotal": "km total", "activities": "actividades", "avgPace": "ritmo medio",
+    "history": "Historial", "noActivity": "Sin actividad aún", "noActivityDesc": "Tus carreras y caminatas aparecerán aquí",
+    "discard": "Descartar", "saveActivity": "Guardar {{activity}}", "saving": "Guardando...", "saved": "Guardado ✓",
+    "distance": "Distancia", "time": "Tiempo", "pace": "Ritmo medio", "calories": "Calorías", "maxSpeed": "Vel. máx.", "avgSpeed": "Vel. media",
+    "kilometers": "kilómetros", "paceLabel": "Ritmo /km", "gpsActive": "GPS activo", "yourLocation": "Tu ubicación",
+    "activities_run": "Carrera", "activities_walk": "Caminata", "activities_bike": "Bici", "activities_treadmill": "Cinta", "activities_elliptical": "Elíptica", "activities_stairs": "Escalera",
+    "routeUnavailable": "Ruta no disponible", "loadError": "No se pudo cargar la carrera", "deleteConfirm": "¿Eliminar esta carrera?", "deleted": "Carrera eliminada"
+  },
+  "settings": { "language": "Idioma", "languageDescription": "Elige el idioma de la aplicación", "saved": "Idioma guardado" },
+  "languages": { "pt-BR": "Português (Brasil)", "en": "English", "es": "Español", "fr": "Français", "de": "Deutsch", "it": "Italiano", "ja": "日本語", "ko": "한국어", "zh-CN": "中文 (简体)" }
+}
