@@ -1,0 +1,44 @@
+{
+  "common": { "back": "返回", "save": "保存", "cancel": "取消", "loading": "加载中...", "error": "错误", "retry": "重试", "continue": "继续" },
+  "nav": { "home": "首页", "training": "训练", "running": "跑步", "nutrition": "营养", "progress": "进度", "premium": "高级", "profile": "个人" },
+  "auth": {
+    "welcomeBack": "欢迎回来", "createAccount": "创建账户", "loginSubtitle": "登录以继续", "signupSubtitle": "立即开始你的进化",
+    "name": "你的名字", "email": "你的邮箱", "password": "密码", "login": "登录", "signup": "创建账户", "loginLoading": "加载中...",
+    "continueWith": "或继续使用", "google": "Google", "apple": "Apple",
+    "haveAccount": "已有账户? ", "noAccount": "还没有账户? ", "doLogin": "登录", "doSignup": "创建账户",
+    "forgotPassword": "忘记密码", "recoverPassword": "恢复密码", "recoverDescription": "输入你的邮箱以接收链接",
+    "sendLink": "发送链接", "sendingLink": "发送中...", "backToLogin": "返回登录",
+    "acceptTerms": "我已阅读并同意 ", "termsOfUse": "使用条款", "and": " 和 ", "privacyPolicy": "隐私政策",
+    "tagline": "进化你的身体。掌控你的日常。"
+  },
+  "home": {
+    "goodMorning": "早上好", "goodAfternoon": "下午好", "goodEvening": "晚上好", "athlete": "运动员",
+    "evoaiTitle": "EvoAI — 你的教练", "evoaiSubtitle": "与你的 AI 对话获取个性化训练和营养",
+    "streakStart": "开始你的连续记录!", "streakDay": "连续 {{count}} 天", "streakDays": "连续 {{count}} 天",
+    "weekDays": "{{done}}/7 天", "trainedToday": "✅ 你今天已经训练了!",
+    "training": "训练", "trainingDesc": "用 AI 制定计划", "running": "跑步", "runningDesc": "开始你的活动",
+    "nutrition": "营养", "nutritionDesc": "个性化饮食", "progress": "进度", "progressDesc": "追踪进化",
+    "motivation": "今日动力"
+  },
+  "premium": {
+    "title": "EVOCORE PRO", "subtitle": "解锁你的完整进化", "youArePro": "你是 PRO! 🎉",
+    "proDescription": "享受 EVOCORE 的所有高级功能。", "expiresOn": "你的订阅将于 {{date}} 到期",
+    "activeBenefits": "你的活跃权益", "backHome": "返回首页", "manageSubscription": "管理订阅", "loadingPortal": "加载中...",
+    "choosePlan": "选择你的方案", "annual": "年度", "monthly": "月度", "save60": "节省 60%", "cancelAnytime": "随时取消",
+    "mostPopular": "最受欢迎", "perMonth": "/月", "comparison": "方案对比", "feature": "功能", "free": "Free", "pro": "PRO",
+    "subscribe": "立即订阅 🚀", "securePayment": "安全支付", "checkoutTitle": "完成订阅",
+    "annualSummary": "$59.88/年 ($4.99/月)", "monthlySummary": "$9.99/月"
+  },
+  "running": {
+    "title": "跑步 & 有氧", "startActivity": "开始{{activity}}", "gpsInfo": "GPS • 配速 • 距离 • 卡路里", "startNow": "立即开始 🏃",
+    "thisWeek": "本周", "kmTotal": "总公里", "activities": "活动", "avgPace": "平均配速",
+    "history": "历史", "noActivity": "暂无活动", "noActivityDesc": "你的跑步和步行将显示在这里",
+    "discard": "舍弃", "saveActivity": "保存{{activity}}", "saving": "保存中...", "saved": "已保存 ✓",
+    "distance": "距离", "time": "时间", "pace": "平均配速", "calories": "卡路里", "maxSpeed": "最高速度", "avgSpeed": "平均速度",
+    "kilometers": "公里", "paceLabel": "配速 /km", "gpsActive": "GPS 已激活", "yourLocation": "你的位置",
+    "activities_run": "跑步", "activities_walk": "步行", "activities_bike": "自行车", "activities_treadmill": "跑步机", "activities_elliptical": "椭圆机", "activities_stairs": "爬楼",
+    "routeUnavailable": "路线不可用", "loadError": "无法加载此次跑步", "deleteConfirm": "删除此次跑步?", "deleted": "已删除"
+  },
+  "settings": { "language": "语言", "languageDescription": "选择应用语言", "saved": "语言已保存" },
+  "languages": { "pt-BR": "Português (Brasil)", "en": "English", "es": "Español", "fr": "Français", "de": "Deutsch", "it": "Italiano", "ja": "日本語", "ko": "한국어", "zh-CN": "中文 (简体)" }
+}

@@ -1,0 +1,44 @@
+{
+  "common": { "back": "뒤로", "save": "저장", "cancel": "취소", "loading": "로딩 중...", "error": "오류", "retry": "재시도", "continue": "계속" },
+  "nav": { "home": "홈", "training": "운동", "running": "달리기", "nutrition": "영양", "progress": "진행", "premium": "프리미엄", "profile": "프로필" },
+  "auth": {
+    "welcomeBack": "다시 오신 것을 환영합니다", "createAccount": "계정 만들기", "loginSubtitle": "계속하려면 로그인하세요", "signupSubtitle": "지금 진화를 시작하세요",
+    "name": "이름", "email": "이메일", "password": "비밀번호", "login": "로그인", "signup": "계정 만들기", "loginLoading": "로딩 중...",
+    "continueWith": "또는 다음으로 계속", "google": "Google", "apple": "Apple",
+    "haveAccount": "이미 계정이 있나요? ", "noAccount": "계정이 없나요? ", "doLogin": "로그인", "doSignup": "계정 만들기",
+    "forgotPassword": "비밀번호 찾기", "recoverPassword": "비밀번호 복구", "recoverDescription": "링크를 받을 이메일을 입력하세요",
+    "sendLink": "링크 보내기", "sendingLink": "전송 중...", "backToLogin": "로그인으로 돌아가기",
+    "acceptTerms": "동의합니다 ", "termsOfUse": "이용 약관", "and": " 및 ", "privacyPolicy": "개인정보 처리방침",
+    "tagline": "몸을 진화시키세요. 루틴을 지배하세요."
+  },
+  "home": {
+    "goodMorning": "좋은 아침입니다", "goodAfternoon": "좋은 오후입니다", "goodEvening": "좋은 저녁입니다", "athlete": "운동선수",
+    "evoaiTitle": "EvoAI — 당신의 코치", "evoaiSubtitle": "AI와 대화하여 맞춤형 운동과 영양을",
+    "streakStart": "연속 기록을 시작하세요!", "streakDay": "{{count}}일 연속", "streakDays": "{{count}}일 연속",
+    "weekDays": "{{done}}/7일", "trainedToday": "✅ 오늘 이미 운동했습니다!",
+    "training": "운동", "trainingDesc": "AI로 계획 만들기", "running": "달리기", "runningDesc": "활동 시작",
+    "nutrition": "영양", "nutritionDesc": "맞춤형 식단", "progress": "진행", "progressDesc": "진화 추적",
+    "motivation": "오늘의 동기부여"
+  },
+  "premium": {
+    "title": "EVOCORE PRO", "subtitle": "완전한 진화를 잠금 해제", "youArePro": "당신은 PRO입니다! 🎉",
+    "proDescription": "EVOCORE의 모든 프리미엄 기능을 즐기세요.", "expiresOn": "구독은 {{date}}에 만료됩니다",
+    "activeBenefits": "활성 혜택", "backHome": "홈으로 돌아가기", "manageSubscription": "구독 관리", "loadingPortal": "로딩 중...",
+    "choosePlan": "플랜 선택", "annual": "연간", "monthly": "월간", "save60": "60% 절약", "cancelAnytime": "언제든지 취소",
+    "mostPopular": "가장 인기", "perMonth": "/월", "comparison": "플랜 비교", "feature": "기능", "free": "Free", "pro": "PRO",
+    "subscribe": "지금 구독 🚀", "securePayment": "안전한 결제", "checkoutTitle": "구독 완료",
+    "annualSummary": "$59.88/년 ($4.99/월)", "monthlySummary": "$9.99/월"
+  },
+  "running": {
+    "title": "달리기 & 유산소", "startActivity": "{{activity}} 시작", "gpsInfo": "GPS • 페이스 • 거리 • 칼로리", "startNow": "지금 시작 🏃",
+    "thisWeek": "이번 주", "kmTotal": "km 합계", "activities": "활동", "avgPace": "평균 페이스",
+    "history": "기록", "noActivity": "아직 활동이 없습니다", "noActivityDesc": "달리기와 걷기가 여기에 표시됩니다",
+    "discard": "버리기", "saveActivity": "{{activity}} 저장", "saving": "저장 중...", "saved": "저장됨 ✓",
+    "distance": "거리", "time": "시간", "pace": "평균 페이스", "calories": "칼로리", "maxSpeed": "최고 속도", "avgSpeed": "평균 속도",
+    "kilometers": "킬로미터", "paceLabel": "페이스 /km", "gpsActive": "GPS 활성", "yourLocation": "현재 위치",
+    "activities_run": "달리기", "activities_walk": "걷기", "activities_bike": "자전거", "activities_treadmill": "러닝머신", "activities_elliptical": "일립티컬", "activities_stairs": "계단",
+    "routeUnavailable": "경로 사용 불가", "loadError": "달리기를 불러올 수 없습니다", "deleteConfirm": "이 달리기를 삭제하시겠습니까?", "deleted": "달리기 삭제됨"
+  },
+  "settings": { "language": "언어", "languageDescription": "앱 언어 선택", "saved": "언어 저장됨" },
+  "languages": { "pt-BR": "Português (Brasil)", "en": "English", "es": "Español", "fr": "Français", "de": "Deutsch", "it": "Italiano", "ja": "日本語", "ko": "한국어", "zh-CN": "中文 (简体)" }
+}
