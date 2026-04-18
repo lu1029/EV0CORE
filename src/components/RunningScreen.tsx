@@ -484,32 +484,71 @@ const RunningScreen = () => {
         ))}
       </div>
 
-      {/* Weekly stats - empty state */}
+      {/* Weekly stats */}
       <div className="glass-card rounded-2xl p-4 mb-6 animate-fade-in">
         <h3 className="font-semibold text-foreground text-sm mb-3">Esta semana</h3>
         <div className="grid grid-cols-3 gap-4">
           <div className="text-center">
-            <p className="text-2xl font-bold text-gradient font-heading">0.0</p>
+            <p className="text-2xl font-bold text-gradient font-heading">{weekStats.totalKm.toFixed(1)}</p>
             <p className="text-[10px] text-muted-foreground">km total</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold text-foreground font-heading">0</p>
+            <p className="text-2xl font-bold text-foreground font-heading">{weekStats.count}</p>
             <p className="text-[10px] text-muted-foreground">atividades</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold text-foreground font-heading">--:--</p>
+            <p className="text-2xl font-bold text-foreground font-heading">
+              {weekStats.avgPace
+                ? `${Math.floor(weekStats.avgPace)}:${Math.round((weekStats.avgPace - Math.floor(weekStats.avgPace)) * 60).toString().padStart(2, "0")}`
+                : "--:--"}
+            </p>
             <p className="text-[10px] text-muted-foreground">pace médio</p>
           </div>
         </div>
       </div>
 
-      {/* History - empty state */}
+      {/* History */}
       <h3 className="font-semibold text-foreground text-sm mb-3">Histórico</h3>
-      <div className="glass-card rounded-2xl p-6 flex flex-col items-center text-center animate-fade-in">
-        <MapPin className="w-8 h-8 text-muted-foreground/30 mb-3" />
-        <p className="text-sm text-muted-foreground">Nenhuma atividade ainda</p>
-        <p className="text-xs text-muted-foreground/70 mt-1">Suas corridas e caminhadas aparecerão aqui</p>
-      </div>
+      {historyLoading ? (
+        <div className="glass-card rounded-2xl p-6 flex items-center justify-center animate-fade-in">
+          <Loader2 className="w-5 h-5 text-primary animate-spin" />
+        </div>
+      ) : runs.length === 0 ? (
+        <div className="glass-card rounded-2xl p-6 flex flex-col items-center text-center animate-fade-in">
+          <MapPin className="w-8 h-8 text-muted-foreground/30 mb-3" />
+          <p className="text-sm text-muted-foreground">Nenhuma atividade ainda</p>
+          <p className="text-xs text-muted-foreground/70 mt-1">Suas corridas e caminhadas aparecerão aqui</p>
+        </div>
+      ) : (
+        <div className="space-y-2 animate-fade-in">
+          {runs.map((r) => {
+            const ptCount = (r.route_data as any)?.points?.length ?? 0;
+            const paceStr = r.pace_min_km
+              ? `${Math.floor(r.pace_min_km)}:${Math.round((r.pace_min_km - Math.floor(r.pace_min_km)) * 60).toString().padStart(2, "0")}/km`
+              : "--";
+            return (
+              <button
+                key={r.id}
+                onClick={() => navigate(`/corrida/resultado/${r.id}`)}
+                className="w-full glass-card rounded-2xl p-4 flex items-center gap-3 text-left active:scale-[0.98] transition-transform"
+              >
+                <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shrink-0">
+                  <Footprints className="w-5 h-5 text-primary-foreground" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-foreground truncate">
+                    {Number(r.distance_km).toFixed(2)} km · {formatTime(r.duration_seconds)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(r.started_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })} · {paceStr}{ptCount > 1 ? ` · ${ptCount}pts` : ""}
+                  </p>
+                </div>
+                <span className="text-muted-foreground text-lg">›</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };
