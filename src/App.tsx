@@ -23,6 +23,12 @@ import TermsOfUse from "./pages/TermsOfUse";
 import ResetPassword from "./pages/ResetPassword";
 import LanguageSettings from "./pages/LanguageSettings";
 import RunResult from "./pages/RunResult";
+import Cadastro from "./pages/Cadastro";
+import EsqueciSenha from "./pages/EsqueciSenha";
+import Historico from "./pages/Historico";
+import Configuracoes from "./pages/Configuracoes";
+import TreinoDetalhe from "./pages/TreinoDetalhe";
+import CorridaAtiva from "./pages/CorridaAtiva";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +47,8 @@ const App = () => (
                 <Route path="/termos" element={<TermsOfUse />} />
                 <Route path="/checkout/return" element={<CheckoutReturn />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/cadastro" element={<Cadastro />} />
+                <Route path="/esqueci-senha" element={<EsqueciSenha />} />
 
                 {/* App (auth gated inside AppLayout) */}
                 <Route element={<AppLayout />}>
@@ -54,7 +62,11 @@ const App = () => (
                   <Route path="/perfil" element={<ProfileScreen />} />
                   <Route path="/ai" element={<AIChatScreen />} />
                   <Route path="/assinatura" element={<Navigate to="/premium" replace />} />
+                  <Route path="/configuracoes" element={<Configuracoes />} />
                   <Route path="/configuracoes/idioma" element={<LanguageSettings />} />
+                  <Route path="/historico" element={<Historico />} />
+                  <Route path="/treino/:id" element={<TreinoDetalhe />} />
+                  <Route path="/corrida/ativa" element={<CorridaAtiva />} />
                   <Route path="/corrida/resultado/:id" element={<RunResult />} />
                 </Route>
 
