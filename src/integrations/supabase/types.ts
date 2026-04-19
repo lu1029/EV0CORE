@@ -41,6 +41,48 @@ export type Database = {
         }
         Relationships: []
       }
+      exercise_library: {
+        Row: {
+          body_part: string | null
+          created_at: string
+          equipment: string | null
+          external_id: string
+          gif_url: string | null
+          id: string
+          instructions: Json | null
+          name: string
+          secondary_muscles: Json | null
+          target: string | null
+          updated_at: string
+        }
+        Insert: {
+          body_part?: string | null
+          created_at?: string
+          equipment?: string | null
+          external_id: string
+          gif_url?: string | null
+          id?: string
+          instructions?: Json | null
+          name: string
+          secondary_muscles?: Json | null
+          target?: string | null
+          updated_at?: string
+        }
+        Update: {
+          body_part?: string | null
+          created_at?: string
+          equipment?: string | null
+          external_id?: string
+          gif_url?: string | null
+          id?: string
+          instructions?: Json | null
+          name?: string
+          secondary_muscles?: Json | null
+          target?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       generated_plans: {
         Row: {
           created_at: string
