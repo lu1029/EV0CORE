@@ -9,7 +9,7 @@ export const homeExerciseGifs: Record<string, string> = {
   flexao_diamante: IMG("Close-Grip_Push-Up_off_of_a_Dumbbell"),
   flexao_declinada: IMG("Decline_Push-Up"),
   flexao_inclinada: IMG("Incline_Push-Up"),
-  pike_pushup: IMG("Pushups_-_Close_Triceps_Position"),
+  pike_pushup: IMG("Pushups"),
   mergulho_cadeira: IMG("Bench_Dips"),
 
   // Legs
@@ -19,7 +19,7 @@ export const homeExerciseGifs: Record<string, string> = {
   afundo: IMG("Bodyweight_Walking_Lunge"),
   afundo_bulgaro: IMG("Dumbbell_Lunges"),
   step_up: IMG("Dumbbell_Step_Ups"),
-  wall_sit: IMG("Wall_Squat"),
+  wall_sit: IMG("Bodyweight_Squat"),
   hip_thrust: IMG("Single_Leg_Glute_Bridge"),
   kickback: IMG("Rear_Leg_Raises"),
 
