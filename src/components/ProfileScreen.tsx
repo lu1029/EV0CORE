@@ -1,23 +1,35 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useApp } from "@/contexts/AppContext";
 import { ChevronRight, LogOut, X, Save, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import SettingsScreen from "@/components/settings/SettingsScreen";
 import { useProfileStats } from "@/hooks/useProfileStats";
 import { useAchievements } from "@/hooks/useAchievements";
+import AvatarUpload from "@/components/profile/AvatarUpload";
 
 const ProfileScreen = () => {
   const { userProfile, setUserProfile, isPremium, setCurrentTab, user } = useApp();
   const { stats, loading: statsLoading } = useProfileStats();
   const { unlockedCount, totalCount } = useAchievements();
   const name = userProfile.name || "Atleta";
+  const initial = (name[0] || "A").toUpperCase();
   const [isEditing, setIsEditing] = useState(false);
   const [editProfile, setEditProfile] = useState(userProfile);
   const [saving, setSaving] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("avatar_url")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => setAvatarUrl(data?.avatar_url ?? null));
+  }, [user]);
 
   const startEditing = () => {
     setEditProfile({ ...userProfile });
