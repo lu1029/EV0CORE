@@ -321,6 +321,9 @@ const RunningScreen = () => {
 
   // ─── SAVE RUN TO DATABASE ───
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [savedRunId, setSavedRunId] = useState<string | null>(null);
+  const [summaryPhotoUrl, setSummaryPhotoUrl] = useState<string | null>(null);
 
   const saveRun = useCallback(async () => {
     if (saving || saved) return;
