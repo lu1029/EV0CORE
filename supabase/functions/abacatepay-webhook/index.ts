@@ -8,8 +8,14 @@ const supabase = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
 );
 
-const PRICE_ID = "evocore_premium_pix";
 const PRODUCT_ID = "evocore_premium";
+
+const PLAN_DURATION_DAYS: Record<string, number> = {
+  evocore_premium_weekly: 7,
+  evocore_premium_monthly: 30,
+  evocore_premium_yearly: 365,
+  evocore_premium_pix: 30, // legacy fallback
+};
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") {
