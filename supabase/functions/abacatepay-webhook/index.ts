@@ -93,7 +93,12 @@ Deno.serve(async (req) => {
 
     if (isPaid) {
       const now = new Date();
-      const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+      const resolvedPriceId: string =
+        charge?.price_id ||
+        data?.metadata?.priceId ||
+        "evocore_premium_monthly";
+      const days = PLAN_DURATION_DAYS[resolvedPriceId] ?? 30;
+      const periodEnd = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
       const subscriptionId = `pix_${abacateId || charge?.external_id || crypto.randomUUID()}`;
 
       const { error: subErr } = await supabase.from("subscriptions").upsert(
@@ -102,11 +107,11 @@ Deno.serve(async (req) => {
           stripe_subscription_id: subscriptionId,
           stripe_customer_id: `pix_customer_${userId}`,
           product_id: PRODUCT_ID,
-          price_id: PRICE_ID,
+          price_id: resolvedPriceId,
           status: "active",
           current_period_start: now.toISOString(),
           current_period_end: periodEnd.toISOString(),
-          cancel_at_period_end: true, // pix is one-shot, do not auto-renew
+          cancel_at_period_end: true,
           environment: "pix",
           updated_at: now.toISOString(),
         },
