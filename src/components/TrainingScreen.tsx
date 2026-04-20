@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useApp } from "@/contexts/AppContext";
-import {
-  Dumbbell, Play, Home, Sparkles, Loader2, RotateCcw
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Loader2, ChevronRight, Plus } from "lucide-react";
 import ActiveWorkout from "./training/ActiveWorkout";
 import type { Exercise } from "./training/ExerciseCard";
 import { getGifUrl } from "./training/homeExerciseGifs";
@@ -11,44 +8,52 @@ import { useSavedPlan } from "@/hooks/useSavedPlan";
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/evo-ai-chat`;
 
+type LevelKey = "iniciante" | "intermediario" | "avancado";
+
+const LEVELS: { key: LevelKey; title: string; subtitle: string }[] = [
+  { key: "iniciante",     title: "Iniciante",     subtitle: "Construindo a base. Foco em forma e consistência." },
+  { key: "intermediario", title: "Intermediário", subtitle: "Volume crescente. Maior intensidade e variação." },
+  { key: "avancado",      title: "Avançado",      subtitle: "Alta carga e técnica refinada. Treinos densos." },
+];
+
+const inferLevelFromProfile = (level?: string): LevelKey => {
+  const l = (level || "").toLowerCase();
+  if (l.includes("avan")) return "avancado";
+  if (l.includes("inter")) return "intermediario";
+  return "iniciante";
+};
+
 const TrainingScreen = () => {
   const { userProfile } = useApp();
   const [tab, setTab] = useState<"gym" | "home">("gym");
   const [activeWorkout, setActiveWorkout] = useState<string | null>(null);
   const [activeExercises, setActiveExercises] = useState<Exercise[]>([]);
+  const [selectedLevel, setSelectedLevel] = useState<LevelKey>(inferLevelFromProfile(userProfile.level));
 
-  // Saved plans
   const gymSaved = useSavedPlan("gym");
   const homeSaved = useSavedPlan("home");
 
-  // AI-generated plan state (gym)
   const [generatedPlan, setGeneratedPlan] = useState<Record<string, Exercise[]> | null>(null);
   const [planName, setPlanName] = useState("");
-  const [planDesc, setPlanDesc] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateError, setGenerateError] = useState("");
 
-  // AI-generated home plan state
   const [homePlan, setHomePlan] = useState<Record<string, Exercise[]> | null>(null);
   const [homePlanName, setHomePlanName] = useState("");
-  const [homePlanDesc, setHomePlanDesc] = useState("");
   const [isGeneratingHome, setIsGeneratingHome] = useState(false);
   const [homeError, setHomeError] = useState("");
 
-  // Load saved plans on mount
   useEffect(() => {
     if (gymSaved.plan && !generatedPlan) {
-      const data = gymSaved.plan.plan_data;
+      const data = gymSaved.plan.plan_data as any;
       setGeneratedPlan(data.workouts || null);
       setPlanName(data.planName || gymSaved.plan.plan_name);
-      setPlanDesc(data.description || gymSaved.plan.description);
     }
   }, [gymSaved.plan]);
 
   useEffect(() => {
     if (homeSaved.plan && !homePlan) {
-      const data = homeSaved.plan.plan_data;
-      // Re-map gifKeys
+      const data = homeSaved.plan.plan_data as any;
       const mapped: Record<string, Exercise[]> = {};
       for (const [name, exercises] of Object.entries(data.workouts || {})) {
         mapped[name] = (exercises as any[]).map((ex) => ({
@@ -58,7 +63,6 @@ const TrainingScreen = () => {
       }
       setHomePlan(mapped);
       setHomePlanName(data.planName || homeSaved.plan.plan_name);
-      setHomePlanDesc(data.description || homeSaved.plan.description);
     }
   }, [homeSaved.plan]);
 
@@ -71,8 +75,8 @@ const TrainingScreen = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           mode: "generate-training",
-          userProfile,
-          messages: [{ role: "user", content: "Gere meu plano de treino personalizado completo." }],
+          userProfile: { ...userProfile, level: selectedLevel },
+          messages: [{ role: "user", content: `Gere meu plano de treino personalizado para o nível ${selectedLevel}.` }],
         }),
       });
       if (!res.ok) throw new Error("Erro ao gerar plano");
@@ -80,18 +84,12 @@ const TrainingScreen = () => {
       const parsed = JSON.parse(data.result);
       if (parsed.workouts) {
         setGeneratedPlan(parsed.workouts);
-        setPlanName(parsed.planName || "Seu Plano Personalizado");
-        setPlanDesc(parsed.description || "");
-        // Save to DB
-        await gymSaved.savePlan(
-          parsed.planName || "Seu Plano Personalizado",
-          parsed.description || "",
-          parsed
-        );
+        setPlanName(parsed.planName || "Plano personalizado");
+        await gymSaved.savePlan(parsed.planName || "Plano personalizado", parsed.description || "", parsed);
       }
     } catch (err) {
       console.error(err);
-      setGenerateError("Erro ao gerar plano. Tente novamente.");
+      setGenerateError("Não foi possível gerar agora. Tente novamente.");
     } finally {
       setIsGenerating(false);
     }
@@ -106,47 +104,28 @@ const TrainingScreen = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           mode: "generate-home-training",
-          userProfile: { ...userProfile, preference: "home" },
-          messages: [{ role: "user", content: "Gere meu plano de treino em casa personalizado completo, com equivalentes de exercícios de academia." }],
+          userProfile: { ...userProfile, preference: "home", level: selectedLevel },
+          messages: [{ role: "user", content: `Gere meu plano de treino em casa para o nível ${selectedLevel}, com equivalentes de academia.` }],
         }),
       });
       if (!res.ok) throw new Error("Erro ao gerar plano");
       const data = await res.json();
       const parsed = JSON.parse(data.result);
       if (parsed.workouts) {
-        const mappedWorkouts: Record<string, Exercise[]> = {};
+        const mapped: Record<string, Exercise[]> = {};
         for (const [name, exercises] of Object.entries(parsed.workouts)) {
-          mappedWorkouts[name] = (exercises as any[]).map((ex) => ({
-            ...ex,
-            gifUrl: getGifUrl(ex.gifKey) || undefined,
-          }));
+          mapped[name] = (exercises as any[]).map((ex) => ({ ...ex, gifUrl: getGifUrl(ex.gifKey) || undefined }));
         }
-        setHomePlan(mappedWorkouts);
-        setHomePlanName(parsed.planName || "Treino em Casa");
-        setHomePlanDesc(parsed.description || "");
-        // Save to DB
-        await homeSaved.savePlan(
-          parsed.planName || "Treino em Casa",
-          parsed.description || "",
-          parsed
-        );
+        setHomePlan(mapped);
+        setHomePlanName(parsed.planName || "Treino em casa");
+        await homeSaved.savePlan(parsed.planName || "Treino em casa", parsed.description || "", parsed);
       }
     } catch (err) {
       console.error(err);
-      setHomeError("Erro ao gerar plano. Tente novamente.");
+      setHomeError("Não foi possível gerar agora. Tente novamente.");
     } finally {
       setIsGeneratingHome(false);
     }
-  };
-
-  const resetGymPlan = async () => {
-    setGeneratedPlan(null); setPlanName(""); setPlanDesc("");
-    await gymSaved.deletePlan();
-  };
-
-  const resetHomePlan = async () => {
-    setHomePlan(null); setHomePlanName(""); setHomePlanDesc("");
-    await homeSaved.deletePlan();
   };
 
   const startWorkout = (name: string, plan: Record<string, Exercise[]>) => {
@@ -167,156 +146,147 @@ const TrainingScreen = () => {
     );
   }
 
-  const renderEmptyState = (
-    isHome: boolean,
-    loading: boolean,
-    error: string,
-    onGenerate: () => void,
-    savedLoading: boolean
-  ) => (
-    <div className="flex flex-col items-center text-center py-8 animate-fade-in">
-      {savedLoading ? (
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Carregando plano salvo...</p>
-        </div>
-      ) : (
-        <>
-          <div className="w-20 h-20 rounded-3xl gradient-primary flex items-center justify-center mb-6 animate-pulse-glow">
-            {isHome ? <Home className="w-10 h-10 text-primary-foreground" /> : <Sparkles className="w-10 h-10 text-primary-foreground" />}
-          </div>
-          <h2 className="text-xl font-heading font-bold text-foreground mb-2">
-            {isHome ? "Treino em Casa com IA" : "Crie seu treino personalizado"}
-          </h2>
-          <p className="text-sm text-muted-foreground mb-2 max-w-xs">
-            {isHome
-              ? "Nossa IA vai montar exercícios equivalentes aos de academia usando apenas seu peso corporal e itens de casa."
-              : "Nossa IA vai montar um plano de treino completo baseado no seu perfil: objetivo, nível e disponibilidade."}
-          </p>
-
-          <div className="glass-card rounded-2xl p-4 mb-6 w-full text-left">
-            <p className="text-xs text-muted-foreground mb-2 font-medium">Seu perfil:</p>
-            <div className="space-y-1">
-              <p className="text-xs text-foreground">🎯 Objetivo: <span className="text-primary font-medium">{userProfile.goal || "não definido"}</span></p>
-              <p className="text-xs text-foreground">📊 Nível: <span className="text-primary font-medium">{userProfile.level || "não definido"}</span></p>
-              <p className="text-xs text-foreground">📅 Dias/semana: <span className="text-primary font-medium">{userProfile.daysPerWeek}</span></p>
-              <p className="text-xs text-foreground">⚖️ Peso: <span className="text-primary font-medium">{userProfile.weight}kg</span></p>
-            </div>
-          </div>
-
-          {error && <p className="text-xs text-destructive mb-4">{error}</p>}
-
-          <Button
-            className="w-full h-14 rounded-2xl text-base gap-2 gradient-primary text-primary-foreground font-semibold"
-            onClick={onGenerate}
-            disabled={loading}
-          >
-            {loading ? (
-              <><Loader2 className="w-5 h-5 animate-spin" /> {isHome ? "Montando treino em casa..." : "Gerando seu plano..."}</>
-            ) : (
-              <><Sparkles className="w-5 h-5" /> {isHome ? "Gerar Treino em Casa com IA" : "Gerar Meu Treino com IA"}</>
-            )}
-          </Button>
-
-          {loading && (
-            <div className="mt-4 space-y-2 w-full">
-              {[0, 1].map(i => (
-                <div key={i} className="glass-card rounded-xl p-3 animate-pulse" style={{ animationDelay: `${i * 150}ms` }}>
-                  <div className="h-3 bg-secondary rounded w-3/4 mb-2" />
-                  <div className="h-2 bg-secondary rounded w-1/2" />
-                </div>
-              ))}
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  );
-
-  const renderPlanView = (
-    plan: Record<string, Exercise[]>,
-    name: string,
-    desc: string,
-    onReset: () => void,
-    isHome: boolean
-  ) => (
-    <>
-      <div className="flex items-center justify-between mb-2">
-        <div>
-          <h2 className="font-heading font-bold text-foreground text-lg">{name}</h2>
-          {desc && <p className="text-xs text-muted-foreground">{desc}</p>}
-        </div>
-        <button onClick={onReset} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors">
-          <RotateCcw className="w-3 h-3" /> Refazer
-        </button>
-      </div>
-
-      <div className="space-y-3">
-        {Object.entries(plan).map(([workoutName, exercises], idx) => {
-          const firstEmoji = exercises[0]?.emoji || (isHome ? "🏠" : "💪");
-          const hasGifs = isHome && exercises.some(e => e.gifUrl);
-          return (
-            <button
-              key={workoutName}
-              onClick={() => startWorkout(workoutName, plan)}
-              className="w-full glass-card rounded-2xl p-4 flex items-center gap-3 hover:border-primary/30 transition-all text-left animate-fade-in active:scale-[0.98]"
-              style={{ animationDelay: `${idx * 80}ms` }}
-            >
-              <div className="w-12 h-12 rounded-xl bg-secondary/80 flex items-center justify-center text-xl border border-border/30">
-                {firstEmoji}
-              </div>
-              <div className="flex-1 min-w-0">
-                <h4 className="font-semibold text-foreground text-sm">{workoutName}</h4>
-                <p className="text-xs text-muted-foreground">
-                  {exercises.length} exercícios • ~{exercises.length * 7} min
-                  {hasGifs && " • 🎬 Com demonstração"}
-                </p>
-              </div>
-              <Play className="w-4 h-4 text-primary shrink-0" />
-            </button>
-          );
-        })}
-      </div>
-    </>
-  );
+  const currentPlan = tab === "gym" ? generatedPlan : homePlan;
+  const currentName = tab === "gym" ? planName : homePlanName;
+  const loading = tab === "gym" ? isGenerating : isGeneratingHome;
+  const error = tab === "gym" ? generateError : homeError;
+  const onGenerate = tab === "gym" ? generateTrainingPlan : generateHomePlan;
+  const savedLoading = tab === "gym" ? gymSaved.loading : homeSaved.loading;
 
   return (
-    <div className="pb-24 px-4 pt-6 max-w-lg mx-auto relative z-10">
-      <h1 className="text-2xl font-heading font-bold text-foreground mb-6 animate-fade-in">Treino</h1>
-
-      {/* Tab switch */}
-      <div className="flex glass-card rounded-2xl p-1 mb-6 animate-fade-in">
-        <button
-          onClick={() => setTab("gym")}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all ${
-            tab === "gym" ? "gradient-primary text-primary-foreground" : "text-muted-foreground"
-          }`}
-        >
-          <Dumbbell className="w-4 h-4" /> Academia
-        </button>
-        <button
-          onClick={() => setTab("home")}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all ${
-            tab === "home" ? "gradient-primary text-primary-foreground" : "text-muted-foreground"
-          }`}
-        >
-          <Home className="w-4 h-4" /> Em casa
-        </button>
+    <div className="pb-32 max-w-lg mx-auto relative z-10">
+      {/* Large title — Apple style */}
+      <div className="px-5 pt-6 pb-4 animate-fade-in">
+        <p className="text-[13px] font-medium text-muted-foreground mb-1">Treino</p>
+        <h1 className="text-[34px] leading-tight font-bold tracking-tight text-foreground">
+          Hoje
+        </h1>
       </div>
 
-      {tab === "gym" ? (
-        <div className="animate-fade-in space-y-6">
-          {!generatedPlan
-            ? renderEmptyState(false, isGenerating, generateError, generateTrainingPlan, gymSaved.loading)
-            : renderPlanView(generatedPlan, planName, planDesc, resetGymPlan, false)}
+      {/* Segmented control — iOS */}
+      <div className="px-5 mb-6 animate-fade-in">
+        <div className="flex bg-white/[0.06] rounded-[10px] p-[3px]">
+          {([
+            { key: "gym",  label: "Academia" },
+            { key: "home", label: "Em casa" },
+          ] as const).map((opt) => (
+            <button
+              key={opt.key}
+              onClick={() => setTab(opt.key)}
+              className={`flex-1 py-1.5 rounded-[8px] text-[13px] font-semibold transition-all ${
+                tab === opt.key
+                  ? "bg-white/[0.14] text-foreground shadow-[0_1px_0_rgba(0,0,0,0.2)]"
+                  : "text-muted-foreground"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
         </div>
-      ) : (
-        <div className="animate-fade-in space-y-6">
-          {!homePlan
-            ? renderEmptyState(true, isGeneratingHome, homeError, generateHomePlan, homeSaved.loading)
-            : renderPlanView(homePlan, homePlanName, homePlanDesc, resetHomePlan, true)}
+      </div>
+
+      {/* Level selector — horizontal blocks (no cards) */}
+      <div className="px-5 mb-2 animate-fade-in">
+        <h2 className="text-[22px] font-bold tracking-tight text-foreground mb-3">Nível</h2>
+        <div className="rounded-2xl bg-card overflow-hidden border border-white/[0.06]">
+          {LEVELS.map((lvl, idx) => {
+            const active = selectedLevel === lvl.key;
+            return (
+              <button
+                key={lvl.key}
+                onClick={() => setSelectedLevel(lvl.key)}
+                className={`w-full flex items-center gap-4 px-5 py-4 text-left transition-colors active:bg-white/[0.04] ${
+                  idx > 0 ? "border-t border-white/[0.06]" : ""
+                }`}
+              >
+                <div className={`w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
+                  active ? "border-primary" : "border-white/20"
+                }`}>
+                  {active && <div className="w-[10px] h-[10px] rounded-full bg-primary" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[17px] font-semibold text-foreground leading-tight">{lvl.title}</p>
+                  <p className="text-[13px] text-muted-foreground mt-0.5 leading-snug">{lvl.subtitle}</p>
+                </div>
+              </button>
+            );
+          })}
         </div>
-      )}
+      </div>
+
+      {/* Plan section */}
+      <div className="px-5 pt-8 animate-fade-in">
+        <div className="flex items-end justify-between mb-3">
+          <h2 className="text-[22px] font-bold tracking-tight text-foreground">
+            {currentPlan ? "Treinos" : "Seu plano"}
+          </h2>
+          {currentPlan && (
+            <button
+              onClick={onGenerate}
+              disabled={loading}
+              className="text-[15px] text-primary font-medium active:opacity-60 transition-opacity disabled:opacity-40"
+            >
+              Refazer
+            </button>
+          )}
+        </div>
+
+        {savedLoading ? (
+          <div className="flex items-center gap-3 py-10 justify-center">
+            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+            <p className="text-[13px] text-muted-foreground">Carregando…</p>
+          </div>
+        ) : !currentPlan ? (
+          <div className="rounded-2xl bg-card border border-white/[0.06] p-5">
+            <p className="text-[15px] text-foreground leading-relaxed">
+              {tab === "gym"
+                ? "Vamos montar seu plano com base no seu perfil e nível."
+                : "Treino em casa adaptado, sem equipamentos."}
+            </p>
+            <p className="text-[13px] text-muted-foreground mt-1">
+              {currentName || `Nível selecionado: ${LEVELS.find(l => l.key === selectedLevel)?.title}`}
+            </p>
+
+            {error && <p className="text-[13px] text-destructive mt-3">{error}</p>}
+
+            <button
+              onClick={onGenerate}
+              disabled={loading}
+              className="mt-4 w-full h-12 rounded-full bg-primary text-primary-foreground font-semibold text-[15px] flex items-center justify-center gap-2 active:opacity-80 transition-opacity disabled:opacity-50"
+            >
+              {loading ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Gerando…</>
+              ) : (
+                <><Plus className="w-4 h-4" /> Gerar plano</>
+              )}
+            </button>
+          </div>
+        ) : (
+          <div className="rounded-2xl bg-card border border-white/[0.06] overflow-hidden">
+            {Object.entries(currentPlan).map(([workoutName, exercises], idx, arr) => {
+              const totalMin = exercises.length * 7;
+              return (
+                <button
+                  key={workoutName}
+                  onClick={() => startWorkout(workoutName, currentPlan)}
+                  className={`w-full flex items-center gap-4 px-5 py-4 text-left transition-colors active:bg-white/[0.04] ${
+                    idx > 0 ? "border-t border-white/[0.06]" : ""
+                  }`}
+                  style={{ animationDelay: `${idx * 40}ms` }}
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[17px] font-semibold text-foreground leading-tight truncate">{workoutName}</p>
+                    <p className="text-[13px] text-muted-foreground mt-1">
+                      {exercises.length} exercícios · {totalMin} min · {LEVELS.find(l => l.key === selectedLevel)?.title}
+                    </p>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

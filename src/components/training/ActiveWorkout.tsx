@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ChevronLeft, Trophy, Play, Flame } from "lucide-react";
+import { ChevronLeft, Check } from "lucide-react";
 import ExerciseCard from "./ExerciseCard";
 import RestTimerModal from "./RestTimerModal";
 import { useApp } from "@/contexts/AppContext";
@@ -16,6 +16,8 @@ interface ActiveWorkoutProps {
 
 type WorkoutPhase = "preview" | "active" | "finished";
 
+const haptic = (ms: number = 10) => { try { (navigator as any).vibrate?.(ms); } catch {} };
+
 const ActiveWorkout = ({ workoutName, exercises, onBack, workoutType = "gym" }: ActiveWorkoutProps) => {
   const { user } = useApp();
   const [phase, setPhase] = useState<WorkoutPhase>("preview");
@@ -23,10 +25,8 @@ const ActiveWorkout = ({ workoutName, exercises, onBack, workoutType = "gym" }: 
   const [completedIndices, setCompletedIndices] = useState<Set<number>>(new Set());
   const [completedSetsMap, setCompletedSetsMap] = useState<Record<number, Set<number>>>({});
   const [showRest, setShowRest] = useState(false);
-  const [notes, setNotes] = useState("");
   const [startTime, setStartTime] = useState(0);
-  const [elapsed, setElapsed] = useState(0);
-  const [saving, setSaving] = useState(false);
+  const [, setElapsed] = useState(0);
 
   useEffect(() => {
     if (phase !== "active") return;
@@ -46,6 +46,7 @@ const ActiveWorkout = ({ workoutName, exercises, onBack, workoutType = "gym" }: 
   }, 0);
 
   const handleStartWorkout = () => {
+    haptic(20);
     setStartTime(Date.now());
     setPhase("active");
   };
@@ -53,33 +54,24 @@ const ActiveWorkout = ({ workoutName, exercises, onBack, workoutType = "gym" }: 
   const handleCompleteSet = (setIdx: number) => {
     setCompletedSetsMap(prev => {
       const next = new Set(prev[currentIndex] || []);
-      if (next.has(setIdx)) next.delete(setIdx);
-      else next.add(setIdx);
+      if (next.has(setIdx)) next.delete(setIdx); else next.add(setIdx);
       return { ...prev, [currentIndex]: next };
     });
   };
 
   const handleCompleteExercise = () => {
     setCompletedIndices(prev => new Set(prev).add(currentIndex));
-    if (currentIndex < exercises.length - 1) {
-      setShowRest(true);
-    } else {
-      // Last exercise — finish
-      handleFinishWorkout();
-    }
+    if (currentIndex < exercises.length - 1) setShowRest(true);
+    else handleFinishWorkout();
   };
 
   const handleRestEnd = () => {
     setShowRest(false);
-    if (currentIndex < exercises.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-    }
+    if (currentIndex < exercises.length - 1) setCurrentIndex(currentIndex + 1);
   };
 
   const handleFinishWorkout = async () => {
-    setSaving(true);
     const durationMin = Math.max(1, Math.floor((Date.now() - startTime) / 60000));
-
     if (user) {
       try {
         const { data: workout, error } = await supabase
@@ -92,156 +84,152 @@ const ActiveWorkout = ({ workoutName, exercises, onBack, workoutType = "gym" }: 
             completed_at: new Date().toISOString(),
             duration_minutes: durationMin,
             calories_burned: Math.round(durationMin * 6),
-            notes: notes || null,
           })
           .select()
           .single();
-
         if (error) throw error;
-
         if (workout) {
-          const exerciseRows = exercises.map((ex, i) => ({
-            workout_id: workout.id,
-            user_id: user.id,
-            name: ex.name,
-            sets: ex.sets,
-            reps: parseInt(ex.reps) || 12,
-            weight_kg: parseFloat(ex.weight) || null,
-            rest_seconds: ex.rest || 60,
-            sort_order: i,
-          }));
-          await supabase.from("workout_exercises").insert(exerciseRows);
+          await supabase.from("workout_exercises").insert(
+            exercises.map((ex, i) => ({
+              workout_id: workout.id,
+              user_id: user.id,
+              name: ex.name,
+              sets: ex.sets,
+              reps: parseInt(ex.reps) || 12,
+              weight_kg: parseFloat(ex.weight) || null,
+              rest_seconds: ex.rest || 60,
+              sort_order: i,
+            })),
+          );
         }
-
-        toast.success("Treino salvo! 💪🔥");
+        toast.success("Treino salvo");
       } catch (err) {
-        console.error("Error saving workout:", err);
+        console.error(err);
         toast.error("Erro ao salvar treino");
       }
     }
-
-    setSaving(false);
     setPhase("finished");
   };
 
-  // === PREVIEW PHASE ===
+  // === PREVIEW ===
   if (phase === "preview") {
     return (
-      <div className="pb-28 max-w-lg mx-auto animate-fade-in">
-        <div className="px-4 pt-4">
-          <button onClick={onBack} className="flex items-center gap-1 text-muted-foreground text-sm hover:text-foreground transition-colors mb-4">
-            <ChevronLeft className="w-5 h-5" /> Voltar
+      <div className="pb-32 max-w-lg mx-auto animate-fade-in">
+        <div className="px-5 pt-4">
+          <button
+            onClick={onBack}
+            className="flex items-center gap-1 text-primary text-[15px] font-medium active:opacity-60 transition-opacity"
+          >
+            <ChevronLeft className="w-5 h-5 -ml-1" /> Voltar
           </button>
+        </div>
 
-          <div className="text-center mb-6">
-            <div className="w-20 h-20 rounded-3xl gradient-primary flex items-center justify-center mx-auto mb-4 animate-pulse-glow">
-              <Play className="w-10 h-10 text-primary-foreground ml-1" />
-            </div>
-            <h2 className="text-2xl font-heading font-bold text-foreground mb-1">{workoutName}</h2>
-            <p className="text-sm text-muted-foreground">{exercises.length} exercícios • ~{exercises.length * 7} min</p>
-          </div>
+        <div className="px-5 pt-6 pb-6">
+          <p className="text-[13px] font-medium text-muted-foreground uppercase tracking-wide">
+            {exercises.length} exercícios · ~{exercises.length * 7} min
+          </p>
+          <h1 className="text-[34px] font-bold tracking-tight text-foreground mt-1 leading-tight">
+            {workoutName}
+          </h1>
+        </div>
 
-          <div className="space-y-2 mb-6">
+        <div className="px-5">
+          <div className="rounded-2xl bg-card border border-white/[0.06] overflow-hidden">
             {exercises.map((ex, idx) => (
               <div
                 key={idx}
-                className="glass-card rounded-xl p-3 flex items-center gap-3 animate-fade-in"
-                style={{ animationDelay: `${idx * 60}ms` }}
+                className={`flex items-center gap-4 px-5 py-3.5 ${idx > 0 ? "border-t border-white/[0.06]" : ""}`}
               >
-                <div className="w-10 h-10 rounded-lg bg-secondary/80 flex items-center justify-center text-lg border border-border/30">
-                  {ex.emoji}
-                </div>
+                <span className="text-[15px] font-semibold text-muted-foreground tabular w-6">
+                  {String(idx + 1).padStart(2, "0")}
+                </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-foreground truncate">{ex.name}</p>
-                  <p className="text-xs text-muted-foreground">{ex.sets} séries × {ex.reps} reps • {ex.weight}</p>
+                  <p className="text-[15px] font-semibold text-foreground truncate">{ex.name}</p>
+                  <p className="text-[13px] text-muted-foreground mt-0.5">
+                    {ex.sets} × {ex.reps} {ex.weight && ex.weight !== "Corpo" ? `· ${ex.weight}` : ""}
+                  </p>
                 </div>
               </div>
             ))}
           </div>
+        </div>
 
+        <div className="px-5 pt-8">
           <button
             onClick={handleStartWorkout}
-            className="w-full h-14 rounded-2xl gradient-primary text-primary-foreground font-semibold text-base flex items-center justify-center gap-2 active:scale-[0.97] transition-transform animate-scale-in"
+            className="w-full h-14 rounded-full bg-primary text-primary-foreground font-semibold text-[17px] flex items-center justify-center active:opacity-80 transition-opacity"
           >
-            <Play className="w-5 h-5" /> Começar Exercício
+            Iniciar treino
           </button>
         </div>
       </div>
     );
   }
 
-  // === FINISHED PHASE ===
+  // === FINISHED ===
   if (phase === "finished") {
     const durationMin = Math.max(1, Math.floor((Date.now() - startTime) / 60000));
     return (
-      <div className="pb-28 max-w-lg mx-auto animate-fade-in">
-        <div className="px-4 pt-8 text-center">
-          <div className="w-24 h-24 rounded-full gradient-primary flex items-center justify-center mx-auto mb-6 animate-scale-in">
-            <Trophy className="w-12 h-12 text-primary-foreground" />
+      <div className="pb-28 max-w-lg mx-auto min-h-[80vh] flex flex-col animate-fade-in">
+        <div className="px-5 pt-12 flex-1 flex flex-col items-center justify-center text-center">
+          <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center mb-8 animate-scale-in">
+            <Check className="w-10 h-10 text-primary-foreground" strokeWidth={3} />
           </div>
-          <h2 className="text-2xl font-heading font-bold text-foreground mb-2">Treino Concluído! 🎉</h2>
-          <p className="text-muted-foreground mb-6">Você arrasou hoje!</p>
+          <p className="text-[15px] font-medium text-muted-foreground uppercase tracking-wider">Concluído</p>
+          <h1 className="text-[34px] font-bold tracking-tight text-foreground mt-2">{workoutName}</h1>
 
-          <div className="grid grid-cols-3 gap-3 mb-8">
-            <div className="glass-card rounded-xl p-3 text-center">
-              <p className="text-xs text-muted-foreground">Duração</p>
-              <p className="text-lg font-heading font-bold text-foreground">{durationMin} min</p>
+          <div className="w-full max-w-sm grid grid-cols-3 mt-10 rounded-2xl bg-card border border-white/[0.06] overflow-hidden">
+            <div className="px-3 py-4 text-center">
+              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Tempo</p>
+              <p className="text-[22px] font-bold text-foreground tabular mt-1">{durationMin}<span className="text-muted-foreground text-[14px] font-medium ml-0.5">min</span></p>
             </div>
-            <div className="glass-card rounded-xl p-3 text-center">
-              <p className="text-xs text-muted-foreground">Exercícios</p>
-              <p className="text-lg font-heading font-bold text-foreground">{exercises.length}</p>
+            <div className="px-3 py-4 text-center border-l border-white/[0.06]">
+              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Exercícios</p>
+              <p className="text-[22px] font-bold text-foreground tabular mt-1">{exercises.length}</p>
             </div>
-            <div className="glass-card rounded-xl p-3 text-center">
-              <p className="text-xs text-muted-foreground">Volume</p>
-              <p className="text-lg font-heading font-bold text-foreground">{Math.round(estimatedVolume)} kg</p>
+            <div className="px-3 py-4 text-center border-l border-white/[0.06]">
+              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Volume</p>
+              <p className="text-[22px] font-bold text-foreground tabular mt-1">{Math.round(estimatedVolume)}<span className="text-muted-foreground text-[14px] font-medium ml-0.5">kg</span></p>
             </div>
           </div>
+        </div>
 
-          <div className="flex items-center justify-center gap-2 mb-8 animate-fade-in">
-            <Flame className="w-6 h-6 text-orange-500" />
-            <span className="text-lg font-heading font-bold text-foreground">+1 dia de streak!</span>
-            <Flame className="w-6 h-6 text-orange-500" />
-          </div>
-
+        <div className="px-5">
           <button
             onClick={onBack}
-            className="w-full h-14 rounded-2xl gradient-primary text-primary-foreground font-semibold text-base flex items-center justify-center gap-2 active:scale-[0.97] transition-transform"
+            className="w-full h-14 rounded-full bg-primary text-primary-foreground font-semibold text-[17px] flex items-center justify-center active:opacity-80 transition-opacity"
           >
-            Voltar ao Menu
+            Concluído
           </button>
         </div>
       </div>
     );
   }
 
-  // === ACTIVE PHASE ===
+  // === ACTIVE ===
   return (
     <div className="pb-28 max-w-lg mx-auto animate-fade-in">
-      {/* Simple header like Fitness Online */}
-      <div className="sticky top-0 z-30 bg-background/95 px-4 py-3 flex items-center justify-between">
-        <button onClick={onBack} className="text-muted-foreground hover:text-foreground transition-colors">
-          <ChevronLeft className="w-6 h-6" />
-        </button>
-        <div className="text-center">
-          <p className="text-sm font-heading font-bold text-foreground">
-            {currentIndex + 1}/{exercises.length} {currentExercise?.muscle}
+      {/* Top bar — minimal */}
+      <div className="sticky top-0 z-30 bg-background/85 backdrop-blur-xl border-b border-white/[0.06]">
+        <div className="px-5 py-3 flex items-center justify-between">
+          <button onClick={onBack} className="text-primary active:opacity-60 transition-opacity">
+            <ChevronLeft className="w-6 h-6 -ml-1" />
+          </button>
+          <p className="text-[13px] font-semibold text-foreground tabular">
+            {currentIndex + 1} / {exercises.length}
           </p>
+          <div className="w-6" />
         </div>
-        <div className="w-6" /> {/* spacer */}
-      </div>
-
-      {/* Progress bar */}
-      <div className="px-4 mb-2">
-        <div className="h-1 bg-secondary rounded-full overflow-hidden">
+        {/* Hairline progress */}
+        <div className="h-[2px] bg-white/[0.06] overflow-hidden">
           <div
-            className="h-full gradient-primary rounded-full transition-all duration-500 ease-out"
+            className="h-full bg-primary transition-all duration-500 ease-out"
             style={{ width: `${progress}%` }}
           />
         </div>
       </div>
 
-      {/* Current exercise - clean layout */}
-      <div className="px-4 pt-2">
+      <div className="px-4 pt-4">
         {currentExercise && (
           <ExerciseCard
             exercise={currentExercise}
@@ -257,7 +245,6 @@ const ActiveWorkout = ({ workoutName, exercises, onBack, workoutType = "gym" }: 
         )}
       </div>
 
-      {/* Rest timer modal */}
       <RestTimerModal
         isOpen={showRest}
         initialSeconds={currentExercise?.rest || 90}
