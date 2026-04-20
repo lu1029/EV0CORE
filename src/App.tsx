@@ -15,6 +15,7 @@ import NutritionScreen from "@/components/NutritionScreen";
 import ProgressScreen from "@/components/ProgressScreen";
 import PremiumScreen from "@/components/PremiumScreen";
 import ProfileScreen from "@/components/ProfileScreen";
+import SearchScreen from "@/components/SearchScreen";
 import AIChatScreen from "@/components/AIChatScreen";
 import NotFound from "./pages/NotFound";
 import CheckoutReturn from "./pages/CheckoutReturn";
@@ -60,6 +61,7 @@ const App = () => (
                   <Route path="/evolucao" element={<ProgressScreen />} />
                   <Route path="/premium" element={<PremiumScreen />} />
                   <Route path="/perfil" element={<ProfileScreen />} />
+                  <Route path="/buscar" element={<SearchScreen />} />
                   <Route path="/ai" element={<AIChatScreen />} />
                   <Route path="/assinatura" element={<Navigate to="/premium" replace />} />
                   <Route path="/configuracoes" element={<Configuracoes />} />
