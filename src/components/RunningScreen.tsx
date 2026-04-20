@@ -350,9 +350,12 @@ const RunningScreen = () => {
           {routePath.length > 1 ? (
             <div ref={summaryMapRef} className="w-full h-full" />
           ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+            <div className="w-full h-full flex flex-col items-center justify-center gap-2 px-6 text-center">
               <Route className="w-8 h-8 text-muted-foreground/40" />
               <p className="text-muted-foreground text-sm">Rota não disponível</p>
+              <p className="text-muted-foreground/70 text-xs">
+                Sinal GPS fraco ou movimento insuficiente. Tente em ambiente externo com boa visada do céu.
+              </p>
             </div>
           )}
         </div>
