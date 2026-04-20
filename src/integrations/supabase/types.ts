@@ -41,8 +41,33 @@ export type Database = {
         }
         Relationships: []
       }
+      exercise_image_cache: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string
+          name_key: string
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url: string
+          name_key: string
+          source?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string
+          name_key?: string
+          source?: string
+        }
+        Relationships: []
+      }
       exercise_library: {
         Row: {
+          ai_image_url: string | null
           body_part: string | null
           created_at: string
           equipment: string | null
@@ -56,6 +81,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          ai_image_url?: string | null
           body_part?: string | null
           created_at?: string
           equipment?: string | null
@@ -69,6 +95,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          ai_image_url?: string | null
           body_part?: string | null
           created_at?: string
           equipment?: string | null
