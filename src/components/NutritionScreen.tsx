@@ -351,5 +351,7 @@ const NutritionScreen = () => {
         />
       )}
     </motion.div>
+  );
+};
 
 export default NutritionScreen;
