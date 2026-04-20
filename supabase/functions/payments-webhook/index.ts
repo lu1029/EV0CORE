@@ -64,8 +64,11 @@ async function handleSubscriptionCreated(subscription: any, env: StripeEnv) {
   const priceId = item?.price?.metadata?.lovable_external_id || item?.price?.id;
   const productId = item?.price?.product;
 
-  const periodStart = subscription.current_period_start;
-  const periodEnd = subscription.current_period_end;
+  // Stripe API 2024+: period dates moved to item level. Fallback to subscription level.
+  const periodStart = item?.current_period_start ?? subscription.current_period_start;
+  const periodEnd = item?.current_period_end ?? subscription.current_period_end;
+
+  console.log("subscription.created", { userId, status: subscription.status, periodStart, periodEnd });
 
   await supabase.from("subscriptions").upsert(
     {
@@ -77,6 +80,7 @@ async function handleSubscriptionCreated(subscription: any, env: StripeEnv) {
       status: subscription.status,
       current_period_start: periodStart ? new Date(periodStart * 1000).toISOString() : null,
       current_period_end: periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
+      cancel_at_period_end: subscription.cancel_at_period_end || false,
       environment: env,
       updated_at: new Date().toISOString(),
     },
@@ -89,8 +93,15 @@ async function handleSubscriptionUpdated(subscription: any, env: StripeEnv) {
   const priceId = item?.price?.metadata?.lovable_external_id || item?.price?.id;
   const productId = item?.price?.product;
 
-  const periodStart = subscription.current_period_start;
-  const periodEnd = subscription.current_period_end;
+  const periodStart = item?.current_period_start ?? subscription.current_period_start;
+  const periodEnd = item?.current_period_end ?? subscription.current_period_end;
+
+  console.log("subscription.updated", {
+    id: subscription.id,
+    status: subscription.status,
+    cancel_at_period_end: subscription.cancel_at_period_end,
+    periodEnd,
+  });
 
   await supabase
     .from("subscriptions")
