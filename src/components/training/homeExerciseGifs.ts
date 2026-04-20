@@ -1,50 +1,50 @@
-// Mapping of exercise keys to demonstration image URLs
-// Using wger.de open-source exercise database (reliable, Creative Commons)
-
-const W = "https://wger.de/media/exercise-images";
+// Mapping of exercise keys to demonstration images.
+// Source: yuhonas/free-exercise-db (CC0) via jsDelivr CDN — reliable, real
+// demonstration photos for each exercise.
+const IMG = (id: string) => `https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/${id}/0.jpg`;
 
 export const homeExerciseGifs: Record<string, string> = {
   // Push exercises
-  flexao: `${W}/97/Dumbbell-bench-press-1.png`,
-  flexao_diamante: `${W}/61/Close-grip-bench-press-1.png`,
-  flexao_declinada: `${W}/100/Decline-bench-press-1.png`,
-  flexao_inclinada: `${W}/41/Incline-bench-press-1.png`,
-  pike_pushup: `${W}/119/seated-barbell-shoulder-press-large-1.png`,
-  mergulho_cadeira: `${W}/83/Bench-dips-1.png`,
+  flexao: IMG("Pushups"),
+  flexao_diamante: IMG("Close-Grip_Push-Up_off_of_a_Dumbbell"),
+  flexao_declinada: IMG("Decline_Push-Up"),
+  flexao_inclinada: IMG("Incline_Push-Up"),
+  pike_pushup: IMG("Pushups_-_Close_Triceps_Position"),
+  mergulho_cadeira: IMG("Bench_Dips"),
 
   // Legs
-  agachamento: `${W}/191/Front-squat-1-857x1024.png`,
-  agachamento_salto: `${W}/191/Front-squat-1-857x1024.png`,
-  agachamento_sumo: `${W}/130/Narrow-stance-hack-squats-1-1024x721.png`,
-  afundo: `${W}/113/Walking-lunges-1.png`,
-  afundo_bulgaro: `${W}/113/Walking-lunges-1.png`,
-  step_up: `${W}/113/Walking-lunges-1.png`,
-  wall_sit: `${W}/130/Narrow-stance-hack-squats-1-1024x721.png`,
-  hip_thrust: `${W}/116/Good-mornings-2.png`,
-  kickback: `${W}/116/Good-mornings-2.png`,
+  agachamento: IMG("Bodyweight_Squat"),
+  agachamento_salto: IMG("Box_Squat"),
+  agachamento_sumo: IMG("Plie_Dumbbell_Squat"),
+  afundo: IMG("Bodyweight_Walking_Lunge"),
+  afundo_bulgaro: IMG("Dumbbell_Lunges"),
+  step_up: IMG("Dumbbell_Step_Ups"),
+  wall_sit: IMG("Wall_Squat"),
+  hip_thrust: IMG("Single_Leg_Glute_Bridge"),
+  kickback: IMG("Rear_Leg_Raises"),
 
   // Core
-  prancha: `${W}/91/Crunches-1.png`,
-  prancha_lateral: `${W}/91/Crunches-1.png`,
-  abdominal: `${W}/91/Crunches-1.png`,
-  elevacao_pernas: `${W}/125/Leg-raises-2.png`,
-  bicicleta_ar: `${W}/176/Cross-body-crunch-1.png`,
-  superman: `${W}/128/Hyperextensions-1.png`,
+  prancha: IMG("Plank"),
+  prancha_lateral: IMG("Side_Bridge"),
+  abdominal: IMG("Crunches"),
+  elevacao_pernas: IMG("Flat_Bench_Lying_Leg_Raise"),
+  bicicleta_ar: IMG("Air_Bike"),
+  superman: IMG("Superman"),
 
   // Cardio / HIIT
-  mountain_climber: `${W}/91/Crunches-1.png`,
-  burpee: `${W}/191/Front-squat-1-857x1024.png`,
-  jumping_jack: `${W}/191/Front-squat-1-857x1024.png`,
-  corrida_lugar: `${W}/191/Front-squat-1-857x1024.png`,
-  polichinelo: `${W}/191/Front-squat-1-857x1024.png`,
+  mountain_climber: IMG("Mountain_Climbers"),
+  burpee: IMG("Body-Up"),
+  jumping_jack: IMG("Bodyweight_Squat"),
+  corrida_lugar: IMG("Knee_Tuck_Jump"),
+  polichinelo: IMG("Bodyweight_Squat"),
 
   // Back (home alternatives)
-  remada_toalha: `${W}/109/Barbell-rear-delt-row-1.png`,
+  remada_toalha: IMG("Reverse_Grip_Bent-Over_Rows"),
 
   // Flexibility
-  gato_vaca: `${W}/128/Hyperextensions-1.png`,
-  alongamento_posterior: `${W}/116/Good-mornings-2.png`,
-  alongamento_quadriceps: `${W}/113/Walking-lunges-1.png`,
+  gato_vaca: IMG("Cat_Stretch"),
+  alongamento_posterior: IMG("Standing_Toe_Touches"),
+  alongamento_quadriceps: IMG("Quad_Stretch"),
 };
 
 export const availableGifKeys = Object.keys(homeExerciseGifs);
