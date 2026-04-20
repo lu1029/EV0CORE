@@ -14,7 +14,14 @@ interface PixRequestBody {
   amount: number;
   description?: string;
   expiresIn?: number;
+  plan?: "weekly" | "monthly" | "yearly";
 }
+
+const PLAN_PRICE_IDS: Record<string, string> = {
+  weekly: "evocore_premium_weekly",
+  monthly: "evocore_premium_monthly",
+  yearly: "evocore_premium_yearly",
+};
 
 const onlyDigits = (s: string) => (s || "").replace(/\D+/g, "");
 const isValidEmail = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
@@ -69,6 +76,8 @@ Deno.serve(async (req) => {
     const amount = Number(body.amount);
     const description = (body.description || "Assinatura EvoCore Premium").slice(0, 140);
     const expiresIn = Number.isFinite(Number(body.expiresIn)) ? Number(body.expiresIn) : 3600;
+    const plan = (body.plan && PLAN_PRICE_IDS[body.plan]) ? body.plan : "monthly";
+    const priceId = PLAN_PRICE_IDS[plan];
 
     const errors: Record<string, string> = {};
     if (fullName.length < 3 || fullName.length > 120) errors.fullName = "Nome inválido";
@@ -102,7 +111,7 @@ Deno.serve(async (req) => {
           cellphone: phone,
           taxId: cpf,
         },
-        metadata: { externalId, userId },
+        metadata: { externalId, userId, plan, priceId },
       }),
     });
 
@@ -131,6 +140,7 @@ Deno.serve(async (req) => {
         amount: data?.amount ?? amount,
         status: data?.status ?? "PENDING",
         expires_at: data?.expiresAt ?? null,
+        price_id: priceId,
       });
       if (insErr) console.error("pix_charges insert error", insErr);
     } else {
