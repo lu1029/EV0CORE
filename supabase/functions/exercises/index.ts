@@ -61,12 +61,41 @@ function normalize(e: OssExercise): NormalizedExercise {
   };
 }
 
-async function fetchOss(path: string): Promise<OssExercise[]> {
-  const res = await fetch(`${API_BASE}${path}`);
-  if (!res.ok) throw new Error(`OSS API ${res.status}: ${await res.text()}`);
-  const json = (await res.json()) as OssListResponse;
-  if (!json.success) throw new Error("OSS API returned success=false");
-  return json.data ?? [];
+/** Busca em múltiplas páginas até atingir o `needed` filtrado.
+ *  A API OSS ignora filtros nos query params, então paginamos e filtramos no servidor. */
+async function fetchAndFilter(opts: {
+  bodyPart?: string;
+  target?: string;
+  search?: string;
+  needed: number;
+}): Promise<OssExercise[]> {
+  const { bodyPart, target, search, needed } = opts;
+  const matches: OssExercise[] = [];
+  let cursor: string | undefined;
+  const PAGE = 100;
+  for (let i = 0; i < 16 && matches.length < needed; i++) {
+    const qs = new URLSearchParams({ limit: String(PAGE) });
+    if (cursor) qs.set("cursor", cursor);
+    const res = await fetch(`${API_BASE}/exercises?${qs.toString()}`);
+    if (!res.ok) break;
+    const json = (await res.json()) as OssListResponse;
+    const page = json.data ?? [];
+    for (const e of page) {
+      if (bodyPart && !e.bodyParts?.includes(bodyPart)) continue;
+      if (target && !e.targetMuscles?.includes(target)) continue;
+      if (search) {
+        const q = search.toLowerCase();
+        const inName = e.name.toLowerCase().includes(q);
+        const inMuscle = e.targetMuscles?.some((m) => m.toLowerCase().includes(q));
+        if (!inName && !inMuscle) continue;
+      }
+      matches.push(e);
+      if (matches.length >= needed) break;
+    }
+    cursor = json.meta?.nextCursor;
+    if (!cursor || !json.meta?.hasNextPage) break;
+  }
+  return matches;
 }
 
 async function cacheExercises(items: NormalizedExercise[]) {
