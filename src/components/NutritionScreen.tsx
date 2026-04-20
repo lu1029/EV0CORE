@@ -275,13 +275,15 @@ const NutritionScreen = () => {
           <Plus className="w-3.5 h-3.5" /> Adicionar
         </button>
       </div>
-      <div className="bg-card rounded-2xl overflow-hidden mb-8">
+      <motion.div variants={staggerFast} initial="hidden" animate="visible" className="bg-card rounded-2xl overflow-hidden mb-8 border border-border/40">
         {nutritionPlan.meals.map((m, i) => (
-          <button
+          <motion.button
             key={i}
+            variants={fadeUp}
+            whileHover={{ x: 4, transition: springSnappy }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => setEditingIdx(i)}
-            className={`w-full text-left px-5 py-4 ${i > 0 ? "border-t border-border" : ""} active:bg-secondary/40 transition-colors animate-fade-in`}
-            style={{ animationDelay: `${i * 40}ms` }}
+            className={`w-full text-left px-5 py-4 ${i > 0 ? "border-t border-border" : ""} active:bg-secondary/40 transition-colors`}
           >
             <div className="flex items-baseline justify-between mb-1">
               <p className="text-[16px] font-medium text-foreground flex items-center gap-2">
@@ -297,9 +299,9 @@ const NutritionScreen = () => {
               <span>C {m.carbs}g</span>
               <span>G {m.fat}g</span>
             </div>
-          </button>
+          </motion.button>
         ))}
-      </div>
+      </motion.div>
 
       {/* Tips */}
       {nutritionPlan.tips?.length > 0 && (
@@ -348,8 +350,6 @@ const NutritionScreen = () => {
           onClose={() => setAdding(false)}
         />
       )}
-    </div>
-  );
-};
+    </motion.div>
 
 export default NutritionScreen;
