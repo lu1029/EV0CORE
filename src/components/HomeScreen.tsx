@@ -4,6 +4,7 @@ import { useApp } from "@/contexts/AppContext";
 import { ChevronRight, Flame, Dumbbell, Apple, MapPin, TrendingUp } from "lucide-react";
 import { useStreak } from "@/hooks/useStreak";
 import { fadeUp, stagger, staggerFast, springSnappy, easeApple } from "@/lib/motion";
+import { AnimatedText } from "@/components/motion/AnimatedText";
 
 const HomeScreen = () => {
   const { userProfile, setCurrentTab, isPremium } = useApp();
@@ -30,14 +31,14 @@ const HomeScreen = () => {
       {/* Greeting */}
       <motion.header variants={fadeUp} className="text-center mb-12">
         <p className="text-[15px] text-muted-foreground tracking-tight mb-2">{greeting},</p>
-        <motion.h1
-          initial={{ opacity: 0, y: 16, letterSpacing: "0em" }}
-          animate={{ opacity: 1, y: 0, letterSpacing: "-0.04em" }}
-          transition={{ duration: 0.6, ease: easeApple, delay: 0.1 }}
-          className="text-[44px] leading-[1.05] font-bold text-foreground"
-        >
-          {name}
-        </motion.h1>
+        <AnimatedText
+          as="h1"
+          text={name}
+          gradient
+          delay={0.1}
+          duration={0.7}
+          className="text-[44px] leading-[1.05] font-bold tracking-[-0.04em] block"
+        />
         {trainedToday && (
           <motion.div
             initial={{ scale: 0, opacity: 0 }}

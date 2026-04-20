@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useRunHistory } from "@/hooks/useRunHistory";
+import { AnimatedText } from "@/components/motion/AnimatedText";
 
 type RunPhase = "idle" | "running" | "summary";
 type MapLoadState = "loading-key" | "loading-map" | "ready" | "error";
@@ -443,7 +444,7 @@ const RunningScreen = () => {
   // ─── IDLE / PRE-RUN (Clean first-time state) ───
   return (
     <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
-      <h1 className="text-2xl font-heading font-bold text-foreground mb-6 animate-fade-in">Corrida & Cardio</h1>
+      <AnimatedText as="h1" text="Corrida & Cardio" gradient className="text-2xl font-heading font-bold mb-6 block" />
 
       {/* Map + Start */}
       <div className="glass-card rounded-2xl overflow-hidden mb-6 animate-fade-in">

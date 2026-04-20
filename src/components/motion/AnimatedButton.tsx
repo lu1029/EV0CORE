@@ -1,23 +1,28 @@
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
-
 import { cn } from "@/lib/utils";
 
 /**
- * Global Button — shadcn API preserved, but every button in the app now ships
- * with: scale + glow on hover/tap, click ripple and (on desktop) a subtle
- * magnetic hover. Use `noFx` to opt out for very dense surfaces.
+ * AnimatedButton
+ * - Scale + glow on hover/tap (CSS-only, GPU friendly)
+ * - Ripple on click (pointer position)
+ * - Magnetic hover on desktop (translate toward cursor; disabled on touch)
+ *
+ * Designed as a drop-in replacement for the shadcn `Button`. Reuses the same
+ * variants so existing usages don't break.
  */
-const buttonVariants = cva(
+
+const animatedButtonVariants = cva(
   cn(
     "relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium",
-    "ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+    "ring-offset-background transition-[transform,box-shadow,background-color,color] duration-300",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
     "disabled:pointer-events-none disabled:opacity-50",
     "[&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
-    "overflow-hidden select-none will-change-transform",
-    "transition-[transform,box-shadow,background-color,color,opacity] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]",
+    "overflow-hidden select-none",
     "active:scale-[0.97] hover:scale-[1.025]",
+    "will-change-transform",
   ),
   {
     variants: {
@@ -31,13 +36,12 @@ const buttonVariants = cva(
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/90 hover:shadow-[0_8px_22px_-14px_hsl(var(--foreground)/0.4)]",
         ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline hover:scale-100 active:scale-100",
+        link: "text-primary underline-offset-4 hover:underline",
         hero: cn(
           "bg-primary text-primary-foreground font-semibold",
           "shadow-[0_8px_30px_-8px_hsl(var(--primary)/0.55)]",
           "hover:shadow-[0_14px_44px_-10px_hsl(var(--primary)/0.85)]",
         ),
-        glass: "bg-card/60 backdrop-blur-md text-foreground hover:bg-card/80",
       },
       size: {
         default: "h-10 px-4 py-2",
@@ -46,45 +50,38 @@ const buttonVariants = cva(
         icon: "h-10 w-10",
       },
     },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
+    defaultVariants: { variant: "default", size: "default" },
   },
 );
 
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
-  asChild?: boolean;
-  /** Disable click ripple. */
-  noRipple?: boolean;
-  /** Disable magnetic-hover (still keeps scale + glow). */
-  noMagnetic?: boolean;
-  /** Disable ALL motion FX (use for very small or dense surfaces). */
-  noFx?: boolean;
-}
-
 interface Ripple { id: number; x: number; y: number; size: number; }
+
+export interface AnimatedButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof animatedButtonVariants> {
+  asChild?: boolean;
+  /** Disable magnetic-hover effect (still keeps scale/glow). Defaults to false. */
+  noMagnetic?: boolean;
+  /** Disable ripple effect. Defaults to false. */
+  noRipple?: boolean;
+}
 
 const isFinePointer = () =>
   typeof window !== "undefined" && window.matchMedia?.("(pointer: fine)").matches;
 
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+const AnimatedButton = React.forwardRef<HTMLButtonElement, AnimatedButtonProps>(
   (
     {
       className,
       variant,
       size,
       asChild = false,
-      noRipple = false,
       noMagnetic = false,
-      noFx = false,
+      noRipple = false,
       onClick,
       onPointerMove,
       onPointerLeave,
       children,
-      style,
       ...props
     },
     forwardedRef,
@@ -97,7 +94,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const idRef = React.useRef(0);
 
     const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-      if (!noFx && !noRipple) {
+      if (!noRipple) {
         const el = innerRef.current;
         if (el) {
           const rect = el.getBoundingClientRect();
@@ -115,14 +112,14 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     };
 
     const handlePointerMove = (e: React.PointerEvent<HTMLButtonElement>) => {
-      if (!noFx && !noMagnetic && isFinePointer()) {
+      if (!noMagnetic && isFinePointer()) {
         const el = innerRef.current;
         if (el) {
           const rect = el.getBoundingClientRect();
           const cx = rect.left + rect.width / 2;
           const cy = rect.top + rect.height / 2;
-          const dx = (e.clientX - cx) * 0.16;
-          const dy = (e.clientY - cy) * 0.20;
+          const dx = (e.clientX - cx) * 0.18;
+          const dy = (e.clientY - cy) * 0.22;
           el.style.setProperty("--mx", `${dx}px`);
           el.style.setProperty("--my", `${dy}px`);
         }
@@ -139,27 +136,26 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       onPointerLeave?.(e);
     };
 
-    const fxStyle: React.CSSProperties = noFx
-      ? style ?? {}
-      : { transform: "translate3d(var(--mx, 0px), var(--my, 0px), 0)", ...style };
-
     return (
       <Comp
         ref={innerRef}
-        className={cn(buttonVariants({ variant, size, className }))}
-        style={fxStyle}
+        className={cn(animatedButtonVariants({ variant, size }), className)}
+        style={{
+          transform: "translate3d(var(--mx, 0px), var(--my, 0px), 0)",
+        }}
         onClick={handleClick}
         onPointerMove={handlePointerMove}
         onPointerLeave={handlePointerLeave}
         {...props}
       >
         <span className="relative z-10 inline-flex items-center gap-2">{children as React.ReactNode}</span>
-        {!noFx && !noRipple && (
-          <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]" aria-hidden>
+        {/* Ripple layer */}
+        {!noRipple && (
+          <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]">
             {ripples.map((r) => (
               <span
                 key={r.id}
-                className="absolute rounded-full bg-white/30 mix-blend-overlay"
+                className="absolute rounded-full bg-white/35 mix-blend-overlay"
                 style={{
                   left: r.x,
                   top: r.y,
@@ -175,6 +171,6 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     );
   },
 );
-Button.displayName = "Button";
+AnimatedButton.displayName = "AnimatedButton";
 
-export { Button, buttonVariants };
+export { AnimatedButton, animatedButtonVariants };
