@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import ExercisePlaceholder from "./ExercisePlaceholder";
+import { useExerciseGif } from "@/hooks/useExerciseGif";
 
 export interface Exercise {
   name: string;
@@ -28,8 +29,19 @@ interface ExerciseCardProps {
 const ExerciseMedia = ({ exercise }: { exercise: Exercise }) => {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
+  // Resolve GIF: usa o do exercício se houver, senão busca na biblioteca pelo nome
+  const { gifUrl, loading } = useExerciseGif(exercise.name, exercise.gifUrl);
 
-  if (!exercise.gifUrl || error) {
+  if (!gifUrl && loading) {
+    return (
+      <div className="relative w-full aspect-square">
+        <ExercisePlaceholder exerciseName={exercise.name} muscleGroup={exercise.muscle} />
+        <div className="absolute inset-0 bg-black/10 animate-pulse" />
+      </div>
+    );
+  }
+
+  if (!gifUrl || error) {
     return <ExercisePlaceholder exerciseName={exercise.name} muscleGroup={exercise.muscle} />;
   }
 
@@ -41,7 +53,7 @@ const ExerciseMedia = ({ exercise }: { exercise: Exercise }) => {
         </div>
       )}
       <img
-        src={exercise.gifUrl}
+        src={gifUrl}
         alt={exercise.name}
         className={`w-full h-full object-contain transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
         onLoad={() => setLoaded(true)}
