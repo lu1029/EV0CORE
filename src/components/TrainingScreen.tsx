@@ -293,6 +293,8 @@ const TrainingScreen = () => {
           </div>
         )}
       </div>
+      </>
+      )}
     </div>
   );
 };
