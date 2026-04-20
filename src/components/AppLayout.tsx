@@ -8,6 +8,7 @@ import BottomNav from "@/components/BottomNav";
 import EvoAIFab from "@/components/EvoAIFab";
 import { Sun, Moon } from "lucide-react";
 import evocoreLogo from "@/assets/evocore-logo.png";
+import { PageTransition } from "@/components/PageTransition";
 
 const AppLayout = () => {
   const { isLoggedIn, hasOnboarded } = useApp();
@@ -59,9 +60,9 @@ const AppLayout = () => {
         </div>
       </div>
 
-      <div className="animate-fade-in" key={location.pathname}>
+      <PageTransition>
         <Outlet />
-      </div>
+      </PageTransition>
       <EvoAIFab />
       <BottomNav />
     </div>
