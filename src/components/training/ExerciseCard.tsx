@@ -29,8 +29,8 @@ interface ExerciseCardProps {
 const ExerciseMedia = ({ exercise }: { exercise: Exercise }) => {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
-  // Resolve GIF: usa o do exercício se houver, senão busca na biblioteca pelo nome
-  const { gifUrl, loading } = useExerciseGif(exercise.name, exercise.gifUrl);
+  // Resolve mídia: GIF da biblioteca, ou imagem gerada por IA como fallback
+  const { gifUrl, loading } = useExerciseGif(exercise.name, exercise.gifUrl, exercise.muscle);
 
   if (!gifUrl && loading) {
     return (

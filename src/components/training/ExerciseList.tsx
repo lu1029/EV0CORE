@@ -1,6 +1,7 @@
 import React from "react";
 import { Check, Play } from "lucide-react";
 import type { Exercise } from "./ExerciseCard";
+import ExerciseThumb from "./ExerciseThumb";
 
 interface ExerciseListProps {
   exercises: Exercise[];
@@ -45,11 +46,12 @@ const ExerciseList = ({ exercises, currentIndex, completedIndices, onSelect }: E
 
             {/* Thumbnail */}
             <div className="w-9 h-9 rounded-xl bg-secondary/80 flex items-center justify-center text-base shrink-0 border border-border/30 overflow-hidden">
-              {ex.gifUrl ? (
-                <img src={ex.gifUrl} alt={ex.name} className="w-full h-full object-cover" loading="lazy" />
-              ) : (
-                ex.emoji
-              )}
+              <ExerciseThumb
+                name={ex.name}
+                muscle={ex.muscle}
+                emoji={ex.emoji}
+                fallbackGifUrl={ex.gifUrl}
+              />
             </div>
 
             {/* Info */}
