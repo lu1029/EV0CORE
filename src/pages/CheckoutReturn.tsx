@@ -2,9 +2,10 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
-import { Check, Home, Volume2, VolumeX, Sparkles } from "lucide-react";
+import { Check, Home, Volume2, VolumeX, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { springSnappy, easeApple, fadeUp, stagger } from "@/lib/motion";
+import { supabase } from "@/integrations/supabase/client";
 
 // Pleasant short success chime — synthesized inline so no asset is required
 function playSuccessChime() {
