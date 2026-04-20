@@ -7,6 +7,7 @@ import ExerciseLibraryBrowser from "./training/ExerciseLibraryBrowser";
 import type { Exercise } from "./training/ExerciseCard";
 import { getGifUrl } from "./training/homeExerciseGifs";
 import { useSavedPlan } from "@/hooks/useSavedPlan";
+import { TrainingSkeleton } from "./skeletons/TrainingSkeleton";
 import { fadeUp, stagger, staggerFast, springSnappy, easeApple } from "@/lib/motion";
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/evo-ai-chat`;
