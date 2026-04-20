@@ -76,6 +76,8 @@ Deno.serve(async (req) => {
     const amount = Number(body.amount);
     const description = (body.description || "Assinatura EvoCore Premium").slice(0, 140);
     const expiresIn = Number.isFinite(Number(body.expiresIn)) ? Number(body.expiresIn) : 3600;
+    const plan = (body.plan && PLAN_PRICE_IDS[body.plan]) ? body.plan : "monthly";
+    const priceId = PLAN_PRICE_IDS[plan];
 
     const errors: Record<string, string> = {};
     if (fullName.length < 3 || fullName.length > 120) errors.fullName = "Nome inválido";
