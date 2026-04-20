@@ -90,6 +90,7 @@ const PremiumScreen = () => {
   const { subscription, isActive, isLoading: subLoading } = useSubscription();
   const [selectedPlan, setSelectedPlan] = useState<PlanId>("monthly");
   const [showCheckout, setShowCheckout] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
   const [loadingPortal, setLoadingPortal] = useState(false);
   const navigate = useNavigate();
 
@@ -135,16 +136,53 @@ const PremiumScreen = () => {
           <ChevronLeft className="w-4 h-4" /> Voltar
         </button>
         <h1 className="text-[28px] font-bold text-foreground tracking-[-0.03em] mb-1">Finalizar assinatura</h1>
-        <p className="text-[14px] text-muted-foreground mb-6">
+        <p className="text-[14px] text-muted-foreground mb-5">
           Plano {selected.title} · {selected.price}{selected.per}
         </p>
-        <StripeEmbeddedCheckout
-          priceId={selected.priceId}
-          quantity={1}
-          customerEmail={user?.email || ""}
-          userId={user?.id || ""}
-          returnUrl={`${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`}
-        />
+
+        {/* Payment method tabs */}
+        <div className="grid grid-cols-2 gap-2 p-1 bg-secondary rounded-xl mb-6">
+          <button
+            type="button"
+            onClick={() => setPaymentMethod("card")}
+            className={`h-10 rounded-lg text-[14px] font-semibold flex items-center justify-center gap-2 transition-all ${
+              paymentMethod === "card"
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground"
+            }`}
+          >
+            <CreditCard className="w-4 h-4" />
+            Cartão
+          </button>
+          <button
+            type="button"
+            onClick={() => setPaymentMethod("pix")}
+            className={`h-10 rounded-lg text-[14px] font-semibold flex items-center justify-center gap-2 transition-all ${
+              paymentMethod === "pix"
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground"
+            }`}
+          >
+            <QrCode className="w-4 h-4" />
+            Pix
+          </button>
+        </div>
+
+        {paymentMethod === "card" ? (
+          <StripeEmbeddedCheckout
+            priceId={selected.priceId}
+            quantity={1}
+            customerEmail={user?.email || ""}
+            userId={user?.id || ""}
+            returnUrl={`${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`}
+          />
+        ) : (
+          <PixCheckoutForm
+            amountCents={selected.amountCents}
+            description={`Assinatura EvoCore Premium ${selected.title}`}
+            defaultEmail={user?.email || ""}
+          />
+        )}
       </motion.div>
     );
   }
