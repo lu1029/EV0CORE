@@ -183,44 +183,57 @@ const RunningScreen = () => {
   const avgSpeed = elapsedSeconds > 0 ? ((distanceKm / (elapsedSeconds / 3600)).toFixed(1)) : "0.0";
   const activities = ["Corrida", "Caminhada", "Bike", "Esteira", "Elíptico", "Escada"];
 
+  const lastRawPointRef = useRef<RawPoint | null>(null);
+  const activityKeyMap: Record<string, string> = {
+    "Corrida": "run", "Caminhada": "walk", "Bike": "bike",
+    "Esteira": "treadmill", "Elíptico": "elliptical", "Escada": "stairs",
+  };
+
   const startRun = useCallback(() => {
     setPhase("running");
     setIsPaused(false);
     setRoutePath(currentPosition ? [currentPosition] : []);
     setElapsedSeconds(0); setDistanceKm(0); setCalories(0); setSegments([]);
-    setMaxSpeed(0); setElevationGain(Math.round(Math.random() * 30 + 10));
+    setMaxSpeed(0); setElevationGain(0);
     lastSegmentDistRef.current = 0; lastSegmentTimeRef.current = 0; lastSegmentIdxRef.current = 0;
+    lastRawPointRef.current = null;
     mapRef.current = null;
     timerRef.current = setInterval(() => setElapsedSeconds((s) => s + 1), 1000);
+
+    const activityKey = activityKeyMap[selectedActivity] ?? "run";
+
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
-        const accuracy = pos.coords.accuracy ?? 999;
-        // Ignora amostras muito imprecisas (>50m) para não poluir a rota
-        if (accuracy > 50) return;
-        const newPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        setCurrentPosition(newPos);
-        setMaxSpeed((prev) => Math.max(prev, (pos.coords.speed ?? 0) * 3.6));
-        setRoutePath((prev) => {
-          // Sempre garante o ponto inicial
-          if (prev.length === 0) return [newPos];
-          const last = prev[prev.length - 1];
-          const dist = haversine(last, newPos);
-          // Aceita movimentos a partir de 2m (antes era 5m, muito restritivo)
-          if (dist > 0.002) {
-            setDistanceKm((d) => d + dist);
-            setCalories((c) => c + Math.round(dist * 70));
-            return [...prev, newPos];
-          }
-          return prev;
-        });
-        mapRef.current?.panTo(newPos);
+        const next: RawPoint = {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          altitude: pos.coords.altitude,
+          accuracy: pos.coords.accuracy,
+          speed: pos.coords.speed,
+          timestamp: pos.timestamp,
+        };
+        const result = evaluateGpsPoint(lastRawPointRef.current, next, { activityType: activityKey });
+
+        // Always update visible position so the user sees the cursor move
+        setCurrentPosition({ lat: next.lat, lng: next.lng });
+        mapRef.current?.panTo({ lat: next.lat, lng: next.lng });
+
+        if (!result.accept) return;
+        // Accept point — update route, distance, calories, elevation
+        const newPoint = { lat: next.lat, lng: next.lng };
+        setRoutePath((prev) => (prev.length === 0 ? [newPoint] : [...prev, newPoint]));
+        if (lastRawPointRef.current) {
+          setDistanceKm((d) => d + result.distanceKm);
+          setCalories((c) => c + Math.round(result.distanceKm * 70));
+          setMaxSpeed((m) => Math.max(m, result.speedKmh));
+          setElevationGain((e) => accumulateElevation(e, result.elevationDeltaM));
+        }
+        lastRawPointRef.current = next;
       },
-      (err) => {
-        console.warn("watchPosition error:", err);
-      },
-      { enableHighAccuracy: true, maximumAge: 1000, timeout: 15000 }
+      (err) => { console.warn("watchPosition error:", err); },
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 }
     );
-  }, [currentPosition]);
+  }, [currentPosition, selectedActivity]);
 
   const stopRun = useCallback(() => {
     if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current);
