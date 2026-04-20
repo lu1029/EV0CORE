@@ -131,7 +131,7 @@ export default function CheckoutReturn() {
         >
           <h1 className="text-2xl font-bold text-foreground mb-2">Nenhuma sessão encontrada</h1>
           <p className="text-muted-foreground mb-6">Não conseguimos identificar seu pagamento.</p>
-          <Button variant="ghost" onClick={() => navigate("/")} className="rounded-xl">
+          <Button variant="ghost" onClick={() => navigate("/home", { replace: true })} className="rounded-xl">
             Voltar
           </Button>
         </motion.div>
@@ -272,7 +272,7 @@ export default function CheckoutReturn() {
             whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
             transition={springSnappy}
-            onClick={() => navigate("/")}
+            onClick={goHome}
             className="w-full h-12 rounded-2xl bg-primary text-primary-foreground text-[15px] font-semibold shadow-[0_12px_32px_-8px_hsl(var(--primary)/0.55)] flex items-center justify-center gap-2"
           >
             <Home className="w-4 h-4" strokeWidth={2.5} />
