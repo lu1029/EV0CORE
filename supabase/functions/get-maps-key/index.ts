@@ -1,5 +1,3 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -10,30 +8,9 @@ Deno.serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
-  // Auth check
-  const authHeader = req.headers.get('Authorization')
-  if (!authHeader?.startsWith('Bearer ')) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
-  }
-
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_ANON_KEY')!,
-    { global: { headers: { Authorization: authHeader } } }
-  )
-
-  const token = authHeader.replace('Bearer ', '')
-  const { data, error } = await supabase.auth.getClaims(token)
-  if (error || !data?.claims) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
-  }
-
+  // Note: API key is restricted by HTTP referrer in Google Cloud Console,
+  // so it's safe to return without JWT validation. This avoids 401 errors
+  // when sessions expire and lets the map load on public/return flows.
   const apiKey = Deno.env.get('GOOGLE_MAPS_API_KEY')
   if (!apiKey) {
     return new Response(JSON.stringify({ error: 'API key not configured' }), {
