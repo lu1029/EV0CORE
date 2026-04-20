@@ -285,6 +285,7 @@ const RunningScreen = () => {
   // ─── SUMMARY MAP (renders polyline of completed route) ───
   const summaryMapRef = useRef<HTMLDivElement>(null);
   const summaryMapInstanceRef = useRef<any>(null);
+  const [summaryMode, setSummaryMode] = useState<ActivityMode>("map");
 
   useEffect(() => {
     if (phase !== "summary" || summaryMode !== "map") {
