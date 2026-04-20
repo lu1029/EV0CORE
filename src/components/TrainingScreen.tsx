@@ -280,10 +280,7 @@ const TrainingScreen = () => {
               </div>
 
               {savedLoading ? (
-                <div className="flex items-center gap-3 py-10 justify-center">
-                  <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                  <p className="text-[13px] text-muted-foreground">Carregando…</p>
-                </div>
+                <TrainingSkeleton />
               ) : !currentPlan ? (
                 <motion.div
                   whileHover={{ y: -2, transition: springSnappy }}
