@@ -158,6 +158,8 @@ export type Database = {
       profiles: {
         Row: {
           age: number
+          ai_messages_reset_date: string
+          ai_messages_today: number
           avatar_url: string | null
           created_at: string
           days_per_week: number
@@ -176,6 +178,8 @@ export type Database = {
         }
         Insert: {
           age?: number
+          ai_messages_reset_date?: string
+          ai_messages_today?: number
           avatar_url?: string | null
           created_at?: string
           days_per_week?: number
@@ -194,6 +198,8 @@ export type Database = {
         }
         Update: {
           age?: number
+          ai_messages_reset_date?: string
+          ai_messages_today?: number
           avatar_url?: string | null
           created_at?: string
           days_per_week?: number

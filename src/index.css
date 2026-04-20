@@ -5,44 +5,43 @@
 @tailwind utilities;
 
 /*
-  EV0CORE — Apple-like design system
-  Pure black surfaces, single accent (EV0 green), SF-inspired Inter typography,
-  generous spacing, no gradients, no glow, no decorative orbs.
+  EV0CORE — Apple-like design system, light + dark.
+  Pure surfaces, single accent (EV0 green), SF-inspired Inter typography,
+  generous spacing, no gradients, no glow.
 */
 
 @layer base {
   :root {
-    /* Surfaces — neutral grays on near-black */
-    --background: 0 0% 4%;          /* #0A0A0A — deep, not pure black */
+    /* DARK (default) */
+    --background: 0 0% 4%;
     --foreground: 0 0% 98%;
 
-    --card: 0 0% 7%;                /* #121212 — elevated surface */
+    --card: 0 0% 7%;
     --card-foreground: 0 0% 98%;
 
     --popover: 0 0% 9%;
     --popover-foreground: 0 0% 98%;
 
-    --secondary: 0 0% 11%;          /* #1C1C1E iOS secondary */
+    --secondary: 0 0% 11%;
     --secondary-foreground: 0 0% 92%;
 
     --muted: 0 0% 14%;
-    --muted-foreground: 0 0% 60%;   /* iOS secondary label */
+    --muted-foreground: 0 0% 60%;
 
     --accent: 0 0% 14%;
     --accent-foreground: 0 0% 98%;
 
-    --destructive: 4 90% 58%;       /* iOS red */
+    --destructive: 4 90% 58%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 16%;             /* hairline */
+    --border: 0 0% 16%;
     --input: 0 0% 16%;
 
-    /* EV0CORE Green — single accent, used sparingly */
-    --primary: 142 100% 39%;        /* #00C853 */
+    --primary: 142 100% 39%;
     --primary-foreground: 0 0% 100%;
     --ring: 142 100% 39%;
 
-    --radius: 0.875rem;             /* iOS-ish 14px */
+    --radius: 0.875rem;
 
     --sidebar-background: 0 0% 7%;
     --sidebar-foreground: 0 0% 98%;
@@ -56,10 +55,52 @@
     --surface: 0 0% 7%;
     --surface-elevated: 0 0% 10%;
 
-    /* Semantic helpers used in older components — kept for back-compat */
     --glow-purple: 142 100% 39%;
     --glow-blue: 142 100% 39%;
     --glow-green: 142 100% 39%;
+  }
+
+  /* LIGHT theme */
+  .light {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 8%;
+
+    --card: 0 0% 98%;
+    --card-foreground: 0 0% 8%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 8%;
+
+    --secondary: 240 5% 94%;
+    --secondary-foreground: 0 0% 12%;
+
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%;
+
+    --accent: 240 5% 94%;
+    --accent-foreground: 0 0% 12%;
+
+    --destructive: 4 90% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+
+    --primary: 142 76% 36%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 142 76% 36%;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 0 0% 8%;
+    --sidebar-primary: 142 76% 36%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 5% 94%;
+    --sidebar-accent-foreground: 0 0% 8%;
+    --sidebar-border: 240 6% 90%;
+    --sidebar-ring: 142 76% 36%;
+
+    --surface: 0 0% 98%;
+    --surface-elevated: 0 0% 96%;
   }
 }
 
@@ -70,6 +111,7 @@
   html, body {
     background: hsl(var(--background));
     color: hsl(var(--foreground));
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
   body {
     @apply font-sans antialiased;
@@ -86,71 +128,49 @@
   h2 { letter-spacing: -0.03em; }
 }
 
-/* Decorative orbs / mesh / noise — disabled.
-   Apple-like: flat near-black surfaces, no decorative motion. */
-.mesh-bg,
-.mesh-bg-extra,
-.mesh-bg-orb-4,
-.mesh-bg-orb-5,
-.noise-overlay {
+.mesh-bg, .mesh-bg-extra, .mesh-bg-orb-4, .mesh-bg-orb-5, .noise-overlay {
   display: none !important;
 }
 
 @layer utilities {
-  /* Glass cards collapsed to flat elevated surfaces (back-compat). */
-  .glass,
-  .glass-card,
-  .glass-card-purple,
-  .glass-card-blue,
-  .glass-card-green {
+  .glass, .glass-card, .glass-card-purple, .glass-card-blue, .glass-card-green {
     background: hsl(var(--card));
     border: 1px solid hsl(var(--border));
     box-shadow: none;
   }
-
-  /* Legacy gradient classes -> solid primary. */
-  .gradient-primary {
-    background: hsl(var(--primary));
-  }
-  .text-gradient,
-  .text-gradient-green {
+  .gradient-primary { background: hsl(var(--primary)); }
+  .text-gradient, .text-gradient-green {
     color: hsl(var(--primary));
     background: none;
     -webkit-text-fill-color: currentColor;
   }
-  .glow-primary {
-    box-shadow: none;
-  }
+  .glow-primary { box-shadow: none; }
+  .hairline { border-color: hsl(var(--border)); }
 
-  /* iOS-style hairline divider */
-  .hairline {
-    border-color: hsl(0 0% 100% / 0.08);
-  }
-
-  .hide-scrollbar,
-  .scrollbar-hide {
+  .hide-scrollbar, .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-  .hide-scrollbar::-webkit-scrollbar,
-  .scrollbar-hide::-webkit-scrollbar {
+  .hide-scrollbar::-webkit-scrollbar, .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
-  .safe-area-bottom {
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-  }
-  .safe-area-top {
-    padding-top: env(safe-area-inset-top, 0px);
-  }
+  .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .safe-area-top { padding-top: env(safe-area-inset-top, 0px); }
 
-  /* Tabular numerals for timers/stats */
   .tabular {
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum";
   }
+
+  /* Subtle accent dot/pulse for liveliness */
+  .accent-dot {
+    background: hsl(var(--primary));
+    box-shadow: 0 0 0 0 hsl(var(--primary) / 0.5);
+    animation: accent-pulse 2s ease-out infinite;
+  }
 }
 
-/* Animations — minimal, Apple-like easing */
+/* Apple-spring fade & scale */
 @keyframes fade-in {
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -167,14 +187,21 @@
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-/* Kept (reduced) for back-compat */
 @keyframes pulse-glow {
   0%, 100% { opacity: 1; }
   50%      { opacity: 0.85; }
 }
+@keyframes accent-pulse {
+  0%   { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.45); }
+  70%  { box-shadow: 0 0 0 10px hsl(var(--primary) / 0); }
+  100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0); }
+}
 @keyframes shimmer {
   0%   { background-position: -200% 0; }
   100% { background-position: 200% 0; }
+}
+@keyframes ring-fill {
+  from { stroke-dashoffset: 276; }
 }
 
 .animate-fade-in    { animation: fade-in 0.35s cubic-bezier(0.32, 0.72, 0, 1) both; }

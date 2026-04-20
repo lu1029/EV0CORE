@@ -1,6 +1,6 @@
 import React from "react";
 import { useApp } from "@/contexts/AppContext";
-import { ChevronRight, Flame } from "lucide-react";
+import { ChevronRight, Flame, Dumbbell, Apple, MapPin, TrendingUp } from "lucide-react";
 import { useStreak } from "@/hooks/useStreak";
 
 const HomeScreen = () => {
@@ -12,44 +12,31 @@ const HomeScreen = () => {
   const weekDayLabels = ["S", "T", "Q", "Q", "S", "S", "D"];
 
   const tiles = [
-    { id: "training", label: "Treino", sub: "Plano com IA" },
-    { id: "running", label: "Corrida", sub: "Iniciar atividade" },
-    { id: "nutrition", label: "Nutrição", sub: "Dieta personalizada" },
-    { id: "progress", label: "Progresso", sub: "Sua evolução" },
+    { id: "training", label: "Treino", sub: "Plano com IA", icon: Dumbbell },
+    { id: "running", label: "Corrida", sub: "Iniciar atividade", icon: MapPin },
+    { id: "nutrition", label: "Nutrição", sub: "Dieta personalizada", icon: Apple },
+    { id: "progress", label: "Progresso", sub: "Sua evolução", icon: TrendingUp },
   ] as const;
 
   return (
-    <div className="pb-28 px-5 pt-8 max-w-lg mx-auto">
-      {/* Header */}
-      <header className="flex items-end justify-between mb-10 animate-fade-in">
-        <div>
-          <p className="text-[13px] text-muted-foreground tracking-tight">{greeting}</p>
-          <h1 className="text-[32px] leading-tight font-bold text-foreground tracking-[-0.03em] mt-0.5">{name}</h1>
-        </div>
-        <button
-          onClick={() => setCurrentTab("profile")}
-          className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center active:scale-95 transition-transform"
-        >
-          <span className="text-sm font-semibold text-foreground">{name[0]?.toUpperCase()}</span>
-        </button>
+    <div className="pb-28 px-5 pt-10 max-w-lg mx-auto">
+      {/* Big centered greeting — Apple Fitness style */}
+      <header className="text-center mb-12 animate-fade-in">
+        <p className="text-[15px] text-muted-foreground tracking-tight mb-2">{greeting},</p>
+        <h1 className="text-[44px] leading-[1.05] font-bold text-foreground tracking-[-0.04em]">
+          {name}
+        </h1>
+        {trainedToday && (
+          <div className="inline-flex items-center gap-1.5 mt-4 px-3 py-1 rounded-full bg-primary/10 animate-scale-in">
+            <span className="w-1.5 h-1.5 rounded-full accent-dot" />
+            <span className="text-[12px] font-medium text-primary">Treinado hoje</span>
+          </div>
+        )}
       </header>
 
-      {/* EvoAI row */}
-      <button
-        onClick={() => setCurrentTab("ai")}
-        className="w-full flex items-center justify-between py-4 mb-2 active:opacity-60 transition-opacity animate-fade-in"
-      >
-        <div className="text-left">
-          <p className="text-[17px] font-semibold text-foreground tracking-tight">EvoAI</p>
-          <p className="text-[13px] text-muted-foreground">Seu personal trainer</p>
-        </div>
-        <ChevronRight className="w-5 h-5 text-muted-foreground" />
-      </button>
-      <div className="h-px bg-border mb-8" />
-
-      {/* Streak card */}
+      {/* Streak card with animated rings */}
       <section className="mb-10 animate-fade-in" style={{ animationDelay: "60ms" }}>
-        <div className="flex items-baseline justify-between mb-4">
+        <div className="flex items-baseline justify-between mb-4 px-1">
           <h2 className="text-[22px] font-bold text-foreground tracking-[-0.02em]">Esta semana</h2>
           <span className="text-[13px] text-muted-foreground tabular">
             {activeWeek.filter(Boolean).length}/7
@@ -57,19 +44,18 @@ const HomeScreen = () => {
         </div>
         <div className="bg-card rounded-2xl p-5">
           <div className="flex items-center gap-2 mb-5">
-            <Flame className={`w-4 h-4 ${streak > 0 ? "text-primary" : "text-muted-foreground"}`} />
+            <Flame className={`w-4 h-4 transition-colors ${streak > 0 ? "text-primary" : "text-muted-foreground"}`} />
             <span className="text-[15px] font-medium text-foreground">
-              {streak > 0 ? `${streak} dia${streak > 1 ? "s" : ""}` : "Sem sequência"}
+              {streak > 0 ? `${streak} dia${streak > 1 ? "s" : ""} de sequência` : "Sem sequência"}
             </span>
-            {trainedToday && <span className="text-[12px] text-primary ml-auto">Treinado hoje</span>}
           </div>
           <div className="flex justify-between">
             {weekDayLabels.map((d, i) => (
-              <div key={i} className="flex flex-col items-center gap-2">
+              <div key={i} className="flex flex-col items-center gap-2 animate-fade-in" style={{ animationDelay: `${i * 30}ms` }}>
                 <span className="text-[11px] text-muted-foreground tabular">{d}</span>
                 <div
-                  className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${
-                    activeWeek[i] ? "bg-primary" : "bg-secondary"
+                  className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300 ${
+                    activeWeek[i] ? "bg-primary scale-100" : "bg-secondary scale-90"
                   }`}
                 >
                   {activeWeek[i] && <div className="w-1.5 h-1.5 rounded-full bg-primary-foreground" />}
@@ -80,23 +66,27 @@ const HomeScreen = () => {
         </div>
       </section>
 
-      {/* Quick access — list rows, Apple-like */}
+      {/* Quick access — Apple-like tiles */}
       <section className="animate-fade-in" style={{ animationDelay: "120ms" }}>
-        <h2 className="text-[22px] font-bold text-foreground tracking-[-0.02em] mb-3">Atividades</h2>
+        <h2 className="text-[22px] font-bold text-foreground tracking-[-0.02em] mb-3 px-1">Atividades</h2>
         <div className="bg-card rounded-2xl overflow-hidden">
           {tiles.map((t, i) => (
             <button
               key={t.id}
               onClick={() => setCurrentTab(t.id)}
-              className="w-full flex items-center justify-between px-5 py-4 active:bg-secondary/60 transition-colors"
+              className="w-full flex items-center gap-4 px-5 py-4 active:bg-secondary/60 transition-colors relative animate-fade-in"
+              style={{ animationDelay: `${140 + i * 40}ms` }}
             >
-              <div className="text-left">
+              <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <t.icon className="w-4 h-4 text-primary" />
+              </div>
+              <div className="flex-1 text-left">
                 <p className="text-[16px] font-medium text-foreground">{t.label}</p>
                 <p className="text-[13px] text-muted-foreground">{t.sub}</p>
               </div>
               <ChevronRight className="w-4 h-4 text-muted-foreground" />
               {i < tiles.length - 1 && (
-                <div className="absolute left-5 right-0 bottom-0 h-px bg-border pointer-events-none" />
+                <div className="absolute left-[68px] right-5 bottom-0 h-px bg-border pointer-events-none" />
               )}
             </button>
           ))}
@@ -106,14 +96,17 @@ const HomeScreen = () => {
       {!isPremium && (
         <button
           onClick={() => setCurrentTab("premium")}
-          className="w-full mt-8 py-4 flex items-center justify-between animate-fade-in active:opacity-60 transition-opacity"
-          style={{ animationDelay: "180ms" }}
+          className="w-full mt-6 py-4 px-5 rounded-2xl bg-card flex items-center gap-3 animate-fade-in active:bg-secondary/40 transition-colors"
+          style={{ animationDelay: "300ms" }}
         >
-          <div className="text-left">
-            <p className="text-[15px] font-medium text-foreground">EVOCORE Pro</p>
-            <p className="text-[13px] text-muted-foreground">Desbloqueie a experiência completa</p>
+          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+            <span className="text-[13px] font-bold text-primary">Pro</span>
           </div>
-          <ChevronRight className="w-5 h-5 text-primary" />
+          <div className="text-left flex-1">
+            <p className="text-[15px] font-medium text-foreground">EVOCORE Pro</p>
+            <p className="text-[13px] text-muted-foreground">Desbloqueie tudo</p>
+          </div>
+          <ChevronRight className="w-4 h-4 text-primary" />
         </button>
       )}
     </div>
