@@ -193,24 +193,31 @@ const RunningScreen = () => {
     timerRef.current = setInterval(() => setElapsedSeconds((s) => s + 1), 1000);
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
+        const accuracy = pos.coords.accuracy ?? 999;
+        // Ignora amostras muito imprecisas (>50m) para não poluir a rota
+        if (accuracy > 50) return;
         const newPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         setCurrentPosition(newPos);
         setMaxSpeed((prev) => Math.max(prev, (pos.coords.speed ?? 0) * 3.6));
         setRoutePath((prev) => {
-          if (prev.length > 0) {
-            const dist = haversine(prev[prev.length - 1], newPos);
-            if (dist > 0.005) {
-              setDistanceKm((d) => d + dist);
-              setCalories((c) => c + Math.round(dist * 70));
-              return [...prev, newPos];
-            }
+          // Sempre garante o ponto inicial
+          if (prev.length === 0) return [newPos];
+          const last = prev[prev.length - 1];
+          const dist = haversine(last, newPos);
+          // Aceita movimentos a partir de 2m (antes era 5m, muito restritivo)
+          if (dist > 0.002) {
+            setDistanceKm((d) => d + dist);
+            setCalories((c) => c + Math.round(dist * 70));
+            return [...prev, newPos];
           }
-          return prev.length === 0 ? [newPos] : prev;
+          return prev;
         });
         mapRef.current?.panTo(newPos);
       },
-      undefined,
-      { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 }
+      (err) => {
+        console.warn("watchPosition error:", err);
+      },
+      { enableHighAccuracy: true, maximumAge: 1000, timeout: 15000 }
     );
   }, [currentPosition]);
 
@@ -343,9 +350,12 @@ const RunningScreen = () => {
           {routePath.length > 1 ? (
             <div ref={summaryMapRef} className="w-full h-full" />
           ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+            <div className="w-full h-full flex flex-col items-center justify-center gap-2 px-6 text-center">
               <Route className="w-8 h-8 text-muted-foreground/40" />
               <p className="text-muted-foreground text-sm">Rota não disponível</p>
+              <p className="text-muted-foreground/70 text-xs">
+                Sinal GPS fraco ou movimento insuficiente. Tente em ambiente externo com boa visada do céu.
+              </p>
             </div>
           )}
         </div>
