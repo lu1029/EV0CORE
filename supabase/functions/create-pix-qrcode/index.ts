@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
           cellphone: phone,
           taxId: cpf,
         },
-        metadata: { externalId, userId },
+        metadata: { externalId, userId, plan, priceId },
       }),
     });
 
