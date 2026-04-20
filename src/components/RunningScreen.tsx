@@ -4,12 +4,17 @@ import {
   Navigation, Share2, Save, ArrowLeft, Zap,
   Route, Timer, Footprints, Loader2, WifiOff, LocateFixed
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useRunHistory } from "@/hooks/useRunHistory";
 import { AnimatedText } from "@/components/motion/AnimatedText";
 import { evaluateGpsPoint, accumulateElevation, type RawPoint } from "@/lib/gpsFilter";
+import { ActivityModeTabs, type ActivityMode } from "@/components/running/ActivityModeTabs";
+import { ActivityAnimationMode } from "@/components/running/ActivityAnimationMode";
+import { ActivityPhotoMode } from "@/components/running/ActivityPhotoMode";
+import { toast } from "sonner";
 
 type RunPhase = "idle" | "running" | "summary";
 type MapLoadState = "loading-key" | "loading-map" | "ready" | "error";
@@ -252,8 +257,9 @@ const RunningScreen = () => {
 
   const discardRun = () => {
     mapRef.current = null;
+    summaryMapInstanceRef.current = null;
     setPhase("idle"); setRoutePath([]); setDistanceKm(0); setElapsedSeconds(0); setCalories(0); setSegments([]);
-    setSaved(false); setSaving(false);
+    setSaved(false); setSaving(false); setSavedRunId(null); setSummaryPhotoUrl(null); setSummaryMode("map");
   };
 
   useEffect(() => () => {
@@ -279,9 +285,13 @@ const RunningScreen = () => {
   // ─── SUMMARY MAP (renders polyline of completed route) ───
   const summaryMapRef = useRef<HTMLDivElement>(null);
   const summaryMapInstanceRef = useRef<any>(null);
+  const [summaryMode, setSummaryMode] = useState<ActivityMode>("map");
 
   useEffect(() => {
-    if (phase !== "summary") { summaryMapInstanceRef.current = null; return; }
+    if (phase !== "summary" || summaryMode !== "map") {
+      summaryMapInstanceRef.current = null;
+      return;
+    }
     if (mapLoadState !== "ready" || !summaryMapRef.current || routePath.length < 2) return;
     const g = (window as any).google;
     if (!g?.maps) return;
@@ -308,11 +318,13 @@ const RunningScreen = () => {
     });
     map.fitBounds(bounds, 40);
     summaryMapInstanceRef.current = map;
-  }, [phase, mapLoadState, routePath]);
+  }, [phase, mapLoadState, routePath, summaryMode]);
 
   // ─── SAVE RUN TO DATABASE ───
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [savedRunId, setSavedRunId] = useState<string | null>(null);
+  const [summaryPhotoUrl, setSummaryPhotoUrl] = useState<string | null>(null);
 
   const saveRun = useCallback(async () => {
     if (saving || saved) return;
@@ -329,7 +341,7 @@ const RunningScreen = () => {
       const paceNum = distanceKm > 0 ? elapsedSeconds / 60 / distanceKm : null;
       const avgSpeedNum = elapsedSeconds > 0 ? distanceKm / (elapsedSeconds / 3600) : null;
 
-      const { error } = await supabase.from("runs").insert({
+      const { data: inserted, error } = await supabase.from("runs").insert({
         user_id: user.id,
         activity_type: activityMap[selectedActivity] ?? "run",
         distance_km: Number(distanceKm.toFixed(3)),
@@ -339,17 +351,18 @@ const RunningScreen = () => {
         avg_speed_kmh: avgSpeedNum ? Number(avgSpeedNum.toFixed(2)) : null,
         route_data: { points: routePath, max_speed_kmh: maxSpeed, elevation_gain_m: elevationGain },
         started_at: new Date(Date.now() - elapsedSeconds * 1000).toISOString(),
-      });
+      }).select("id").single();
       if (error) throw error;
       setSaved(true);
+      setSavedRunId(inserted?.id ?? null);
       refreshHistory();
     } catch (e) {
       console.error("Erro ao salvar corrida:", e);
-      alert("Erro ao salvar corrida. Tente novamente.");
+      toast.error("Erro ao salvar corrida. Tente novamente.");
     } finally {
       setSaving(false);
     }
-  }, [saving, saved, distanceKm, elapsedSeconds, calories, selectedActivity, routePath, maxSpeed, elevationGain]);
+  }, [saving, saved, distanceKm, elapsedSeconds, calories, selectedActivity, routePath, maxSpeed, elevationGain, refreshHistory]);
 
   // ─── POST-RUN SUMMARY ───
   if (phase === "summary") {
@@ -360,18 +373,52 @@ const RunningScreen = () => {
           <h2 className="text-foreground font-heading font-bold text-base">{selectedActivity}</h2>
           <button className="text-muted-foreground"><Share2 className="w-5 h-5" /></button>
         </div>
-        <div className="w-full h-72 relative bg-secondary">
-          {routePath.length > 1 ? (
-            <div ref={summaryMapRef} className="w-full h-full" />
-          ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center gap-2 px-6 text-center">
-              <Route className="w-8 h-8 text-muted-foreground/40" />
-              <p className="text-muted-foreground text-sm">Rota não disponível</p>
-              <p className="text-muted-foreground/70 text-xs">
-                Sinal GPS fraco ou movimento insuficiente. Tente em ambiente externo com boa visada do céu.
-              </p>
-            </div>
-          )}
+        {/* Mode selector tabs */}
+        <ActivityModeTabs mode={summaryMode} onChange={setSummaryMode} hasPhoto={!!summaryPhotoUrl} />
+
+        {/* Mode viewport */}
+        <div className="w-full h-72 relative bg-secondary mt-3 overflow-hidden">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={summaryMode}
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.02 }}
+              transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+              className="absolute inset-0"
+            >
+              {summaryMode === "map" && (
+                routePath.length > 1 ? (
+                  <div ref={summaryMapRef} className="w-full h-full" />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center gap-2 px-6 text-center">
+                    <Route className="w-8 h-8 text-muted-foreground/40" />
+                    <p className="text-muted-foreground text-sm">Rota não disponível</p>
+                    <p className="text-muted-foreground/70 text-xs">
+                      Sinal GPS fraco ou movimento insuficiente. Tente em ambiente externo com boa visada do céu.
+                    </p>
+                  </div>
+                )
+              )}
+              {summaryMode === "animation" && <ActivityAnimationMode points={routePath} />}
+              {summaryMode === "photo" && (
+                savedRunId ? (
+                  <ActivityPhotoMode
+                    runId={savedRunId}
+                    photoUrl={summaryPhotoUrl}
+                    points={routePath}
+                    onPhotoChange={setSummaryPhotoUrl}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center px-6 text-center">
+                    <p className="text-muted-foreground text-sm">
+                      Salve a atividade primeiro para adicionar uma foto
+                    </p>
+                  </div>
+                )
+              )}
+            </motion.div>
+          </AnimatePresence>
         </div>
         <div className="px-4 -mt-5 relative z-10">
           <Button
