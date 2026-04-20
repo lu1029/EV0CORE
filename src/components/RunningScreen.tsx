@@ -287,7 +287,10 @@ const RunningScreen = () => {
   const summaryMapInstanceRef = useRef<any>(null);
 
   useEffect(() => {
-    if (phase !== "summary") { summaryMapInstanceRef.current = null; return; }
+    if (phase !== "summary" || summaryMode !== "map") {
+      summaryMapInstanceRef.current = null;
+      return;
+    }
     if (mapLoadState !== "ready" || !summaryMapRef.current || routePath.length < 2) return;
     const g = (window as any).google;
     if (!g?.maps) return;
@@ -314,7 +317,7 @@ const RunningScreen = () => {
     });
     map.fitBounds(bounds, 40);
     summaryMapInstanceRef.current = map;
-  }, [phase, mapLoadState, routePath]);
+  }, [phase, mapLoadState, routePath, summaryMode]);
 
   // ─── SAVE RUN TO DATABASE ───
   const [saving, setSaving] = useState(false);
