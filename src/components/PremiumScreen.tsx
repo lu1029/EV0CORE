@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { fadeUp, stagger, staggerFast, easeApple, springSnappy } from "@/lib/motion";
+import { SubscriptionSkeleton, PremiumPlansSkeleton } from "@/components/skeletons/SubscriptionSkeleton";
 
 type PlanId = "weekly" | "monthly" | "annual";
 
@@ -77,7 +78,7 @@ const plans: Plan[] = [
 
 const PremiumScreen = () => {
   const { setCurrentTab, isPremium, user } = useApp();
-  const { subscription, isActive } = useSubscription();
+  const { subscription, isActive, isLoading: subLoading } = useSubscription();
   const [selectedPlan, setSelectedPlan] = useState<PlanId>("monthly");
   const [showCheckout, setShowCheckout] = useState(false);
   const [loadingPortal, setLoadingPortal] = useState(false);
@@ -98,6 +99,15 @@ const PremiumScreen = () => {
   };
 
   const selected = plans.find((p) => p.id === selectedPlan)!;
+
+  if (subLoading) {
+    return (
+      <div className="pb-28 px-5 pt-8 max-w-lg mx-auto space-y-6">
+        <SubscriptionSkeleton />
+        <PremiumPlansSkeleton />
+      </div>
+    );
+  }
 
   if (showCheckout) {
     return (

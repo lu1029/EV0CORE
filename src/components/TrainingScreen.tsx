@@ -7,6 +7,7 @@ import ExerciseLibraryBrowser from "./training/ExerciseLibraryBrowser";
 import type { Exercise } from "./training/ExerciseCard";
 import { getGifUrl } from "./training/homeExerciseGifs";
 import { useSavedPlan } from "@/hooks/useSavedPlan";
+import { TrainingSkeleton } from "./skeletons/TrainingSkeleton";
 import { fadeUp, stagger, staggerFast, springSnappy, easeApple } from "@/lib/motion";
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/evo-ai-chat`;
@@ -280,10 +281,7 @@ const TrainingScreen = () => {
               </div>
 
               {savedLoading ? (
-                <div className="flex items-center gap-3 py-10 justify-center">
-                  <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                  <p className="text-[13px] text-muted-foreground">Carregando…</p>
-                </div>
+                <TrainingSkeleton />
               ) : !currentPlan ? (
                 <motion.div
                   whileHover={{ y: -2, transition: springSnappy }}

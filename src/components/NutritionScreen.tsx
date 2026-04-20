@@ -8,6 +8,7 @@ import NutritionWizard, { type NutritionPreferences } from "./nutrition/Nutritio
 import MealEditor, { type EditableMeal } from "./nutrition/MealEditor";
 import RecipesSection from "./nutrition/RecipesSection";
 import { fadeUp, stagger, staggerFast, springSnappy, easeApple } from "@/lib/motion";
+import { NutritionSkeleton } from "./skeletons/NutritionSkeleton";
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/evo-ai-chat`;
 
@@ -156,9 +157,7 @@ const NutritionScreen = () => {
       <div className="pb-28 px-5 pt-8 max-w-lg mx-auto">
         <h1 className="text-[32px] font-bold text-foreground tracking-[-0.03em] mb-8 animate-fade-in">Nutrição</h1>
         {saved.loading ? (
-          <div className="flex flex-col items-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-          </div>
+          <NutritionSkeleton />
         ) : (
           <>
             {generateError && <p className="text-[13px] text-destructive mb-4">{generateError}</p>}
