@@ -140,6 +140,7 @@ Deno.serve(async (req) => {
         amount: data?.amount ?? amount,
         status: data?.status ?? "PENDING",
         expires_at: data?.expiresAt ?? null,
+        price_id: priceId,
       });
       if (insErr) console.error("pix_charges insert error", insErr);
     } else {
