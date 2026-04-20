@@ -172,25 +172,36 @@ const NutritionScreen = () => {
   const pct = Math.min((consumed / nutritionPlan.dailyCalories) * 100, 100);
 
   return (
-    <div className="pb-28 px-5 pt-8 max-w-lg mx-auto">
-      <div className="flex items-end justify-between mb-8 animate-fade-in">
+    <motion.div
+      className="pb-28 px-5 pt-8 max-w-lg mx-auto"
+      variants={stagger}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.div variants={fadeUp} className="flex items-end justify-between mb-8">
         <h1 className="text-[32px] font-bold text-foreground tracking-[-0.03em]">Nutrição</h1>
         <button onClick={resetPlan} className="text-[13px] text-muted-foreground flex items-center gap-1 active:opacity-60">
           <RotateCcw className="w-3.5 h-3.5" /> Refazer
         </button>
-      </div>
+      </motion.div>
 
       {/* Calorie ring */}
-      <section className="bg-card rounded-2xl p-6 mb-6 animate-fade-in">
+      <motion.section
+        variants={fadeUp}
+        whileHover={{ y: -2, transition: springSnappy }}
+        className="bg-card rounded-2xl p-6 mb-6 border border-border/40"
+      >
         <div className="flex items-center gap-6">
           <div className="relative w-32 h-32 shrink-0">
             <svg className="w-32 h-32 -rotate-90" viewBox="0 0 100 100">
               <circle cx="50" cy="50" r="44" stroke="hsl(var(--secondary))" strokeWidth="6" fill="none" />
-              <circle
+              <motion.circle
                 cx="50" cy="50" r="44"
                 stroke="hsl(var(--primary))" strokeWidth="6" fill="none"
-                strokeDasharray={`${(pct / 100) * 276} 276`}
                 strokeLinecap="round"
+                initial={{ strokeDasharray: "0 276" }}
+                animate={{ strokeDasharray: `${(pct / 100) * 276} 276` }}
+                transition={{ duration: 1, ease: easeApple, delay: 0.2 }}
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -203,20 +214,25 @@ const NutritionScreen = () => {
               { label: "Proteína", g: nutritionPlan.macros.protein.grams, pct: nutritionPlan.macros.protein.percentage },
               { label: "Carbos", g: nutritionPlan.macros.carbs.grams, pct: nutritionPlan.macros.carbs.percentage },
               { label: "Gordura", g: nutritionPlan.macros.fat.grams, pct: nutritionPlan.macros.fat.percentage },
-            ].map((m) => (
+            ].map((m, i) => (
               <div key={m.label}>
                 <div className="flex items-baseline justify-between mb-1.5">
                   <span className="text-[13px] text-muted-foreground">{m.label}</span>
                   <span className="text-[13px] text-foreground tabular font-medium">{m.g}g</span>
                 </div>
                 <div className="h-1 bg-secondary rounded-full overflow-hidden">
-                  <div className="h-full bg-primary rounded-full" style={{ width: `${m.pct}%` }} />
+                  <motion.div
+                    className="h-full bg-primary rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${m.pct}%` }}
+                    transition={{ duration: 0.8, ease: easeApple, delay: 0.3 + i * 0.1 }}
+                  />
                 </div>
               </div>
             ))}
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* Water */}
       <section className="bg-card rounded-2xl p-5 mb-8 animate-fade-in">
