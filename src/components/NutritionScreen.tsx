@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useApp } from "@/contexts/AppContext";
 import { Loader2, RotateCcw, Plus, Minus, Pencil, BookOpen, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import { useSavedPlan } from "@/hooks/useSavedPlan";
 import NutritionWizard, { type NutritionPreferences } from "./nutrition/NutritionWizard";
 import MealEditor, { type EditableMeal } from "./nutrition/MealEditor";
 import RecipesSection from "./nutrition/RecipesSection";
+import { fadeUp, stagger, staggerFast, springSnappy, easeApple } from "@/lib/motion";
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/evo-ai-chat`;
 
