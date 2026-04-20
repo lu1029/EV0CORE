@@ -1,13 +1,19 @@
-import React, { useState } from "react";
-import { Camera, TrendingUp, Activity, Award } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Camera, TrendingUp, Activity, Award, Pencil, Check } from "lucide-react";
 import PremiumGate from "@/components/PremiumGate";
 import { useProgress } from "@/hooks/useProgress";
 import { useAchievements } from "@/hooks/useAchievements";
+import { Input } from "@/components/ui/input";
 
 const ProgressScreen = () => {
   const [tab, setTab] = useState<"overview" | "body" | "achievements">("overview");
   const data = useProgress();
   const { achievements, unlockedCount, totalCount } = useAchievements();
+  const [weeklyGoal, setWeeklyGoal] = useState<number>(() => Number(localStorage.getItem("evo_weekly_goal")) || 4);
+  const [editingGoal, setEditingGoal] = useState(false);
+  const [draftGoal, setDraftGoal] = useState(weeklyGoal);
+  useEffect(() => { localStorage.setItem("evo_weekly_goal", String(weeklyGoal)); }, [weeklyGoal]);
+  const goalReachedReal = Math.min(100, Math.round((data.weekWorkouts / Math.max(1, weeklyGoal)) * 100));
 
   const EmptyState = ({ icon: Icon, title, hint }: { icon: typeof Activity; title: string; hint: string }) => (
     <div className="bg-card rounded-2xl py-10 px-5 flex flex-col items-center text-center animate-fade-in">
