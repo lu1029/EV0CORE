@@ -6,7 +6,7 @@ import LoginScreen from "@/components/LoginScreen";
 import OnboardingScreen from "@/components/OnboardingScreen";
 import BottomNav from "@/components/BottomNav";
 import EvoAIFab from "@/components/EvoAIFab";
-import { Sun, Moon } from "lucide-react";
+import { Sun, Moon, Search, X } from "lucide-react";
 import evocoreLogo from "@/assets/evocore-logo.png";
 import { PageTransition } from "@/components/PageTransition";
 
@@ -50,11 +50,13 @@ const AppLayout = () => {
             </button>
 
             <button
-              onClick={() => navigate(isProfile ? "/home" : "/perfil")}
+              onClick={() => navigate(isProfile ? "/home" : "/buscar")}
               className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center active:opacity-60 transition-opacity"
-              aria-label={isProfile ? "Fechar" : "Abrir perfil"}
+              aria-label={isProfile ? "Fechar" : "Buscar"}
             >
-              <span className="text-[13px] font-semibold text-foreground">{isProfile ? "✕" : "☰"}</span>
+              {isProfile
+                ? <X className="w-4 h-4 text-foreground" />
+                : <Search className="w-4 h-4 text-foreground" />}
             </button>
           </div>
         </div>
