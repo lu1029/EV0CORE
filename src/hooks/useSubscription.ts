@@ -25,11 +25,15 @@ export function useSubscription() {
     enabled: !!user,
   });
 
+  const now = new Date();
+  const periodEnd = subscription?.current_period_end ? new Date(subscription.current_period_end) : null;
   const isActive = !!subscription && (
+    // Active/trialing AND (no end date OR end date in future) AND not cancel_at_period_end-without-end
     (["active", "trialing"].includes(subscription.status) &&
-      (!subscription.current_period_end || new Date(subscription.current_period_end) > new Date())) ||
-    (subscription.status === "canceled" &&
-      subscription.current_period_end && new Date(subscription.current_period_end) > new Date())
+      (!subscription.cancel_at_period_end || (periodEnd && periodEnd > now)) &&
+      (!periodEnd || periodEnd > now)) ||
+    // Cancelled but still within paid period
+    (subscription.status === "canceled" && periodEnd && periodEnd > now)
   );
 
   return { subscription, isActive, isLoading, refetch };
