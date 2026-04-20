@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { useApp } from "@/contexts/AppContext";
-import { ChevronRight, Flame, Dumbbell, Apple, MapPin, TrendingUp, Users, ChevronDown, Bell, Check } from "lucide-react";
+import { ChevronRight, Flame, Dumbbell, Apple, MapPin, TrendingUp, Users, ChevronDown, Search, Check } from "lucide-react";
 import { useStreak } from "@/hooks/useStreak";
 import { useNavigate } from "react-router-dom";
 import { fadeUp, stagger, staggerFast, springSnappy, easeApple } from "@/lib/motion";
@@ -90,12 +90,14 @@ const HomeScreen = () => {
           <span className="text-[14px] font-semibold tabular text-foreground">{streak}</span>
         </motion.div>
 
-        {/* Bell */}
+        {/* Search (substitui o menu/sino) */}
         <motion.button
           whileTap={{ scale: 0.9 }}
+          onClick={() => navigate("/buscar")}
+          aria-label="Buscar"
           className="w-10 h-10 rounded-full flex items-center justify-center text-foreground hover:bg-card transition-colors"
         >
-          <Bell className="w-5 h-5" />
+          <Search className="w-5 h-5" />
         </motion.button>
       </motion.header>
 

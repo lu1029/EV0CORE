@@ -1,23 +1,25 @@
 import React from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Home, Dumbbell, Search, User } from "lucide-react";
+import { Home, Dumbbell, Footprints, Apple, TrendingUp, User } from "lucide-react";
 
 /**
- * Gymrats-style bottom tab bar — 4 tabs.
- * Floating, rounded "pill" with subtle backdrop blur. Profile lives here now.
+ * Bottom tab bar — 6 tabs (matches reference image).
+ * Floating pill, rounded, with active highlight + sliding pill.
  */
 const BottomNav = () => {
   const location = useLocation();
   const tabs = [
-    { to: "/home",     label: "Início",  icon: Home },
-    { to: "/treinos",  label: "Treino",  icon: Dumbbell },
-    { to: "/buscar",   label: "Buscar",  icon: Search },
-    { to: "/perfil",   label: "Perfil",  icon: User },
+    { to: "/home",     label: "Início",    icon: Home },
+    { to: "/treinos",  label: "Treino",    icon: Dumbbell },
+    { to: "/corrida",  label: "Corrida",   icon: Footprints },
+    { to: "/nutricao", label: "Nutrição",  icon: Apple },
+    { to: "/evolucao", label: "Progresso", icon: TrendingUp },
+    { to: "/perfil",   label: "Perfil",    icon: User },
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 px-4 pb-3 pt-2 safe-area-bottom pointer-events-none">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 px-3 pb-3 pt-2 safe-area-bottom pointer-events-none">
       <div className="max-w-lg mx-auto pointer-events-auto">
         <div className="relative bg-card/85 backdrop-blur-xl border border-border/60 rounded-full h-16 flex items-center justify-around px-2 shadow-[0_10px_40px_-12px_hsl(0_0%_0%/0.6)]">
           {tabs.map((tab) => {
@@ -28,17 +30,17 @@ const BottomNav = () => {
                 to={tab.to}
                 aria-label={tab.label}
                 onClick={() => { try { (navigator as any).vibrate?.(8); } catch {} }}
-                className="relative flex items-center justify-center w-14 h-12 rounded-2xl active:scale-90 transition-transform"
+                className="relative flex items-center justify-center w-11 h-11 rounded-2xl active:scale-90 transition-transform"
               >
                 {isActive && (
                   <motion.span
                     layoutId="bottomnav-active"
                     transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                    className="absolute inset-0 m-auto w-12 h-12 rounded-2xl bg-primary/12 border border-primary/25"
+                    className="absolute inset-0 m-auto w-11 h-11 rounded-2xl bg-primary/12 border border-primary/25"
                   />
                 )}
                 <tab.icon
-                  className={`relative w-[26px] h-[26px] transition-colors ${
+                  className={`relative w-[22px] h-[22px] transition-colors ${
                     isActive ? "text-primary" : "text-muted-foreground"
                   }`}
                   strokeWidth={isActive ? 2.4 : 2}
