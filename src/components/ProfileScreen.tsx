@@ -87,9 +87,15 @@ const ProfileScreen = () => {
 
         <div className="space-y-6 animate-fade-in">
           <div className="flex justify-center">
-            <div className="w-20 h-20 rounded-full bg-secondary flex items-center justify-center">
-              <span className="text-[26px] font-semibold text-foreground">{(editProfile.name || "A")[0]?.toUpperCase()}</span>
-            </div>
+            {user && (
+              <AvatarUpload
+                userId={user.id}
+                currentUrl={avatarUrl}
+                fallbackInitial={(editProfile.name || "A")[0]?.toUpperCase()}
+                onUploaded={setAvatarUrl}
+                size={80}
+              />
+            )}
           </div>
 
           <div className="bg-card rounded-2xl divide-y divide-border">
@@ -180,8 +186,20 @@ const ProfileScreen = () => {
     <div className="pb-28 px-5 pt-8 max-w-lg mx-auto">
       {/* Header */}
       <header className="flex flex-col items-center text-center mb-10 animate-fade-in">
-        <div className="w-24 h-24 rounded-full bg-secondary flex items-center justify-center mb-4">
-          <span className="text-[32px] font-semibold text-foreground">{name[0]?.toUpperCase()}</span>
+        <div className="mb-4">
+          {user ? (
+            <AvatarUpload
+              userId={user.id}
+              currentUrl={avatarUrl}
+              fallbackInitial={initial}
+              onUploaded={setAvatarUrl}
+              size={96}
+            />
+          ) : (
+            <div className="w-24 h-24 rounded-full bg-secondary flex items-center justify-center">
+              <span className="text-[32px] font-semibold text-foreground">{initial}</span>
+            </div>
+          )}
         </div>
         <h1 className="text-[26px] font-bold text-foreground tracking-[-0.02em]">{name}</h1>
         <p className="text-[14px] text-muted-foreground mt-0.5">{userProfile.email}</p>
