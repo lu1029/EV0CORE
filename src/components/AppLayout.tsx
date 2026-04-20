@@ -5,6 +5,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import LoginScreen from "@/components/LoginScreen";
 import OnboardingScreen from "@/components/OnboardingScreen";
 import BottomNav from "@/components/BottomNav";
+import EvoAIFab from "@/components/EvoAIFab";
 import { Sun, Moon } from "lucide-react";
 import evocoreLogo from "@/assets/evocore-logo.png";
 
@@ -61,6 +62,7 @@ const AppLayout = () => {
       <div className="animate-fade-in" key={location.pathname}>
         <Outlet />
       </div>
+      <EvoAIFab />
       <BottomNav />
     </div>
   );
