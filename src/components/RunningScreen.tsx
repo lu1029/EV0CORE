@@ -4,12 +4,17 @@ import {
   Navigation, Share2, Save, ArrowLeft, Zap,
   Route, Timer, Footprints, Loader2, WifiOff, LocateFixed
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useRunHistory } from "@/hooks/useRunHistory";
 import { AnimatedText } from "@/components/motion/AnimatedText";
 import { evaluateGpsPoint, accumulateElevation, type RawPoint } from "@/lib/gpsFilter";
+import { ActivityModeTabs, type ActivityMode } from "@/components/running/ActivityModeTabs";
+import { ActivityAnimationMode } from "@/components/running/ActivityAnimationMode";
+import { ActivityPhotoMode } from "@/components/running/ActivityPhotoMode";
+import { toast } from "sonner";
 
 type RunPhase = "idle" | "running" | "summary";
 type MapLoadState = "loading-key" | "loading-map" | "ready" | "error";
