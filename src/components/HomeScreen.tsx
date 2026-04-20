@@ -12,10 +12,10 @@ const HomeScreen = () => {
   const weekDayLabels = ["S", "T", "Q", "Q", "S", "S", "D"];
 
   const tiles = [
-    { id: "training", label: "Treino", sub: "Plano com IA", icon: Dumbbell },
-    { id: "running", label: "Corrida", sub: "Iniciar atividade", icon: MapPin },
-    { id: "nutrition", label: "Nutrição", sub: "Dieta personalizada", icon: Apple },
-    { id: "progress", label: "Progresso", sub: "Sua evolução", icon: TrendingUp },
+    { id: "training", label: "Treino", sub: "Plano com IA",        icon: Dumbbell,    tint: "from-violet-500/25 to-violet-500/5",  ring: "text-violet-400" },
+    { id: "running",  label: "Corrida", sub: "Iniciar atividade",  icon: MapPin,      tint: "from-sky-500/25 to-sky-500/5",         ring: "text-sky-400" },
+    { id: "nutrition",label: "Nutrição",sub: "Dieta personalizada",icon: Apple,       tint: "from-emerald-500/25 to-emerald-500/5", ring: "text-emerald-400" },
+    { id: "progress", label: "Progresso",sub: "Sua evolução",      icon: TrendingUp,  tint: "from-amber-500/25 to-amber-500/5",     ring: "text-amber-400" },
   ] as const;
 
   return (
@@ -66,28 +66,27 @@ const HomeScreen = () => {
         </div>
       </section>
 
-      {/* Quick access — Apple-like tiles */}
+      {/* Quick access — vibrant tiles */}
       <section className="animate-fade-in" style={{ animationDelay: "120ms" }}>
         <h2 className="text-[22px] font-bold text-foreground tracking-[-0.02em] mb-3 px-1">Atividades</h2>
-        <div className="bg-card rounded-2xl overflow-hidden">
+        <div className="grid grid-cols-2 gap-3">
           {tiles.map((t, i) => (
             <button
               key={t.id}
               onClick={() => setCurrentTab(t.id)}
-              className="w-full flex items-center gap-4 px-5 py-4 active:bg-secondary/60 transition-colors relative animate-fade-in"
-              style={{ animationDelay: `${140 + i * 40}ms` }}
+              className={`group relative overflow-hidden bg-card rounded-2xl p-4 text-left active:scale-[0.97] hover:scale-[1.01] transition-transform duration-200 animate-fade-in border border-border/40`}
+              style={{ animationDelay: `${140 + i * 60}ms` }}
             >
-              <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                <t.icon className="w-4 h-4 text-primary" />
+              <div className={`absolute inset-0 bg-gradient-to-br ${t.tint} opacity-80 pointer-events-none`} />
+              <div className="relative flex flex-col gap-3">
+                <div className={`w-10 h-10 rounded-xl bg-background/40 backdrop-blur-sm flex items-center justify-center shadow-sm`}>
+                  <t.icon className={`w-5 h-5 ${t.ring}`} strokeWidth={2.2} />
+                </div>
+                <div>
+                  <p className="text-[16px] font-semibold text-foreground tracking-tight">{t.label}</p>
+                  <p className="text-[12px] text-muted-foreground mt-0.5">{t.sub}</p>
+                </div>
               </div>
-              <div className="flex-1 text-left">
-                <p className="text-[16px] font-medium text-foreground">{t.label}</p>
-                <p className="text-[13px] text-muted-foreground">{t.sub}</p>
-              </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground" />
-              {i < tiles.length - 1 && (
-                <div className="absolute left-[68px] right-5 bottom-0 h-px bg-border pointer-events-none" />
-              )}
             </button>
           ))}
         </div>
