@@ -15,7 +15,7 @@ export function useSubscription() {
         .from("subscriptions")
         .select("*")
         .eq("user_id", user.id)
-        .eq("environment", environment)
+        .in("environment", [environment, "pix"])
         .in("status", ["active", "trialing", "canceled"])
         .order("created_at", { ascending: false })
         .limit(1)

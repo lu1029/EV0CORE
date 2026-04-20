@@ -155,6 +155,45 @@ export type Database = {
         }
         Relationships: []
       }
+      pix_charges: {
+        Row: {
+          abacate_id: string | null
+          amount: number
+          created_at: string
+          expires_at: string | null
+          external_id: string
+          id: string
+          paid_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          abacate_id?: string | null
+          amount: number
+          created_at?: string
+          expires_at?: string | null
+          external_id: string
+          id?: string
+          paid_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          abacate_id?: string | null
+          amount?: number
+          created_at?: string
+          expires_at?: string | null
+          external_id?: string
+          id?: string
+          paid_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           age: number
