@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useApp } from "@/contexts/AppContext";
-import { Droplets, Sparkles, Loader2, RotateCcw, Coffee, Sun, Moon, Cookie, Apple } from "lucide-react";
+import { Loader2, RotateCcw, Plus, Minus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSavedPlan } from "@/hooks/useSavedPlan";
 
@@ -27,16 +27,6 @@ interface NutritionPlan {
   tips: string[];
 }
 
-const mealIcons: Record<string, any> = {
-  "Café da manhã": Coffee,
-  "Lanche da manhã": Cookie,
-  "Almoço": Sun,
-  "Lanche da tarde": Cookie,
-  "Lanche": Cookie,
-  "Jantar": Moon,
-  "Ceia": Moon,
-};
-
 const NutritionScreen = () => {
   const { userProfile } = useApp();
   const [waterCups, setWaterCups] = useState(0);
@@ -46,13 +36,10 @@ const NutritionScreen = () => {
 
   const saved = useSavedPlan("nutrition");
 
-  // Load saved plan
   useEffect(() => {
     if (saved.plan && !nutritionPlan) {
       const data = saved.plan.plan_data;
-      if (data.dailyCalories) {
-        setNutritionPlan(data as NutritionPlan);
-      }
+      if (data.dailyCalories) setNutritionPlan(data as NutritionPlan);
     }
   }, [saved.plan]);
 
@@ -74,14 +61,9 @@ const NutritionScreen = () => {
       const parsed = JSON.parse(data.result);
       if (parsed.dailyCalories) {
         setNutritionPlan(parsed);
-        await saved.savePlan(
-          parsed.planName || "Plano Nutricional",
-          `${parsed.dailyCalories} kcal/dia`,
-          parsed
-        );
+        await saved.savePlan(parsed.planName || "Plano Nutricional", `${parsed.dailyCalories} kcal/dia`, parsed);
       }
-    } catch (err) {
-      console.error(err);
+    } catch {
       setGenerateError("Erro ao gerar plano nutricional. Tente novamente.");
     } finally {
       setIsGenerating(false);
@@ -97,62 +79,50 @@ const NutritionScreen = () => {
 
   if (!nutritionPlan) {
     return (
-      <div className="pb-24 px-4 pt-6 max-w-lg mx-auto relative z-10">
-        <h1 className="text-2xl font-heading font-bold text-foreground mb-6 animate-fade-in">Nutrição</h1>
+      <div className="pb-28 px-5 pt-8 max-w-lg mx-auto">
+        <h1 className="text-[32px] font-bold text-foreground tracking-[-0.03em] mb-10 animate-fade-in">Nutrição</h1>
 
         {saved.loading ? (
-          <div className="flex flex-col items-center py-12 gap-3">
-            <Loader2 className="w-8 h-8 animate-spin text-accent" />
-            <p className="text-sm text-muted-foreground">Carregando plano salvo...</p>
+          <div className="flex flex-col items-center py-16 gap-3">
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <div className="flex flex-col items-center text-center py-8 animate-fade-in">
-            <div className="w-20 h-20 rounded-3xl gradient-green flex items-center justify-center mb-6 animate-pulse-glow">
-              <Sparkles className="w-10 h-10 text-primary-foreground" />
-            </div>
-            <h2 className="text-xl font-heading font-bold text-foreground mb-2">
-              Crie sua dieta personalizada
+          <div className="animate-fade-in">
+            <h2 className="text-[22px] font-semibold text-foreground tracking-[-0.02em] mb-2">
+              Crie sua dieta
             </h2>
-            <p className="text-sm text-muted-foreground mb-2 max-w-xs">
-              Nossa IA vai calcular suas calorias, macros e montar refeições reais baseadas no seu perfil e objetivo.
+            <p className="text-[15px] text-muted-foreground mb-8 leading-relaxed">
+              Calculamos suas calorias e macros baseado no seu perfil e objetivo.
             </p>
 
-            <div className="glass-card rounded-2xl p-4 mb-6 w-full text-left">
-              <p className="text-xs text-muted-foreground mb-2 font-medium">Seu perfil:</p>
-              <div className="space-y-1">
-                <p className="text-xs text-foreground">🎯 Objetivo: <span className="text-accent font-medium">{userProfile.goal || "não definido"}</span></p>
-                <p className="text-xs text-foreground">⚖️ Peso: <span className="text-accent font-medium">{userProfile.weight}kg</span></p>
-                <p className="text-xs text-foreground">📏 Altura: <span className="text-accent font-medium">{userProfile.height}cm</span></p>
-                <p className="text-xs text-foreground">🎂 Idade: <span className="text-accent font-medium">{userProfile.age} anos</span></p>
-                <p className="text-xs text-foreground">📊 Nível: <span className="text-accent font-medium">{userProfile.level || "não definido"}</span></p>
-              </div>
+            <div className="bg-card rounded-2xl divide-y divide-border mb-8">
+              {[
+                ["Objetivo", userProfile.goal || "—"],
+                ["Peso", `${userProfile.weight} kg`],
+                ["Altura", `${userProfile.height} cm`],
+                ["Idade", `${userProfile.age} anos`],
+                ["Nível", userProfile.level || "—"],
+              ].map(([k, v]) => (
+                <div key={k} className="flex items-center justify-between px-5 py-3.5">
+                  <span className="text-[15px] text-foreground">{k}</span>
+                  <span className="text-[15px] text-muted-foreground">{v}</span>
+                </div>
+              ))}
             </div>
 
-            {generateError && <p className="text-xs text-destructive mb-4">{generateError}</p>}
+            {generateError && <p className="text-[13px] text-destructive mb-4">{generateError}</p>}
 
             <Button
-              className="w-full h-14 rounded-2xl text-base gap-2 gradient-green text-primary-foreground font-semibold"
+              className="w-full h-12 rounded-xl text-[15px] font-semibold bg-primary text-primary-foreground hover:bg-primary/90"
               onClick={generateNutritionPlan}
               disabled={isGenerating}
             >
               {isGenerating ? (
-                <><Loader2 className="w-5 h-5 animate-spin" /> Gerando plano nutricional...</>
+                <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Gerando…</>
               ) : (
-                <><Sparkles className="w-5 h-5" /> Gerar Minha Dieta com IA</>
+                "Gerar dieta"
               )}
             </Button>
-
-            {isGenerating && (
-              <div className="mt-4 space-y-2 w-full">
-                <p className="text-xs text-muted-foreground">Calculando TMB, macros e montando refeições...</p>
-                {[0, 1, 2].map(i => (
-                  <div key={i} className="glass-card rounded-xl p-3 animate-pulse" style={{ animationDelay: `${i * 150}ms` }}>
-                    <div className="h-3 bg-secondary rounded w-3/4 mb-2" />
-                    <div className="h-2 bg-secondary rounded w-1/2" />
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         )}
       </div>
@@ -160,141 +130,116 @@ const NutritionScreen = () => {
   }
 
   const consumed = nutritionPlan.meals.reduce((acc, m) => acc + m.calories, 0);
+  const pct = Math.min((consumed / nutritionPlan.dailyCalories) * 100, 100);
 
   return (
-    <div className="pb-24 px-4 pt-6 max-w-lg mx-auto relative z-10">
-      <div className="flex items-center justify-between mb-6 animate-fade-in">
-        <h1 className="text-2xl font-heading font-bold text-foreground">Nutrição</h1>
-        <button onClick={resetPlan} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors">
-          <RotateCcw className="w-3 h-3" /> Refazer
+    <div className="pb-28 px-5 pt-8 max-w-lg mx-auto">
+      <div className="flex items-end justify-between mb-8 animate-fade-in">
+        <h1 className="text-[32px] font-bold text-foreground tracking-[-0.03em]">Nutrição</h1>
+        <button onClick={resetPlan} className="text-[13px] text-muted-foreground flex items-center gap-1 active:opacity-60">
+          <RotateCcw className="w-3.5 h-3.5" /> Refazer
         </button>
       </div>
 
-      {/* Calorie ring */}
-      <div className="glass-card-green rounded-2xl p-6 mb-4 animate-fade-in">
+      {/* Calorie ring — Apple Fitness style */}
+      <section className="bg-card rounded-2xl p-6 mb-6 animate-fade-in">
         <div className="flex items-center gap-6">
-          <div className="relative w-28 h-28">
-            <svg className="w-28 h-28 transform -rotate-90" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="42" stroke="hsl(220, 14%, 18%)" strokeWidth="8" fill="none" />
-              <circle cx="50" cy="50" r="42" stroke="url(#grad)" strokeWidth="8" fill="none"
-                strokeDasharray={`${Math.min((consumed / nutritionPlan.dailyCalories) * 264, 264)} 264`}
-                strokeLinecap="round" />
-              <defs>
-                <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="hsl(142, 71%, 45%)" />
-                  <stop offset="100%" stopColor="hsl(160, 84%, 39%)" />
-                </linearGradient>
-              </defs>
+          <div className="relative w-32 h-32 shrink-0">
+            <svg className="w-32 h-32 -rotate-90" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="44" stroke="hsl(var(--secondary))" strokeWidth="6" fill="none" />
+              <circle
+                cx="50" cy="50" r="44"
+                stroke="hsl(var(--primary))" strokeWidth="6" fill="none"
+                strokeDasharray={`${(pct / 100) * 276} 276`}
+                strokeLinecap="round"
+              />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <p className="text-xl font-bold text-foreground font-heading">{nutritionPlan.dailyCalories}</p>
-              <p className="text-[10px] text-muted-foreground">kcal/dia</p>
+              <p className="text-[28px] font-bold text-foreground tabular tracking-tight">{consumed}</p>
+              <p className="text-[11px] text-muted-foreground tabular">/ {nutritionPlan.dailyCalories} kcal</p>
             </div>
           </div>
-          <div className="flex-1 space-y-2">
-            <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Meta diária</span>
-              <span className="text-foreground font-medium">{nutritionPlan.dailyCalories} kcal</span>
-            </div>
-            <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Proteína</span>
-              <span className="text-foreground font-medium">{nutritionPlan.macros.protein.grams}g</span>
-            </div>
-            <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Carboidratos</span>
-              <span className="text-foreground font-medium">{nutritionPlan.macros.carbs.grams}g</span>
-            </div>
-            <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Gordura</span>
-              <span className="text-foreground font-medium">{nutritionPlan.macros.fat.grams}g</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-3 mt-4">
-          {[
-            { label: "Proteína", g: nutritionPlan.macros.protein.grams, pct: nutritionPlan.macros.protein.percentage, color: "bg-primary" },
-            { label: "Carbs", g: nutritionPlan.macros.carbs.grams, pct: nutritionPlan.macros.carbs.percentage, color: "bg-blue-400" },
-            { label: "Gordura", g: nutritionPlan.macros.fat.grams, pct: nutritionPlan.macros.fat.percentage, color: "bg-orange-400" },
-          ].map((m) => (
-            <div key={m.label} className="text-center">
-              <div className="h-1.5 bg-secondary rounded-full overflow-hidden mb-1">
-                <div className={`h-full rounded-full ${m.color}`} style={{ width: `${m.pct}%` }} />
-              </div>
-              <p className="text-xs font-medium text-foreground">{m.g}g</p>
-              <p className="text-[10px] text-muted-foreground">{m.label} ({m.pct}%)</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Water */}
-      <div className="glass-card-blue rounded-2xl p-4 mb-4 animate-fade-in">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <Droplets className="w-5 h-5 text-blue-400" />
-            <span className="font-semibold text-foreground text-sm">Água</span>
-          </div>
-          <span className="text-xs text-muted-foreground">{waterCups * 250}ml / {nutritionPlan.waterLiters}L</span>
-        </div>
-        <div className="flex gap-1.5 mb-2">
-          {Array.from({ length: waterGoal }).map((_, i) => (
-            <button key={i} onClick={() => setWaterCups(i + 1)}
-              className={`flex-1 h-6 rounded-sm transition-all ${i < waterCups ? "bg-blue-400" : "bg-secondary"}`} />
-          ))}
-        </div>
-        <div className="flex justify-between">
-          <Button variant="glass" size="sm" onClick={() => setWaterCups(Math.max(0, waterCups - 1))} className="rounded-lg text-xs">- 250ml</Button>
-          <Button variant="hero" size="sm" onClick={() => setWaterCups(Math.min(waterGoal, waterCups + 1))} className="rounded-lg text-xs">+ 250ml</Button>
-        </div>
-      </div>
-
-      {/* Meals */}
-      <h3 className="font-semibold text-foreground text-sm mb-3">Refeições do dia</h3>
-      <div className="space-y-3">
-        {nutritionPlan.meals.map((m, i) => {
-          const Icon = mealIcons[m.name] || Coffee;
-          return (
-            <div key={i} className="glass-card rounded-2xl p-4 animate-fade-in" style={{ animationDelay: `${i * 60}ms` }}>
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
-                    <Icon className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground text-sm">{m.name}</p>
-                    <p className="text-xs text-muted-foreground">{m.time} • {m.calories} kcal</p>
-                  </div>
+          <div className="flex-1 space-y-3">
+            {[
+              { label: "Proteína", g: nutritionPlan.macros.protein.grams, pct: nutritionPlan.macros.protein.percentage },
+              { label: "Carbos", g: nutritionPlan.macros.carbs.grams, pct: nutritionPlan.macros.carbs.percentage },
+              { label: "Gordura", g: nutritionPlan.macros.fat.grams, pct: nutritionPlan.macros.fat.percentage },
+            ].map((m) => (
+              <div key={m.label}>
+                <div className="flex items-baseline justify-between mb-1.5">
+                  <span className="text-[13px] text-muted-foreground">{m.label}</span>
+                  <span className="text-[13px] text-foreground tabular font-medium">{m.g}g</span>
+                </div>
+                <div className="h-1 bg-secondary rounded-full overflow-hidden">
+                  <div className="h-full bg-primary rounded-full" style={{ width: `${m.pct}%` }} />
                 </div>
               </div>
-              <div className="flex gap-2 flex-wrap">
-                {m.foods.map((food) => (
-                  <span key={food} className="bg-secondary text-xs text-muted-foreground px-2 py-1 rounded-md">{food}</span>
-                ))}
-              </div>
-              <div className="flex gap-4 mt-2 text-[10px] text-muted-foreground">
-                <span>P: {m.protein}g</span>
-                <span>C: {m.carbs}g</span>
-                <span>G: {m.fat}g</span>
-              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Water */}
+      <section className="bg-card rounded-2xl p-5 mb-8 animate-fade-in">
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-[15px] font-medium text-foreground">Água</span>
+          <span className="text-[13px] text-muted-foreground tabular">{waterCups * 250}ml / {nutritionPlan.waterLiters}L</span>
+        </div>
+        <div className="flex gap-1.5 mb-4">
+          {Array.from({ length: waterGoal }).map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setWaterCups(i + 1)}
+              className={`flex-1 h-2 rounded-full transition-colors ${i < waterCups ? "bg-primary" : "bg-secondary"}`}
+            />
+          ))}
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setWaterCups(Math.max(0, waterCups - 1))}
+            className="flex-1 h-10 rounded-xl bg-secondary text-foreground text-[14px] font-medium flex items-center justify-center gap-2 active:opacity-60"
+          >
+            <Minus className="w-4 h-4" /> 250ml
+          </button>
+          <button
+            onClick={() => setWaterCups(Math.min(waterGoal, waterCups + 1))}
+            className="flex-1 h-10 rounded-xl bg-primary text-primary-foreground text-[14px] font-semibold flex items-center justify-center gap-2 active:opacity-80"
+          >
+            <Plus className="w-4 h-4" /> 250ml
+          </button>
+        </div>
+      </section>
+
+      {/* Meals */}
+      <h2 className="text-[22px] font-bold text-foreground tracking-[-0.02em] mb-3">Refeições</h2>
+      <div className="bg-card rounded-2xl overflow-hidden mb-8">
+        {nutritionPlan.meals.map((m, i) => (
+          <div key={i} className={`px-5 py-4 ${i > 0 ? "border-t border-border" : ""} animate-fade-in`} style={{ animationDelay: `${i * 40}ms` }}>
+            <div className="flex items-baseline justify-between mb-1">
+              <p className="text-[16px] font-medium text-foreground">{m.name}</p>
+              <p className="text-[13px] text-muted-foreground tabular">{m.calories} kcal</p>
             </div>
-          );
-        })}
+            <p className="text-[13px] text-muted-foreground mb-2">{m.time}</p>
+            <p className="text-[13px] text-foreground/80 leading-relaxed">{m.foods.join(" · ")}</p>
+            <div className="flex gap-4 mt-3 text-[11px] text-muted-foreground tabular">
+              <span>P {m.protein}g</span>
+              <span>C {m.carbs}g</span>
+              <span>G {m.fat}g</span>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Tips */}
-      {nutritionPlan.tips && nutritionPlan.tips.length > 0 && (
-        <div className="mt-6 glass-card-green rounded-2xl p-4 animate-fade-in">
-          <div className="flex items-center gap-2 mb-2">
-            <Apple className="w-4 h-4 text-accent" />
-            <span className="text-xs text-accent font-medium">Dicas da IA</span>
-          </div>
-          <ul className="space-y-1.5">
+      {nutritionPlan.tips?.length > 0 && (
+        <section className="animate-fade-in">
+          <h2 className="text-[22px] font-bold text-foreground tracking-[-0.02em] mb-3">Dicas</h2>
+          <div className="bg-card rounded-2xl divide-y divide-border">
             {nutritionPlan.tips.map((tip, i) => (
-              <li key={i} className="text-sm text-foreground">• {tip}</li>
+              <p key={i} className="px-5 py-3.5 text-[14px] text-foreground leading-relaxed">{tip}</p>
             ))}
-          </ul>
-        </div>
+          </div>
+        </section>
       )}
     </div>
   );

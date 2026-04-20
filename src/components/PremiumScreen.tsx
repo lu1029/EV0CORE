@@ -4,24 +4,16 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Crown, Check, X, Sparkles, Brain, Dumbbell, TrendingUp, Star, Shield, Gift } from "lucide-react";
+import { Check, ChevronLeft, Brain, Dumbbell, TrendingUp, Salad } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
-const features = [
-  { name: "Treinos básicos", free: true, premium: true },
-  { name: "Registro de corrida", free: true, premium: true },
-  { name: "Nutrição básica", free: true, premium: true },
-  { name: "Progresso básico", free: true, premium: true },
-  { name: "IA Personal Trainer", free: false, premium: true },
-  { name: "Planos personalizados", free: false, premium: true },
-  { name: "Treino adaptativo", free: false, premium: true },
-  { name: "Análises avançadas", free: false, premium: true },
-  { name: "Nutrição personalizada", free: false, premium: true },
-  { name: "Programas por objetivo", free: false, premium: true },
-  { name: "Desafios exclusivos", free: false, premium: true },
-  { name: "Vídeos e treinos guiados", free: false, premium: true },
+const benefits = [
+  { icon: Brain, title: "IA Personal Trainer", desc: "Treinos gerados sob medida para você." },
+  { icon: Dumbbell, title: "Treino adaptativo", desc: "Planos que evoluem com seu desempenho." },
+  { icon: TrendingUp, title: "Análises avançadas", desc: "Insights detalhados de cada sessão." },
+  { icon: Salad, title: "Nutrição personalizada", desc: "Dieta calculada com base no seu objetivo." },
 ];
 
 const PremiumScreen = () => {
@@ -35,15 +27,12 @@ const PremiumScreen = () => {
     setLoadingPortal(true);
     try {
       const { data, error } = await supabase.functions.invoke("create-portal-session", {
-        body: {
-          returnUrl: window.location.origin,
-          environment: getStripeEnvironment(),
-        },
+        body: { returnUrl: window.location.origin, environment: getStripeEnvironment() },
       });
       if (error || !data?.url) throw new Error("Erro ao abrir portal");
       window.open(data.url, "_blank");
     } catch {
-      toast.error("Não foi possível abrir o gerenciamento da assinatura.");
+      toast.error("Não foi possível abrir o gerenciamento.");
     } finally {
       setLoadingPortal(false);
     }
@@ -52,14 +41,16 @@ const PremiumScreen = () => {
   if (showCheckout) {
     const priceId = selectedPlan === "annual" ? "premium_annual" : "premium_monthly";
     return (
-      <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
+      <div className="pb-28 px-5 pt-6 max-w-lg mx-auto">
         <PaymentTestModeBanner />
-        <div className="flex items-center gap-3 mb-6">
-          <Button variant="ghost" onClick={() => setShowCheckout(false)} className="rounded-xl">
-            ← Voltar
-          </Button>
-          <h2 className="text-lg font-bold text-foreground">Finalizar assinatura</h2>
-        </div>
+        <button
+          onClick={() => setShowCheckout(false)}
+          className="flex items-center gap-1 text-[15px] text-primary mb-6 active:opacity-60"
+        >
+          <ChevronLeft className="w-4 h-4" /> Voltar
+        </button>
+        <h1 className="text-[28px] font-bold text-foreground tracking-[-0.03em] mb-1">Finalizar assinatura</h1>
+        <p className="text-[14px] text-muted-foreground mb-6">Pagamento processado com segurança.</p>
         <StripeEmbeddedCheckout
           priceId={priceId}
           quantity={1}
@@ -73,184 +64,137 @@ const PremiumScreen = () => {
 
   if (isPremium || isActive) {
     return (
-      <div className="pb-24 px-4 pt-6 max-w-lg mx-auto text-center">
-        <div className="w-24 h-24 rounded-full gradient-primary flex items-center justify-center mx-auto mb-4 animate-pulse-glow">
-          <Crown className="w-12 h-12 text-primary-foreground" />
-        </div>
-        <h1 className="text-3xl font-heading font-bold text-foreground mb-2">Você é PRO! 🎉</h1>
-        <p className="text-muted-foreground text-sm mb-2">Aproveite todos os recursos premium do EVOCORE.</p>
-        {subscription?.cancel_at_period_end && subscription.current_period_end && (
-          <p className="text-sm text-orange-400 mb-4">
-            Sua assinatura expira em {new Date(subscription.current_period_end).toLocaleDateString("pt-BR")}
-          </p>
-        )}
-        <div className="bg-card border border-primary/30 rounded-2xl p-4 mt-6 mb-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Gift className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium text-foreground">Seus benefícios ativos</span>
+      <div className="pb-28 px-5 pt-12 max-w-lg mx-auto">
+        <div className="text-center animate-fade-in mb-10">
+          <div className="w-16 h-16 rounded-full bg-primary/15 flex items-center justify-center mx-auto mb-5">
+            <Check className="w-8 h-8 text-primary" strokeWidth={2.5} />
           </div>
-          <div className="space-y-2 text-left">
-            {["IA Personal Trainer", "Treinos ilimitados", "Nutrição personalizada", "Análises avançadas"].map(b => (
-              <div key={b} className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-primary" />
-                <span className="text-sm text-foreground">{b}</span>
+          <h1 className="text-[32px] font-bold text-foreground tracking-[-0.03em]">Você é PRO</h1>
+          <p className="text-[15px] text-muted-foreground mt-1">Aproveite todos os recursos.</p>
+          {subscription?.cancel_at_period_end && subscription.current_period_end && (
+            <p className="text-[13px] text-muted-foreground mt-3">
+              Expira em {new Date(subscription.current_period_end).toLocaleDateString("pt-BR")}
+            </p>
+          )}
+        </div>
+
+        <div className="bg-card rounded-2xl divide-y divide-border mb-8">
+          {benefits.map((b) => (
+            <div key={b.title} className="flex items-center gap-4 px-5 py-4">
+              <b.icon className="w-5 h-5 text-primary shrink-0" />
+              <div className="flex-1">
+                <p className="text-[15px] font-medium text-foreground">{b.title}</p>
+                <p className="text-[13px] text-muted-foreground">{b.desc}</p>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
-        <div className="flex gap-3">
-          <Button variant="glass" onClick={() => setCurrentTab("home")} className="rounded-xl flex-1">
-            Voltar para home
-          </Button>
+
+        <div className="space-y-3">
           <Button
-            variant="outline"
             onClick={handleManageSubscription}
             disabled={loadingPortal}
-            className="rounded-xl flex-1"
+            className="w-full h-12 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-[15px] font-semibold"
           >
-            {loadingPortal ? "Carregando..." : "Gerenciar assinatura"}
+            {loadingPortal ? "Carregando…" : "Gerenciar assinatura"}
           </Button>
+          <button
+            onClick={() => setCurrentTab("home")}
+            className="w-full h-12 rounded-xl bg-secondary text-foreground text-[15px] font-medium active:opacity-60"
+          >
+            Voltar para home
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
+    <div className="pb-28 px-5 pt-12 max-w-lg mx-auto">
       <PaymentTestModeBanner />
-      {/* Header */}
-      <div className="text-center mb-6 animate-fade-in">
-        <div className="relative inline-block">
-          <div className="w-20 h-20 rounded-full gradient-primary flex items-center justify-center mx-auto mb-4 animate-pulse-glow">
-            <Crown className="w-10 h-10 text-primary-foreground" />
-          </div>
-          <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-yellow-500 flex items-center justify-center">
-            <Sparkles className="w-3 h-3 text-yellow-900" />
-          </div>
-        </div>
-        <h1 className="text-3xl font-heading font-bold text-foreground mb-1">EVOCORE PRO</h1>
-        <p className="text-muted-foreground text-sm">Desbloqueie sua evolução completa</p>
-      </div>
 
-      {/* Premium features */}
-      <div className="space-y-3 mb-6 animate-fade-in">
-        {[
-          { icon: Brain, title: "IA Personal Trainer", desc: "Treinos personalizados com inteligência artificial", gradient: true },
-          { icon: Dumbbell, title: "Treino adaptativo", desc: "Planos que evoluem automaticamente com você", gradient: false },
-          { icon: TrendingUp, title: "Análises inteligentes", desc: "Insights avançados de performance", gradient: false },
-          { icon: Star, title: "Nutrição personalizada", desc: "Dieta baseada no seu peso e objetivo", gradient: false },
-        ].map((f) => (
-          <div key={f.title} className={`border rounded-2xl p-4 flex items-center gap-3 ${f.gradient ? 'bg-primary/5 border-primary/30' : 'bg-card border-border'}`}>
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${f.gradient ? 'gradient-primary' : 'bg-secondary'}`}>
-              <f.icon className={`w-5 h-5 ${f.gradient ? 'text-primary-foreground' : 'text-primary'}`} />
-            </div>
-            <div className="flex-1">
-              <p className="font-medium text-foreground text-sm">{f.title}</p>
-              <p className="text-xs text-muted-foreground">{f.desc}</p>
-            </div>
-            {f.gradient && <span className="text-[10px] text-primary font-bold">NOVO</span>}
-          </div>
-        ))}
-      </div>
+      {/* Hero */}
+      <header className="text-center mb-10 animate-fade-in">
+        <p className="text-[13px] uppercase tracking-[0.2em] text-primary font-semibold mb-3">EVOCORE Pro</p>
+        <h1 className="text-[40px] leading-[1.05] font-bold text-foreground tracking-[-0.035em]">
+          Sua evolução,<br />sem limites.
+        </h1>
+        <p className="text-[16px] text-muted-foreground mt-4 max-w-sm mx-auto leading-relaxed">
+          Tudo o que você precisa para treinar como um atleta — em um único app.
+        </p>
+      </header>
 
-      {/* Plans */}
-      <h3 className="font-semibold text-foreground text-sm mb-3">Escolha seu plano</h3>
-      <div className="space-y-3 mb-6 animate-fade-in">
-        <button
-          onClick={() => setSelectedPlan("annual")}
-          className={`w-full text-left border rounded-2xl p-4 relative transition-all ${
-            selectedPlan === "annual" ? "border-primary bg-primary/5 glow-primary" : "border-border bg-card"
-          }`}
-        >
-          <div className="absolute -top-3 right-4 gradient-primary text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-full">
-            MAIS POPULAR
-          </div>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                selectedPlan === "annual" ? "border-primary" : "border-muted-foreground"
-              }`}>
-                {selectedPlan === "annual" && <div className="w-2.5 h-2.5 rounded-full gradient-primary" />}
+      {/* Benefits */}
+      <section className="mb-12 animate-fade-in">
+        <div className="bg-card rounded-2xl divide-y divide-border">
+          {benefits.map((b) => (
+            <div key={b.title} className="flex items-center gap-4 px-5 py-4">
+              <div className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+                <b.icon className="w-4.5 h-4.5 text-primary" />
               </div>
-              <div>
-                <h3 className="font-bold text-foreground">Anual</h3>
-                <p className="text-xs text-muted-foreground">Economize 60%</p>
+              <div className="flex-1">
+                <p className="text-[15px] font-medium text-foreground">{b.title}</p>
+                <p className="text-[13px] text-muted-foreground leading-snug">{b.desc}</p>
               </div>
             </div>
-            <div className="text-right">
-              <p className="text-2xl font-bold text-gradient font-heading">R$ 19,90</p>
-              <p className="text-[10px] text-muted-foreground">/mês</p>
-            </div>
-          </div>
-        </button>
-
-        <button
-          onClick={() => setSelectedPlan("monthly")}
-          className={`w-full text-left border rounded-2xl p-4 transition-all ${
-            selectedPlan === "monthly" ? "border-primary bg-primary/5 glow-primary" : "border-border bg-card"
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                selectedPlan === "monthly" ? "border-primary" : "border-muted-foreground"
-              }`}>
-                {selectedPlan === "monthly" && <div className="w-2.5 h-2.5 rounded-full gradient-primary" />}
-              </div>
-              <div>
-                <h3 className="font-bold text-foreground">Mensal</h3>
-                <p className="text-xs text-muted-foreground">Cancele quando quiser</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-2xl font-bold text-foreground font-heading">R$ 39,90</p>
-              <p className="text-[10px] text-muted-foreground">/mês</p>
-            </div>
-          </div>
-        </button>
-      </div>
-
-      {/* Features comparison */}
-      <div className="bg-card border border-border rounded-2xl p-4 mb-6 animate-fade-in">
-        <h3 className="font-semibold text-foreground text-sm mb-4">Comparação de planos</h3>
-        <div className="grid grid-cols-[1fr,50px,50px] gap-y-3 text-xs">
-          <span className="text-muted-foreground font-medium">Recurso</span>
-          <span className="text-center text-muted-foreground font-medium">Free</span>
-          <span className="text-center text-primary font-medium">PRO</span>
-          {features.map((f) => (
-            <React.Fragment key={f.name}>
-              <span className="text-foreground">{f.name}</span>
-              <span className="text-center">
-                {f.free ? <Check className="w-4 h-4 text-primary mx-auto" /> : <X className="w-4 h-4 text-muted-foreground/30 mx-auto" />}
-              </span>
-              <span className="text-center">
-                <Check className="w-4 h-4 text-primary mx-auto" />
-              </span>
-            </React.Fragment>
           ))}
         </div>
-      </div>
+      </section>
 
-      {/* Security badges */}
-      <div className="flex items-center justify-center gap-4 mb-4 animate-fade-in">
-        <div className="flex items-center gap-1 text-muted-foreground">
-          <Shield className="w-3 h-3" />
-          <span className="text-[10px]">Pagamento seguro</span>
+      {/* Plans — minimal radio rows */}
+      <section className="mb-10 animate-fade-in">
+        <h2 className="text-[13px] uppercase tracking-wider text-muted-foreground px-1 mb-2">Escolha seu plano</h2>
+        <div className="space-y-3">
+          {[
+            { id: "annual" as const, title: "Anual", sub: "Equivale a R$ 19,90/mês", price: "R$ 238,80", per: "/ano", badge: "Economize 60%" },
+            { id: "monthly" as const, title: "Mensal", sub: "Cancele quando quiser", price: "R$ 39,90", per: "/mês", badge: null },
+          ].map((p) => {
+            const selected = selectedPlan === p.id;
+            return (
+              <button
+                key={p.id}
+                onClick={() => setSelectedPlan(p.id)}
+                className={`w-full text-left bg-card rounded-2xl p-5 transition-all border ${
+                  selected ? "border-primary" : "border-transparent"
+                }`}
+              >
+                <div className="flex items-center gap-4">
+                  <div
+                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                      selected ? "border-primary bg-primary" : "border-muted-foreground/40"
+                    }`}
+                  >
+                    {selected && <Check className="w-3 h-3 text-primary-foreground" strokeWidth={3} />}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="text-[16px] font-semibold text-foreground">{p.title}</p>
+                      {p.badge && (
+                        <span className="text-[10px] uppercase tracking-wider font-bold text-primary">{p.badge}</span>
+                      )}
+                    </div>
+                    <p className="text-[13px] text-muted-foreground mt-0.5">{p.sub}</p>
+                  </div>
+                  <div className="text-right tabular">
+                    <p className="text-[18px] font-bold text-foreground tracking-tight">{p.price}</p>
+                    <p className="text-[11px] text-muted-foreground">{p.per}</p>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
         </div>
-        <div className="flex items-center gap-1 text-muted-foreground">
-          <span className="text-[10px]">Cancele a qualquer momento</span>
-        </div>
-      </div>
+      </section>
 
-      <Button
-        variant="hero"
-        className="w-full h-14 rounded-xl text-base"
+      {/* CTA */}
+      <button
         onClick={() => setShowCheckout(true)}
+        className="w-full h-13 py-4 rounded-xl bg-primary text-primary-foreground text-[16px] font-semibold active:opacity-80 transition-opacity"
       >
-        Assinar agora 🚀
-      </Button>
-      <p className="text-center text-[10px] text-muted-foreground mt-3">
-        {selectedPlan === "annual" ? "R$ 238,80/ano (R$ 19,90/mês)" : "R$ 39,90/mês"}
+        Continuar
+      </button>
+      <p className="text-center text-[12px] text-muted-foreground mt-3">
+        Pagamento seguro · Cancele a qualquer momento
       </p>
     </div>
   );

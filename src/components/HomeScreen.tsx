@@ -1,7 +1,6 @@
 import React from "react";
 import { useApp } from "@/contexts/AppContext";
-import { Zap, Crown, Flame } from "lucide-react";
-import evoaiLogo from "@/assets/evoai-logo.png";
+import { ChevronRight, Flame } from "lucide-react";
 import { useStreak } from "@/hooks/useStreak";
 
 const HomeScreen = () => {
@@ -10,125 +9,113 @@ const HomeScreen = () => {
   const name = userProfile.name || "Atleta";
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
-
   const weekDayLabels = ["S", "T", "Q", "Q", "S", "S", "D"];
 
-  const motivations = [
-    "Disciplina é escolher entre o que você quer agora e o que você quer mais.",
-    "Cada repetição te aproxima da melhor versão de si.",
-    "O treino de hoje é a conquista de amanhã.",
-    "Sua única competição é quem você era ontem.",
-  ];
-  const todayMotivation = motivations[new Date().getDate() % motivations.length];
+  const tiles = [
+    { id: "training", label: "Treino", sub: "Plano com IA" },
+    { id: "running", label: "Corrida", sub: "Iniciar atividade" },
+    { id: "nutrition", label: "Nutrição", sub: "Dieta personalizada" },
+    { id: "progress", label: "Progresso", sub: "Sua evolução" },
+  ] as const;
 
   return (
-    <div className="pb-24 px-4 pt-6 max-w-lg mx-auto relative z-10">
+    <div className="pb-28 px-5 pt-8 max-w-lg mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6 animate-fade-in">
+      <header className="flex items-end justify-between mb-10 animate-fade-in">
         <div>
-          <p className="text-muted-foreground text-sm">{greeting} 👋</p>
-          <h1 className="text-2xl font-heading font-bold text-foreground">{name}</h1>
+          <p className="text-[13px] text-muted-foreground tracking-tight">{greeting}</p>
+          <h1 className="text-[32px] leading-tight font-bold text-foreground tracking-[-0.03em] mt-0.5">{name}</h1>
         </div>
-        <div className="flex items-center gap-2">
-          {!isPremium && (
-            <button
-              onClick={() => setCurrentTab("premium")}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-full gradient-primary text-primary-foreground text-xs font-semibold active:scale-95 transition-transform"
-            >
-              <Crown className="w-3 h-3" /> PRO
-            </button>
-          )}
-          <button
-            onClick={() => setCurrentTab("profile")}
-            className="w-10 h-10 rounded-full glass-card flex items-center justify-center active:scale-95 transition-transform"
-          >
-            <span className="text-sm font-bold text-foreground">{name[0]?.toUpperCase()}</span>
-          </button>
-        </div>
-      </div>
+        <button
+          onClick={() => setCurrentTab("profile")}
+          className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center active:scale-95 transition-transform"
+        >
+          <span className="text-sm font-semibold text-foreground">{name[0]?.toUpperCase()}</span>
+        </button>
+      </header>
 
-      {/* AI Assistant Button */}
+      {/* EvoAI row */}
       <button
         onClick={() => setCurrentTab("ai")}
-        className="w-full glass-card-purple rounded-2xl p-4 mb-4 flex items-center gap-3 hover:border-primary/40 active:scale-[0.98] transition-all animate-fade-in"
+        className="w-full flex items-center justify-between py-4 mb-2 active:opacity-60 transition-opacity animate-fade-in"
       >
-        <div className="w-12 h-12 rounded-2xl overflow-hidden animate-pulse-glow">
-          <img src={evoaiLogo} alt="EvoAI" className="w-full h-full object-cover" />
+        <div className="text-left">
+          <p className="text-[17px] font-semibold text-foreground tracking-tight">EvoAI</p>
+          <p className="text-[13px] text-muted-foreground">Seu personal trainer</p>
         </div>
-        <div className="flex-1 text-left">
-          <p className="text-sm font-semibold text-foreground">EvoAI — Seu Personal</p>
-          <p className="text-xs text-muted-foreground">Converse com sua IA para treinos e nutrição personalizada</p>
-        </div>
-        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-          <span className="text-primary text-xs">→</span>
-        </div>
+        <ChevronRight className="w-5 h-5 text-muted-foreground" />
       </button>
+      <div className="h-px bg-border mb-8" />
 
-      {/* Streak Widget */}
-      <div className="glass-card-purple rounded-2xl p-4 mb-4 animate-fade-in" style={{ animationDelay: '50ms' }}>
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <Flame className={`w-5 h-5 ${streak > 0 ? "text-orange-500" : "text-muted-foreground"}`} />
-            <span className="text-sm font-medium text-foreground">
-              {streak > 0 ? `${streak} dia${streak > 1 ? "s" : ""} consecutivo${streak > 1 ? "s" : ""}` : "Comece sua streak!"}
-            </span>
-            {streak >= 3 && <span className="text-lg">🔥</span>}
-          </div>
-          <span className="text-xs text-muted-foreground font-medium">{activeWeek.filter(Boolean).length}/7 dias</span>
+      {/* Streak card */}
+      <section className="mb-10 animate-fade-in" style={{ animationDelay: "60ms" }}>
+        <div className="flex items-baseline justify-between mb-4">
+          <h2 className="text-[22px] font-bold text-foreground tracking-[-0.02em]">Esta semana</h2>
+          <span className="text-[13px] text-muted-foreground tabular">
+            {activeWeek.filter(Boolean).length}/7
+          </span>
         </div>
-        <div className="flex justify-between">
-          {weekDayLabels.map((d, i) => (
-            <div key={i} className="flex flex-col items-center gap-1">
-              <span className="text-[10px] text-muted-foreground">{d}</span>
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold transition-all ${
-                activeWeek[i]
-                  ? "gradient-primary text-primary-foreground shadow-lg shadow-primary/20"
-                  : "bg-secondary/60 text-muted-foreground"
-              }`}>
-                {activeWeek[i] ? <Flame className="w-4 h-4" /> : ""}
+        <div className="bg-card rounded-2xl p-5">
+          <div className="flex items-center gap-2 mb-5">
+            <Flame className={`w-4 h-4 ${streak > 0 ? "text-primary" : "text-muted-foreground"}`} />
+            <span className="text-[15px] font-medium text-foreground">
+              {streak > 0 ? `${streak} dia${streak > 1 ? "s" : ""}` : "Sem sequência"}
+            </span>
+            {trainedToday && <span className="text-[12px] text-primary ml-auto">Treinado hoje</span>}
+          </div>
+          <div className="flex justify-between">
+            {weekDayLabels.map((d, i) => (
+              <div key={i} className="flex flex-col items-center gap-2">
+                <span className="text-[11px] text-muted-foreground tabular">{d}</span>
+                <div
+                  className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${
+                    activeWeek[i] ? "bg-primary" : "bg-secondary"
+                  }`}
+                >
+                  {activeWeek[i] && <div className="w-1.5 h-1.5 rounded-full bg-primary-foreground" />}
+                </div>
               </div>
-            </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Quick access — list rows, Apple-like */}
+      <section className="animate-fade-in" style={{ animationDelay: "120ms" }}>
+        <h2 className="text-[22px] font-bold text-foreground tracking-[-0.02em] mb-3">Atividades</h2>
+        <div className="bg-card rounded-2xl overflow-hidden">
+          {tiles.map((t, i) => (
+            <button
+              key={t.id}
+              onClick={() => setCurrentTab(t.id)}
+              className="w-full flex items-center justify-between px-5 py-4 active:bg-secondary/60 transition-colors"
+            >
+              <div className="text-left">
+                <p className="text-[16px] font-medium text-foreground">{t.label}</p>
+                <p className="text-[13px] text-muted-foreground">{t.sub}</p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              {i < tiles.length - 1 && (
+                <div className="absolute left-5 right-0 bottom-0 h-px bg-border pointer-events-none" />
+              )}
+            </button>
           ))}
         </div>
-        {trainedToday && (
-          <p className="text-xs text-primary font-medium mt-2 text-center animate-fade-in">✅ Você já treinou hoje!</p>
-        )}
-      </div>
+      </section>
 
-      {/* Quick access cards */}
-      <div className="grid grid-cols-2 gap-3 mb-4 animate-fade-in" style={{ animationDelay: '100ms' }}>
-        <button onClick={() => setCurrentTab("training")} className="glass-card-purple rounded-2xl p-4 text-left active:scale-[0.97] transition-transform">
-          <span className="text-2xl mb-2 block">🏋️</span>
-          <p className="text-sm font-semibold text-foreground">Treino</p>
-          <p className="text-xs text-muted-foreground">Monte seu plano com IA</p>
+      {!isPremium && (
+        <button
+          onClick={() => setCurrentTab("premium")}
+          className="w-full mt-8 py-4 flex items-center justify-between animate-fade-in active:opacity-60 transition-opacity"
+          style={{ animationDelay: "180ms" }}
+        >
+          <div className="text-left">
+            <p className="text-[15px] font-medium text-foreground">EVOCORE Pro</p>
+            <p className="text-[13px] text-muted-foreground">Desbloqueie a experiência completa</p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-primary" />
         </button>
-        <button onClick={() => setCurrentTab("running")} className="glass-card-blue rounded-2xl p-4 text-left active:scale-[0.97] transition-transform">
-          <span className="text-2xl mb-2 block">🏃</span>
-          <p className="text-sm font-semibold text-foreground">Corrida</p>
-          <p className="text-xs text-muted-foreground">Inicie sua atividade</p>
-        </button>
-        <button onClick={() => setCurrentTab("nutrition")} className="glass-card-green rounded-2xl p-4 text-left active:scale-[0.97] transition-transform">
-          <span className="text-2xl mb-2 block">🥗</span>
-          <p className="text-sm font-semibold text-foreground">Nutrição</p>
-          <p className="text-xs text-muted-foreground">Dieta personalizada</p>
-        </button>
-        <button onClick={() => setCurrentTab("progress")} className="glass-card rounded-2xl p-4 text-left active:scale-[0.97] transition-transform">
-          <span className="text-2xl mb-2 block">📊</span>
-          <p className="text-sm font-semibold text-foreground">Progresso</p>
-          <p className="text-xs text-muted-foreground">Acompanhe evolução</p>
-        </button>
-      </div>
-
-      {/* Motivation */}
-      <div className="glass-card-purple rounded-2xl p-4 animate-fade-in" style={{ animationDelay: '150ms' }}>
-        <div className="flex items-center gap-2 mb-2">
-          <Zap className="w-4 h-4 text-primary" />
-          <span className="text-xs text-primary font-medium">Motivação do dia</span>
-        </div>
-        <p className="text-foreground text-sm font-medium italic">
-          "{todayMotivation}"
-        </p>
-      </div>
+      )}
     </div>
   );
 };
