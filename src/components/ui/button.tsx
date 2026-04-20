@@ -4,19 +4,40 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
+/**
+ * Global Button — shadcn API preserved, but every button in the app now ships
+ * with: scale + glow on hover/tap, click ripple and (on desktop) a subtle
+ * magnetic hover. Use `noFx` to opt out for very dense surfaces.
+ */
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  cn(
+    "relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium",
+    "ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+    "disabled:pointer-events-none disabled:opacity-50",
+    "[&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+    "overflow-hidden select-none will-change-transform",
+    "transition-[transform,box-shadow,background-color,color,opacity] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]",
+    "active:scale-[0.97] hover:scale-[1.025]",
+  ),
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        default:
+          "bg-primary text-primary-foreground hover:bg-primary hover:shadow-[0_10px_30px_-10px_hsl(var(--primary)/0.7),0_0_0_1px_hsl(var(--primary)/0.25)]",
+        destructive:
+          "bg-destructive text-destructive-foreground hover:bg-destructive hover:shadow-[0_10px_30px_-12px_hsl(var(--destructive)/0.6)]",
+        outline:
+          "border border-input bg-background hover:bg-accent hover:text-accent-foreground hover:shadow-[0_8px_24px_-12px_hsl(var(--foreground)/0.25)]",
+        secondary:
+          "bg-secondary text-secondary-foreground hover:bg-secondary/90 hover:shadow-[0_8px_22px_-14px_hsl(var(--foreground)/0.4)]",
         ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
-        hero: "gradient-primary text-primary-foreground font-semibold shadow-lg glow-primary hover:opacity-90 transition-all duration-300",
-        glass: "glass text-foreground hover:bg-muted/50 transition-all duration-300",
+        link: "text-primary underline-offset-4 hover:underline hover:scale-100 active:scale-100",
+        hero: cn(
+          "bg-primary text-primary-foreground font-semibold",
+          "shadow-[0_8px_30px_-8px_hsl(var(--primary)/0.55)]",
+          "hover:shadow-[0_14px_44px_-10px_hsl(var(--primary)/0.85)]",
+        ),
+        glass: "bg-card/60 backdrop-blur-md text-foreground hover:bg-card/80",
       },
       size: {
         default: "h-10 px-4 py-2",
@@ -36,12 +57,122 @@ export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
+  /** Disable click ripple. */
+  noRipple?: boolean;
+  /** Disable magnetic-hover (still keeps scale + glow). */
+  noMagnetic?: boolean;
+  /** Disable ALL motion FX (use for very small or dense surfaces). */
+  noFx?: boolean;
 }
 
+interface Ripple { id: number; x: number; y: number; size: number; }
+
+const isFinePointer = () =>
+  typeof window !== "undefined" && window.matchMedia?.("(pointer: fine)").matches;
+
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  (
+    {
+      className,
+      variant,
+      size,
+      asChild = false,
+      noRipple = false,
+      noMagnetic = false,
+      noFx = false,
+      onClick,
+      onPointerMove,
+      onPointerLeave,
+      children,
+      style,
+      ...props
+    },
+    forwardedRef,
+  ) => {
     const Comp = asChild ? Slot : "button";
-    return <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />;
+    const innerRef = React.useRef<HTMLButtonElement | null>(null);
+    React.useImperativeHandle(forwardedRef, () => innerRef.current as HTMLButtonElement);
+
+    const [ripples, setRipples] = React.useState<Ripple[]>([]);
+    const idRef = React.useRef(0);
+
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+      if (!noFx && !noRipple) {
+        const el = innerRef.current;
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          const size = Math.max(rect.width, rect.height);
+          const x = e.clientX - rect.left - size / 2;
+          const y = e.clientY - rect.top - size / 2;
+          const id = ++idRef.current;
+          setRipples((prev) => [...prev, { id, x, y, size }]);
+          window.setTimeout(() => {
+            setRipples((prev) => prev.filter((r) => r.id !== id));
+          }, 650);
+        }
+      }
+      onClick?.(e);
+    };
+
+    const handlePointerMove = (e: React.PointerEvent<HTMLButtonElement>) => {
+      if (!noFx && !noMagnetic && isFinePointer()) {
+        const el = innerRef.current;
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          const cx = rect.left + rect.width / 2;
+          const cy = rect.top + rect.height / 2;
+          const dx = (e.clientX - cx) * 0.16;
+          const dy = (e.clientY - cy) * 0.20;
+          el.style.setProperty("--mx", `${dx}px`);
+          el.style.setProperty("--my", `${dy}px`);
+        }
+      }
+      onPointerMove?.(e);
+    };
+
+    const handlePointerLeave = (e: React.PointerEvent<HTMLButtonElement>) => {
+      const el = innerRef.current;
+      if (el) {
+        el.style.setProperty("--mx", `0px`);
+        el.style.setProperty("--my", `0px`);
+      }
+      onPointerLeave?.(e);
+    };
+
+    const fxStyle: React.CSSProperties = noFx
+      ? style ?? {}
+      : { transform: "translate3d(var(--mx, 0px), var(--my, 0px), 0)", ...style };
+
+    return (
+      <Comp
+        ref={innerRef}
+        className={cn(buttonVariants({ variant, size, className }))}
+        style={fxStyle}
+        onClick={handleClick}
+        onPointerMove={handlePointerMove}
+        onPointerLeave={handlePointerLeave}
+        {...props}
+      >
+        <span className="relative z-10 inline-flex items-center gap-2">{children as React.ReactNode}</span>
+        {!noFx && !noRipple && (
+          <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]" aria-hidden>
+            {ripples.map((r) => (
+              <span
+                key={r.id}
+                className="absolute rounded-full bg-white/30 mix-blend-overlay"
+                style={{
+                  left: r.x,
+                  top: r.y,
+                  width: r.size,
+                  height: r.size,
+                  animation: "ripple 600ms cubic-bezier(0.32, 0.72, 0, 1) forwards",
+                }}
+              />
+            ))}
+          </span>
+        )}
+      </Comp>
+    );
   },
 );
 Button.displayName = "Button";
