@@ -57,6 +57,32 @@ Mais organização.
 Mais consistência.
 Mais resultado."
     />
+
+    <script src="https://api.mapbox.com/search-js/v1.5.0/core.js"></script>
+    <script>
+      const {
+          MapboxSearch,
+          SearchSession
+      } = mapboxsearchcore;
+
+      const search = new MapboxSearch({
+          accessToken: 'pk.eyJ1IjoibHVhbjEwMjkiLCJhIjoiY21vNmMxNzV5MXowNTJvcTRwMmV1NmN4MiJ9.LujhTBFaT161DV-QX_OA6Q'
+      })
+
+      const session = new SearchSession(search);
+    </script>
+
+    <script id="search-js" defer src="https://api.mapbox.com/search-js/v1.5.0/web.js"></script>
+    <script>
+      const accessToken = 'pk.eyJ1IjoibHVhbjEwMjkiLCJhIjoiY21vNmMxNzV5MXowNTJvcTRwMmV1NmN4MiJ9.LujhTBFaT161DV-QX_OA6Q';
+
+      const script = document.getElementById('search-js');
+      script.onload = function() {
+        mapboxsearch.autofill({
+          accessToken
+        });
+      };
+    </script>
   </head>
 
   <body>
