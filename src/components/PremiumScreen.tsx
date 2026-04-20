@@ -6,10 +6,11 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Check, ChevronLeft, Sparkles, Zap, X } from "lucide-react";
+import { Check, ChevronLeft, Sparkles, Zap, X, CreditCard, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+import { PixCheckoutForm } from "@/components/PixCheckoutForm";
 import { fadeUp, stagger, staggerFast, easeApple, springSnappy } from "@/lib/motion";
 import { SubscriptionSkeleton, PremiumPlansSkeleton } from "@/components/skeletons/SubscriptionSkeleton";
 import { AnimatedText } from "@/components/motion/AnimatedText";
@@ -24,6 +25,7 @@ interface Plan {
   per: string;
   sub: string;
   badge: string | null;
+  amountCents: number;
   features: { label: string; included: boolean }[];
 }
 
@@ -36,6 +38,7 @@ const plans: Plan[] = [
     per: "/semana",
     sub: "Experimente",
     badge: null,
+    amountCents: 499,
     features: [
       { label: "EvoAI ilimitado", included: true },
       { label: "Treinos adaptativos", included: true },
@@ -52,6 +55,7 @@ const plans: Plan[] = [
     per: "/mês",
     sub: "Mais escolhido",
     badge: "POPULAR",
+    amountCents: 1499,
     features: [
       { label: "EvoAI ilimitado", included: true },
       { label: "Treinos adaptativos", included: true },
@@ -68,6 +72,7 @@ const plans: Plan[] = [
     per: "/ano",
     sub: "Economize 33%",
     badge: "MELHOR VALOR",
+    amountCents: 11990,
     features: [
       { label: "EvoAI ilimitado", included: true },
       { label: "Treinos adaptativos", included: true },
@@ -77,6 +82,8 @@ const plans: Plan[] = [
     ],
   },
 ];
+
+type PaymentMethod = "card" | "pix";
 
 const PremiumScreen = () => {
   const { setCurrentTab, isPremium, user } = useApp();
