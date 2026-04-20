@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { fadeUp, stagger, staggerFast, easeApple, springSnappy } from "@/lib/motion";
+import { SubscriptionSkeleton, PremiumPlansSkeleton } from "@/components/skeletons/SubscriptionSkeleton";
 
 type PlanId = "weekly" | "monthly" | "annual";
 
