@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useApp } from "@/contexts/AppContext";
 import { Loader2, ChevronRight, Plus } from "lucide-react";
 import ActiveWorkout from "./training/ActiveWorkout";
+import ExerciseLibraryBrowser from "./training/ExerciseLibraryBrowser";
 import type { Exercise } from "./training/ExerciseCard";
 import { getGifUrl } from "./training/homeExerciseGifs";
 import { useSavedPlan } from "@/hooks/useSavedPlan";
@@ -25,7 +26,7 @@ const inferLevelFromProfile = (level?: string): LevelKey => {
 
 const TrainingScreen = () => {
   const { userProfile } = useApp();
-  const [tab, setTab] = useState<"gym" | "home">("gym");
+  const [tab, setTab] = useState<"gym" | "home" | "library">("gym");
   const [activeWorkout, setActiveWorkout] = useState<string | null>(null);
   const [activeExercises, setActiveExercises] = useState<Exercise[]>([]);
   const [selectedLevel, setSelectedLevel] = useState<LevelKey>(inferLevelFromProfile(userProfile.level));
@@ -167,8 +168,9 @@ const TrainingScreen = () => {
       <div className="px-5 mb-6 animate-fade-in">
         <div className="flex bg-white/[0.06] rounded-[10px] p-[3px]">
           {([
-            { key: "gym",  label: "Academia" },
-            { key: "home", label: "Em casa" },
+            { key: "gym",     label: "Academia" },
+            { key: "home",    label: "Em casa" },
+            { key: "library", label: "Biblioteca" },
           ] as const).map((opt) => (
             <button
               key={opt.key}
@@ -185,6 +187,10 @@ const TrainingScreen = () => {
         </div>
       </div>
 
+      {tab === "library" ? (
+        <ExerciseLibraryBrowser />
+      ) : (
+      <>
       {/* Level selector — horizontal blocks (no cards) */}
       <div className="px-5 mb-2 animate-fade-in">
         <h2 className="text-[22px] font-bold tracking-tight text-foreground mb-3">Nível</h2>
