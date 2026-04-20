@@ -85,12 +85,15 @@ const benefits = [
   "Nutrição personalizada disponível",
 ];
 
+type SyncStatus = "syncing" | "ready" | "timeout";
+
 export default function CheckoutReturn() {
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get("session_id");
   const navigate = useNavigate();
   const [soundOn, setSoundOn] = useState(true);
-  const triggered = useRef(false);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>("syncing");
+  const celebrated = useRef(false);
   const stopConfettiRef = useRef<(() => void) | null>(null);
 
   const goHome = () => {
@@ -98,22 +101,53 @@ export default function CheckoutReturn() {
     navigate("/home", { replace: true });
   };
 
+  // Poll subscription status until premium is confirmed
   useEffect(() => {
-    if (!sessionId || triggered.current) return;
-    triggered.current = true;
+    if (!sessionId) return;
+    let cancelled = false;
+    const MAX_ATTEMPTS = 15; // ~30s total
+    const INTERVAL = 2000;
 
-    // Slight delay so the user sees the screen render first
+    const poll = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        if (!cancelled) setSyncStatus("timeout");
+        return;
+      }
+      for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+        if (cancelled) return;
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("is_premium")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (profile?.is_premium) {
+          if (!cancelled) setSyncStatus("ready");
+          return;
+        }
+        await new Promise((r) => setTimeout(r, INTERVAL));
+      }
+      if (!cancelled) setSyncStatus("timeout");
+    };
+
+    poll();
+    return () => { cancelled = true; };
+  }, [sessionId]);
+
+  // Trigger celebration only once subscription is confirmed
+  useEffect(() => {
+    if (syncStatus !== "ready" || celebrated.current) return;
+    celebrated.current = true;
     const t = setTimeout(() => {
       stopConfettiRef.current = fireConfetti();
       if (soundOn) playSuccessChime();
-    }, 250);
-
-    return () => {
-      clearTimeout(t);
-      stopConfettiRef.current?.();
-    };
+    }, 200);
+    return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId]);
+  }, [syncStatus]);
+
+  // Cleanup confetti on unmount
+  useEffect(() => () => stopConfettiRef.current?.(), []);
 
   const replay = () => {
     stopConfettiRef.current?.();
@@ -134,6 +168,49 @@ export default function CheckoutReturn() {
           <p className="text-muted-foreground mb-6">Não conseguimos identificar seu pagamento.</p>
           <Button variant="ghost" onClick={() => navigate("/home", { replace: true })} className="rounded-xl">
             Voltar
+          </Button>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (syncStatus === "syncing") {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-5 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: easeApple }}
+          className="max-w-sm"
+        >
+          <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-primary/10 flex items-center justify-center">
+            <Loader2 className="w-7 h-7 text-primary animate-spin" />
+          </div>
+          <h1 className="text-2xl font-bold text-foreground mb-2">Confirmando pagamento</h1>
+          <p className="text-muted-foreground text-sm">
+            Estamos liberando seu acesso PRO. Isso leva alguns segundos…
+          </p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (syncStatus === "timeout") {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-5 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: easeApple }}
+          className="max-w-sm"
+        >
+          <h1 className="text-2xl font-bold text-foreground mb-2">Quase lá</h1>
+          <p className="text-muted-foreground text-sm mb-6">
+            Seu pagamento foi recebido, mas a confirmação está demorando mais que o esperado.
+            Entre no app em alguns minutos — o PRO será liberado automaticamente.
+          </p>
+          <Button onClick={goHome} className="rounded-xl">
+            Voltar para o app
           </Button>
         </motion.div>
       </div>
