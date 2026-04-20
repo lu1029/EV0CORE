@@ -304,6 +304,7 @@ export type Database = {
           id: string
           notes: string | null
           pace_min_km: number | null
+          photo_url: string | null
           route_data: Json | null
           started_at: string
           user_id: string
@@ -318,6 +319,7 @@ export type Database = {
           id?: string
           notes?: string | null
           pace_min_km?: number | null
+          photo_url?: string | null
           route_data?: Json | null
           started_at?: string
           user_id: string
@@ -332,6 +334,7 @@ export type Database = {
           id?: string
           notes?: string | null
           pace_min_km?: number | null
+          photo_url?: string | null
           route_data?: Json | null
           started_at?: string
           user_id?: string
