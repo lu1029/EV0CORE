@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useApp } from "@/contexts/AppContext";
 import { Loader2, ChevronRight, Plus } from "lucide-react";
 import ActiveWorkout from "./training/ActiveWorkout";
@@ -6,6 +7,7 @@ import ExerciseLibraryBrowser from "./training/ExerciseLibraryBrowser";
 import type { Exercise } from "./training/ExerciseCard";
 import { getGifUrl } from "./training/homeExerciseGifs";
 import { useSavedPlan } from "@/hooks/useSavedPlan";
+import { fadeUp, stagger, staggerFast, springSnappy, easeApple } from "@/lib/motion";
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/evo-ai-chat`;
 
