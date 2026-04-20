@@ -30,6 +30,7 @@ import Historico from "./pages/Historico";
 import Configuracoes from "./pages/Configuracoes";
 import TreinoDetalhe from "./pages/TreinoDetalhe";
 import CorridaAtiva from "./pages/CorridaAtiva";
+import PixCheckout from "./pages/PixCheckout";
 
 const queryClient = new QueryClient();
 
@@ -70,6 +71,7 @@ const App = () => (
                   <Route path="/treino/:id" element={<TreinoDetalhe />} />
                   <Route path="/corrida/ativa" element={<CorridaAtiva />} />
                   <Route path="/corrida/resultado/:id" element={<RunResult />} />
+                  <Route path="/pix" element={<PixCheckout />} />
                 </Route>
 
                 <Route path="*" element={<NotFound />} />
