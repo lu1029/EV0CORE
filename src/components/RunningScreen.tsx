@@ -337,7 +337,7 @@ const RunningScreen = () => {
       const paceNum = distanceKm > 0 ? elapsedSeconds / 60 / distanceKm : null;
       const avgSpeedNum = elapsedSeconds > 0 ? distanceKm / (elapsedSeconds / 3600) : null;
 
-      const { error } = await supabase.from("runs").insert({
+      const { data: inserted, error } = await supabase.from("runs").insert({
         user_id: user.id,
         activity_type: activityMap[selectedActivity] ?? "run",
         distance_km: Number(distanceKm.toFixed(3)),
@@ -347,17 +347,18 @@ const RunningScreen = () => {
         avg_speed_kmh: avgSpeedNum ? Number(avgSpeedNum.toFixed(2)) : null,
         route_data: { points: routePath, max_speed_kmh: maxSpeed, elevation_gain_m: elevationGain },
         started_at: new Date(Date.now() - elapsedSeconds * 1000).toISOString(),
-      });
+      }).select("id").single();
       if (error) throw error;
       setSaved(true);
+      setSavedRunId(inserted?.id ?? null);
       refreshHistory();
     } catch (e) {
       console.error("Erro ao salvar corrida:", e);
-      alert("Erro ao salvar corrida. Tente novamente.");
+      toast.error("Erro ao salvar corrida. Tente novamente.");
     } finally {
       setSaving(false);
     }
-  }, [saving, saved, distanceKm, elapsedSeconds, calories, selectedActivity, routePath, maxSpeed, elevationGain]);
+  }, [saving, saved, distanceKm, elapsedSeconds, calories, selectedActivity, routePath, maxSpeed, elevationGain, refreshHistory]);
 
   // ─── POST-RUN SUMMARY ───
   if (phase === "summary") {
