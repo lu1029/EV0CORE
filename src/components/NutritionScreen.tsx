@@ -9,6 +9,7 @@ import MealEditor, { type EditableMeal } from "./nutrition/MealEditor";
 import RecipesSection from "./nutrition/RecipesSection";
 import { fadeUp, stagger, staggerFast, springSnappy, easeApple } from "@/lib/motion";
 import { NutritionSkeleton } from "./skeletons/NutritionSkeleton";
+import { AnimatedText } from "./motion/AnimatedText";
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/evo-ai-chat`;
 
@@ -155,7 +156,7 @@ const NutritionScreen = () => {
   if (!nutritionPlan) {
     return (
       <div className="pb-28 px-5 pt-8 max-w-lg mx-auto">
-        <h1 className="text-[32px] font-bold text-foreground tracking-[-0.03em] mb-8 animate-fade-in">Nutrição</h1>
+        <AnimatedText as="h1" text="Nutrição" gradient className="text-[32px] font-bold tracking-[-0.03em] mb-8 block" />
         {saved.loading ? (
           <NutritionSkeleton />
         ) : (
@@ -180,7 +181,7 @@ const NutritionScreen = () => {
       animate="visible"
     >
       <motion.div variants={fadeUp} className="flex items-end justify-between mb-8">
-        <h1 className="text-[32px] font-bold text-foreground tracking-[-0.03em]">Nutrição</h1>
+        <AnimatedText as="h1" text="Nutrição" gradient className="text-[32px] font-bold tracking-[-0.03em] block" />
         <button onClick={resetPlan} className="text-[13px] text-muted-foreground flex items-center gap-1 active:opacity-60">
           <RotateCcw className="w-3.5 h-3.5" /> Refazer
         </button>

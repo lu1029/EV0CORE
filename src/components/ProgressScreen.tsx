@@ -4,6 +4,7 @@ import PremiumGate from "@/components/PremiumGate";
 import { useProgress } from "@/hooks/useProgress";
 import { useAchievements } from "@/hooks/useAchievements";
 import { Input } from "@/components/ui/input";
+import { AnimatedText } from "@/components/motion/AnimatedText";
 
 const ProgressScreen = () => {
   const [tab, setTab] = useState<"overview" | "body" | "achievements">("overview");
