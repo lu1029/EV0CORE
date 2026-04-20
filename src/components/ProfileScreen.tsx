@@ -1,23 +1,35 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useApp } from "@/contexts/AppContext";
 import { ChevronRight, LogOut, X, Save, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import SettingsScreen from "@/components/settings/SettingsScreen";
 import { useProfileStats } from "@/hooks/useProfileStats";
 import { useAchievements } from "@/hooks/useAchievements";
+import AvatarUpload from "@/components/profile/AvatarUpload";
 
 const ProfileScreen = () => {
   const { userProfile, setUserProfile, isPremium, setCurrentTab, user } = useApp();
   const { stats, loading: statsLoading } = useProfileStats();
   const { unlockedCount, totalCount } = useAchievements();
   const name = userProfile.name || "Atleta";
+  const initial = (name[0] || "A").toUpperCase();
   const [isEditing, setIsEditing] = useState(false);
   const [editProfile, setEditProfile] = useState(userProfile);
   const [saving, setSaving] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("avatar_url")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => setAvatarUrl(data?.avatar_url ?? null));
+  }, [user]);
 
   const startEditing = () => {
     setEditProfile({ ...userProfile });
@@ -75,9 +87,15 @@ const ProfileScreen = () => {
 
         <div className="space-y-6 animate-fade-in">
           <div className="flex justify-center">
-            <div className="w-20 h-20 rounded-full bg-secondary flex items-center justify-center">
-              <span className="text-[26px] font-semibold text-foreground">{(editProfile.name || "A")[0]?.toUpperCase()}</span>
-            </div>
+            {user && (
+              <AvatarUpload
+                userId={user.id}
+                currentUrl={avatarUrl}
+                fallbackInitial={(editProfile.name || "A")[0]?.toUpperCase()}
+                onUploaded={setAvatarUrl}
+                size={80}
+              />
+            )}
           </div>
 
           <div className="bg-card rounded-2xl divide-y divide-border">
@@ -168,8 +186,20 @@ const ProfileScreen = () => {
     <div className="pb-28 px-5 pt-8 max-w-lg mx-auto">
       {/* Header */}
       <header className="flex flex-col items-center text-center mb-10 animate-fade-in">
-        <div className="w-24 h-24 rounded-full bg-secondary flex items-center justify-center mb-4">
-          <span className="text-[32px] font-semibold text-foreground">{name[0]?.toUpperCase()}</span>
+        <div className="mb-4">
+          {user ? (
+            <AvatarUpload
+              userId={user.id}
+              currentUrl={avatarUrl}
+              fallbackInitial={initial}
+              onUploaded={setAvatarUrl}
+              size={96}
+            />
+          ) : (
+            <div className="w-24 h-24 rounded-full bg-secondary flex items-center justify-center">
+              <span className="text-[32px] font-semibold text-foreground">{initial}</span>
+            </div>
+          )}
         </div>
         <h1 className="text-[26px] font-bold text-foreground tracking-[-0.02em]">{name}</h1>
         <p className="text-[14px] text-muted-foreground mt-0.5">{userProfile.email}</p>
