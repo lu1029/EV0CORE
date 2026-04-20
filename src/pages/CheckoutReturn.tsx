@@ -174,21 +174,18 @@ export default function CheckoutReturn() {
       >
         {/* Animated check badge */}
         <motion.div variants={fadeUp} className="relative w-28 h-28 mx-auto mb-8">
-          {/* Pulse rings */}
-          {[0, 1, 2].map((i) => (
-            <motion.div
-              key={i}
-              initial={{ scale: 0.6, opacity: 0.5 }}
-              animate={{ scale: 1.8, opacity: 0 }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                delay: i * 0.6,
-                ease: "easeOut",
-              }}
-              className="absolute inset-0 rounded-full bg-primary/30"
-            />
-          ))}
+          {/* Pulse rings — single subtle ring for better performance */}
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0.35 }}
+            animate={{ scale: 1.5, opacity: 0 }}
+            transition={{
+              duration: 2.4,
+              repeat: Infinity,
+              repeatDelay: 0.6,
+              ease: "easeOut",
+            }}
+            className="absolute inset-0 rounded-full bg-primary/25 will-change-transform"
+          />
 
           <motion.div
             initial={{ scale: 0, rotate: -90 }}
