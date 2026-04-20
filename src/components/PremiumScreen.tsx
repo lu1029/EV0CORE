@@ -1,15 +1,15 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useApp } from "@/contexts/AppContext";
 import { useSubscription } from "@/hooks/useSubscription";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Check, ChevronLeft, Sparkles, Zap, X } from "lucide-react";
+import { Check, ChevronLeft, Sparkles, Zap, X, CreditCard, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+import { PixCheckoutForm } from "@/components/PixCheckoutForm";
 import { fadeUp, stagger, staggerFast, easeApple, springSnappy } from "@/lib/motion";
 import { SubscriptionSkeleton, PremiumPlansSkeleton } from "@/components/skeletons/SubscriptionSkeleton";
 import { AnimatedText } from "@/components/motion/AnimatedText";
@@ -24,6 +24,7 @@ interface Plan {
   per: string;
   sub: string;
   badge: string | null;
+  amountCents: number;
   features: { label: string; included: boolean }[];
 }
 
@@ -36,6 +37,7 @@ const plans: Plan[] = [
     per: "/semana",
     sub: "Experimente",
     badge: null,
+    amountCents: 499,
     features: [
       { label: "EvoAI ilimitado", included: true },
       { label: "Treinos adaptativos", included: true },
@@ -52,6 +54,7 @@ const plans: Plan[] = [
     per: "/mês",
     sub: "Mais escolhido",
     badge: "POPULAR",
+    amountCents: 1499,
     features: [
       { label: "EvoAI ilimitado", included: true },
       { label: "Treinos adaptativos", included: true },
@@ -68,6 +71,7 @@ const plans: Plan[] = [
     per: "/ano",
     sub: "Economize 33%",
     badge: "MELHOR VALOR",
+    amountCents: 11990,
     features: [
       { label: "EvoAI ilimitado", included: true },
       { label: "Treinos adaptativos", included: true },
@@ -78,13 +82,15 @@ const plans: Plan[] = [
   },
 ];
 
+type PaymentMethod = "card" | "pix";
+
 const PremiumScreen = () => {
   const { setCurrentTab, isPremium, user } = useApp();
   const { subscription, isActive, isLoading: subLoading } = useSubscription();
   const [selectedPlan, setSelectedPlan] = useState<PlanId>("monthly");
   const [showCheckout, setShowCheckout] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
   const [loadingPortal, setLoadingPortal] = useState(false);
-  const navigate = useNavigate();
 
   const handleManageSubscription = async () => {
     setLoadingPortal(true);
@@ -128,16 +134,53 @@ const PremiumScreen = () => {
           <ChevronLeft className="w-4 h-4" /> Voltar
         </button>
         <h1 className="text-[28px] font-bold text-foreground tracking-[-0.03em] mb-1">Finalizar assinatura</h1>
-        <p className="text-[14px] text-muted-foreground mb-6">
+        <p className="text-[14px] text-muted-foreground mb-5">
           Plano {selected.title} · {selected.price}{selected.per}
         </p>
-        <StripeEmbeddedCheckout
-          priceId={selected.priceId}
-          quantity={1}
-          customerEmail={user?.email || ""}
-          userId={user?.id || ""}
-          returnUrl={`${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`}
-        />
+
+        {/* Payment method tabs */}
+        <div className="grid grid-cols-2 gap-2 p-1 bg-secondary rounded-xl mb-6">
+          <button
+            type="button"
+            onClick={() => setPaymentMethod("card")}
+            className={`h-10 rounded-lg text-[14px] font-semibold flex items-center justify-center gap-2 transition-all ${
+              paymentMethod === "card"
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground"
+            }`}
+          >
+            <CreditCard className="w-4 h-4" />
+            Cartão
+          </button>
+          <button
+            type="button"
+            onClick={() => setPaymentMethod("pix")}
+            className={`h-10 rounded-lg text-[14px] font-semibold flex items-center justify-center gap-2 transition-all ${
+              paymentMethod === "pix"
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground"
+            }`}
+          >
+            <QrCode className="w-4 h-4" />
+            Pix
+          </button>
+        </div>
+
+        {paymentMethod === "card" ? (
+          <StripeEmbeddedCheckout
+            priceId={selected.priceId}
+            quantity={1}
+            customerEmail={user?.email || ""}
+            userId={user?.id || ""}
+            returnUrl={`${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`}
+          />
+        ) : (
+          <PixCheckoutForm
+            amountCents={selected.amountCents}
+            description={`Assinatura EvoCore Premium ${selected.title}`}
+            defaultEmail={user?.email || ""}
+          />
+        )}
       </motion.div>
     );
   }
@@ -377,12 +420,9 @@ const PremiumScreen = () => {
           <Zap className="w-4 h-4" strokeWidth={2.5} />
           Continuar com {selected.title}
         </motion.button>
-        <button
-          onClick={() => navigate("/pix")}
-          className="mt-3 w-full py-3.5 rounded-2xl bg-secondary text-foreground text-[15px] font-semibold border border-border/40 active:opacity-70"
-        >
-          Pagar com Pix
-        </button>
+        <p className="text-center text-[11px] text-muted-foreground mt-2">
+          Pague com cartão ou Pix na próxima etapa
+        </p>
         <p className="text-center text-[12px] text-muted-foreground mt-3">
           Pagamento seguro · Cancele a qualquer momento
         </p>
