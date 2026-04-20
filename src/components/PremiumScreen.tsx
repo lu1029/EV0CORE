@@ -11,6 +11,7 @@ import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { fadeUp, stagger, staggerFast, easeApple, springSnappy } from "@/lib/motion";
 import { SubscriptionSkeleton, PremiumPlansSkeleton } from "@/components/skeletons/SubscriptionSkeleton";
+import { AnimatedText } from "@/components/motion/AnimatedText";
 
 type PlanId = "weekly" | "monthly" | "annual";
 
@@ -204,9 +205,9 @@ const PremiumScreen = () => {
           <Sparkles className="w-3.5 h-3.5 text-primary" />
           <p className="text-[12px] uppercase tracking-[0.2em] text-primary font-semibold">EVOCORE Pro</p>
         </motion.div>
-        <h1 className="text-[36px] sm:text-[44px] leading-[1.05] font-bold text-foreground tracking-[-0.035em]">
-          Sua evolução,<br />
-          <span className="text-primary">sem limites.</span>
+        <h1 className="text-[36px] sm:text-[44px] leading-[1.05] font-bold tracking-[-0.035em]">
+          <AnimatedText as="span" text="Sua evolução," className="text-foreground block" duration={0.6} />
+          <AnimatedText as="span" text="sem limites." className="text-gradient-flow block" delay={0.25} duration={0.6} />
         </h1>
         <p className="text-[15px] sm:text-[16px] text-muted-foreground mt-4 max-w-md mx-auto leading-relaxed">
           Treine como um atleta. Tudo num único app.
