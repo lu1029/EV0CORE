@@ -20,7 +20,7 @@ interface Params {
   enabled?: boolean;
 }
 
-export function useExerciseLibrary({ bodyPart, target, search, limit = 20, enabled = true }: Params = {}) {
+export function useExerciseLibrary({ bodyPart, target, search, limit = 30, enabled = true }: Params = {}) {
   const [items, setItems] = useState<LibraryExercise[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
