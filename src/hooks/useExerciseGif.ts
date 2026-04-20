@@ -218,61 +218,90 @@ async function lookupGif(name: string, muscle?: string): Promise<string | null> 
   const promise = (async () => {
     const term = toSearchTerm(key);
 
-    // 1) Cache de IA por nome livre (resposta mais rápida quando já gerada)
-    {
-      const { data } = await supabase
-        .from("exercise_image_cache")
-        .select("image_url")
-        .eq("name_key", key)
-        .maybeSingle();
-      if (data?.image_url) {
-        memCache.set(key, data.image_url);
-        return data.image_url;
-      }
+    // PRIORIDADE 1: GIF real (ExerciseDB) — busca paralela em cache + library + OSS
+    const gifPromise = (async (): Promise<string | null> => {
+      // 1a) Cache da biblioteca local
+      try {
+        const { data } = await supabase
+          .from("exercise_library")
+          .select("gif_url")
+          .ilike("name", `%${term}%`)
+          .not("gif_url", "is", null)
+          .limit(1)
+          .maybeSingle();
+        if (data?.gif_url) return data.gif_url;
+      } catch { /* ignore */ }
+
+      // 1b) ExerciseDB OSS via edge function
+      try {
+        const qs = new URLSearchParams({ search: term, limit: "1" }).toString();
+        const { data } = await supabase.functions.invoke(`exercises?${qs}`, { method: "GET" });
+        const url: string | null = data?.items?.[0]?.gif_url ?? null;
+        if (url) return url;
+      } catch { /* ignore */ }
+
+      return null;
+    })();
+
+    // PRIORIDADE 2 (paralelo, garantia): Imagem IA cacheada ou gerada
+    const imagePromise = (async (): Promise<string | null> => {
+      // 2a) Cache de IA por nome livre (instantâneo se já existir)
+      try {
+        const { data } = await supabase
+          .from("exercise_image_cache")
+          .select("image_url")
+          .eq("name_key", key)
+          .maybeSingle();
+        if (data?.image_url) return data.image_url;
+      } catch { /* ignore */ }
+
+      // 2b) ai_image_url da biblioteca
+      try {
+        const { data } = await supabase
+          .from("exercise_library")
+          .select("ai_image_url")
+          .ilike("name", `%${term}%`)
+          .not("ai_image_url", "is", null)
+          .limit(1)
+          .maybeSingle();
+        if (data?.ai_image_url) return data.ai_image_url;
+      } catch { /* ignore */ }
+
+      // 2c) Gera com cascata HF -> Lovable AI (lento, mas garante)
+      try {
+        const { data, error } = await supabase.functions.invoke("generate-exercise-image", {
+          body: { name, muscle },
+        });
+        if (!error && data?.image_url) return data.image_url;
+      } catch { /* ignore */ }
+
+      return null;
+    })();
+
+    // Espera o GIF até 2.5s. Se chegar, usa ele e a imagem IA fica cacheada em background.
+    const gifResult = await Promise.race([
+      gifPromise,
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 2500)),
+    ]);
+    if (gifResult) {
+      memCache.set(key, gifResult);
+      // imagem IA continua gerando em background → próxima vez já tem fallback
+      imagePromise.catch(() => null);
+      return gifResult;
     }
 
-    // 2) Busca direta no cache da biblioteca (gif ou ai_image_url)
-    {
-      const { data } = await supabase
-        .from("exercise_library")
-        .select("gif_url, ai_image_url")
-        .ilike("name", `%${term}%`)
-        .or("gif_url.not.is.null,ai_image_url.not.is.null")
-        .limit(1)
-        .maybeSingle();
-      const url = data?.gif_url || data?.ai_image_url;
-      if (url) {
-        memCache.set(key, url);
-        return url;
-      }
+    // GIF demorou ou não existe → usa imagem IA como garantia
+    const imgResult = await imagePromise;
+    if (imgResult) {
+      memCache.set(key, imgResult);
+      return imgResult;
     }
 
-    // 3) Edge function da ExerciseDB OSS (GIFs animados reais)
-    try {
-      const qs = new URLSearchParams({ search: term, limit: "1" }).toString();
-      const { data } = await supabase.functions.invoke(`exercises?${qs}`, {
-        method: "GET",
-      });
-      const url: string | null = data?.items?.[0]?.gif_url ?? null;
-      if (url) {
-        memCache.set(key, url);
-        return url;
-      }
-    } catch {
-      /* fallthrough */
-    }
-
-    // 4) Fallback final: gera imagem com Lovable AI e cacheia
-    try {
-      const { data, error } = await supabase.functions.invoke("generate-exercise-image", {
-        body: { name, muscle },
-      });
-      if (!error && data?.image_url) {
-        memCache.set(key, data.image_url);
-        return data.image_url;
-      }
-    } catch {
-      /* ignore */
+    // Última tentativa: aguarda GIF que ainda pode chegar
+    const lateGif = await gifPromise;
+    if (lateGif) {
+      memCache.set(key, lateGif);
+      return lateGif;
     }
 
     memCache.set(key, null);
