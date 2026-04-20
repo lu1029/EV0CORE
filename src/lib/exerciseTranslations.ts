@@ -287,8 +287,11 @@ export function translateEquipment(name?: string | null): string {
 /** Define se o equipamento permite treinar em casa (sem academia). */
 const HOME_EQUIPMENT = new Set([
   "body weight",
+  "bodyweight",
+  "assisted",
   "resistance band",
   "band",
+  "elastic band",
   "dumbbell",
   "kettlebell",
   "stability ball",
@@ -296,9 +299,11 @@ const HOME_EQUIPMENT = new Set([
   "medicine ball",
   "rope",
   "wheel roller",
+  "roller",
+  "ez barbell",
 ]);
 
 export function isHomeFriendly(equipment?: string | null): boolean {
-  if (!equipment) return false;
+  if (!equipment) return true; // sem equipamento => peso do corpo => casa
   return HOME_EQUIPMENT.has(equipment.toLowerCase().trim());
 }
