@@ -14,7 +14,14 @@ interface PixRequestBody {
   amount: number;
   description?: string;
   expiresIn?: number;
+  plan?: "weekly" | "monthly" | "yearly";
 }
+
+const PLAN_PRICE_IDS: Record<string, string> = {
+  weekly: "evocore_premium_weekly",
+  monthly: "evocore_premium_monthly",
+  yearly: "evocore_premium_yearly",
+};
 
 const onlyDigits = (s: string) => (s || "").replace(/\D+/g, "");
 const isValidEmail = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
