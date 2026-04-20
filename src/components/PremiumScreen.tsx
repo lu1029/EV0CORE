@@ -422,12 +422,9 @@ const PremiumScreen = () => {
           <Zap className="w-4 h-4" strokeWidth={2.5} />
           Continuar com {selected.title}
         </motion.button>
-        <button
-          onClick={() => navigate("/pix")}
-          className="mt-3 w-full py-3.5 rounded-2xl bg-secondary text-foreground text-[15px] font-semibold border border-border/40 active:opacity-70"
-        >
-          Pagar com Pix
-        </button>
+        <p className="text-center text-[11px] text-muted-foreground mt-2">
+          Pague com cartão ou Pix na próxima etapa
+        </p>
         <p className="text-center text-[12px] text-muted-foreground mt-3">
           Pagamento seguro · Cancele a qualquer momento
         </p>
