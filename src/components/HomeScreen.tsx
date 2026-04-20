@@ -73,9 +73,10 @@ const HomeScreen = () => {
           whileHover={{ y: -1 }}
           whileTap={{ scale: 0.94 }}
           onClick={() => setCurrentTab("premium")}
-          className="h-7 px-3 rounded-full bg-yellow-400 text-black text-[11px] font-extrabold tracking-wider shadow-[0_4px_14px_-4px_hsl(48_100%_50%/0.6)]"
+          style={{ background: "hsl(48 100% 55%)", color: "hsl(0 0% 8%)" }}
+          className="h-7 px-3 rounded-full text-[11px] font-extrabold tracking-wider shadow-[0_4px_14px_-4px_hsl(48_100%_50%/0.6)]"
         >
-          {isPremium ? "PRO" : "PRO"}
+          PRO
         </motion.button>
 
         <div className="flex-1" />
