@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useApp } from "@/contexts/AppContext";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -92,7 +91,6 @@ const PremiumScreen = () => {
   const [showCheckout, setShowCheckout] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
   const [loadingPortal, setLoadingPortal] = useState(false);
-  const navigate = useNavigate();
 
   const handleManageSubscription = async () => {
     setLoadingPortal(true);
