@@ -1,23 +1,23 @@
-import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
+import { createClient } from "npm:@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+};
 
 interface PixRequestBody {
   fullName: string;
   email: string;
   phone: string;
   cpf: string;
-  amount: number; // amount in cents (BRL centavos)
+  amount: number;
   description?: string;
-  expiresIn?: number; // seconds
+  expiresIn?: number;
 }
 
-function onlyDigits(s: string) {
-  return (s || "").replace(/\D+/g, "");
-}
-
-function isValidEmail(s: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
-}
-
+const onlyDigits = (s: string) => (s || "").replace(/\D+/g, "");
+const isValidEmail = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 function isValidCPF(cpf: string) {
   const d = onlyDigits(cpf);
   if (d.length !== 11) return false;
@@ -46,6 +46,19 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: "ABACATEPAY_API_KEY não configurada" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
+    }
+
+    // Identify user from JWT (optional but recommended so webhook can activate premium)
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+    const authHeader = req.headers.get("Authorization") || "";
+    const jwt = authHeader.replace("Bearer ", "");
+    let userId: string | null = null;
+    if (jwt) {
+      const { data } = await supabase.auth.getUser(jwt);
+      userId = data.user?.id ?? null;
     }
 
     const body = (await req.json()) as PixRequestBody;
@@ -89,7 +102,7 @@ Deno.serve(async (req) => {
           cellphone: phone,
           taxId: cpf,
         },
-        metadata: { externalId },
+        metadata: { externalId, userId },
       }),
     });
 
@@ -107,8 +120,22 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Abacate returns { data: { id, brCode, brCodeBase64, amount, status, expiresAt, ... } }
     const data = (json as any)?.data ?? json;
+
+    // Persist pending charge so the webhook can map abacate_id → user_id later
+    if (userId) {
+      const { error: insErr } = await supabase.from("pix_charges").insert({
+        user_id: userId,
+        external_id: externalId,
+        abacate_id: data?.id ?? null,
+        amount: data?.amount ?? amount,
+        status: data?.status ?? "PENDING",
+        expires_at: data?.expiresAt ?? null,
+      });
+      if (insErr) console.error("pix_charges insert error", insErr);
+    } else {
+      console.warn("create-pix-qrcode: no userId in JWT, charge will not auto-activate premium");
+    }
 
     return new Response(
       JSON.stringify({
