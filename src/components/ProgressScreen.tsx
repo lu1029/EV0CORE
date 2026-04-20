@@ -27,7 +27,12 @@ const ProgressScreen = () => {
 
   return (
     <div className="pb-28 px-5 pt-8 max-w-lg mx-auto">
-      <h1 className="text-[32px] font-bold text-foreground tracking-[-0.03em] mb-8 animate-fade-in">Progresso</h1>
+      <AnimatedText
+        as="h1"
+        text="Progresso"
+        gradient
+        className="text-[32px] font-bold tracking-[-0.03em] mb-8 block"
+      />
 
       <div className="flex bg-secondary rounded-xl p-1 mb-8 animate-fade-in">
         {[
