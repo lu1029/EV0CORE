@@ -1,33 +1,16 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft, Trash2, Share2, Footprints, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { motion, AnimatePresence } from "framer-motion";
+import html2canvas from "html2canvas";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-const darkMapStyles = [
-  { elementType: "geometry", stylers: [{ color: "#1a1a2e" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#1a1a2e" }] },
-  { elementType: "labels.text.fill", stylers: [{ color: "#6b7280" }] },
-  { featureType: "road", elementType: "geometry", stylers: [{ color: "#2d2d44" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#0e4429" }] },
-];
-
-let mapsPromise: Promise<void> | null = null;
-function loadGoogleMaps(apiKey: string): Promise<void> {
-  if ((window as any).google?.maps) return Promise.resolve();
-  if (mapsPromise) return mapsPromise;
-  mapsPromise = new Promise((resolve, reject) => {
-    const s = document.createElement("script");
-    s.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=geometry`;
-    s.async = true; s.defer = true;
-    s.onload = () => resolve();
-    s.onerror = () => { mapsPromise = null; reject(new Error("Failed to load Google Maps")); };
-    document.head.appendChild(s);
-  });
-  return mapsPromise;
-}
+import { ActivityModeTabs, type ActivityMode } from "@/components/running/ActivityModeTabs";
+import { ActivityMapMode } from "@/components/running/ActivityMapMode";
+import { ActivityAnimationMode } from "@/components/running/ActivityAnimationMode";
+import { ActivityPhotoMode } from "@/components/running/ActivityPhotoMode";
+import { ShareCard } from "@/components/running/ShareCard";
 
 const formatTime = (s: number) => {
   const h = Math.floor(s / 3600);
@@ -56,8 +39,12 @@ const RunResult = () => {
   const [loading, setLoading] = useState(true);
   const [run, setRun] = useState<any>(null);
   const [deleting, setDeleting] = useState(false);
-  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const [mode, setMode] = useState<ActivityMode>("map");
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [sharing, setSharing] = useState(false);
+  const shareCardRef = useRef<HTMLDivElement>(null);
 
+  // Load run + signed photo url
   useEffect(() => {
     if (!id) return;
     (async () => {
@@ -65,6 +52,13 @@ const RunResult = () => {
         const { data, error } = await supabase.from("runs").select("*").eq("id", id).single();
         if (error || !data) throw error;
         setRun(data);
+
+        if (data.photo_url) {
+          const { data: signed } = await supabase.storage
+            .from("activity-photos")
+            .createSignedUrl(data.photo_url, 60 * 60 * 24);
+          if (signed?.signedUrl) setPhotoUrl(signed.signedUrl);
+        }
       } catch {
         toast.error(t("running.loadError"));
         navigate("/corrida");
@@ -73,36 +67,6 @@ const RunResult = () => {
       }
     })();
   }, [id, navigate, t]);
-
-  useEffect(() => {
-    if (!run || !mapContainerRef.current) return;
-    const points = (run.route_data as any)?.points as Array<{ lat: number; lng: number }> | undefined;
-    if (!points || points.length < 2) return;
-    (async () => {
-      try {
-        const { data } = await supabase.functions.invoke("get-maps-key");
-        if (!data?.key) return;
-        await loadGoogleMaps(data.key);
-        const g = (window as any).google;
-        if (!g?.maps || !mapContainerRef.current) return;
-        const map = new g.maps.Map(mapContainerRef.current, {
-          disableDefaultUI: true, styles: darkMapStyles, gestureHandling: "greedy",
-        });
-        const bounds = new g.maps.LatLngBounds();
-        points.forEach((p) => bounds.extend(p));
-        new g.maps.Polyline({ path: points, map, strokeColor: "hsl(142, 71%, 45%)", strokeOpacity: 0.95, strokeWeight: 5 });
-        new g.maps.Marker({
-          position: points[0], map,
-          icon: { path: g.maps.SymbolPath.CIRCLE, scale: 7, fillColor: "#22c55e", fillOpacity: 1, strokeColor: "#fff", strokeWeight: 2 },
-        });
-        new g.maps.Marker({
-          position: points[points.length - 1], map,
-          icon: { path: g.maps.SymbolPath.CIRCLE, scale: 7, fillColor: "#ef4444", fillOpacity: 1, strokeColor: "#fff", strokeWeight: 2 },
-        });
-        map.fitBounds(bounds, 40);
-      } catch (e) { console.error(e); }
-    })();
-  }, [run]);
 
   const handleDelete = useCallback(async () => {
     if (!id || deleting) return;
@@ -120,6 +84,65 @@ const RunResult = () => {
     }
   }, [id, deleting, navigate, t]);
 
+  const points = (run?.route_data as any)?.points ?? [];
+  const hasRoute = Array.isArray(points) && points.length > 1;
+
+  const activityLabel = run ? t(`running.${ACTIVITY_LABELS[run.activity_type] ?? "activities_run"}`) : "";
+  const distanceKm = run ? Number(run.distance_km) : 0;
+  const durationFormatted = run ? formatTime(run.duration_seconds) : "00:00";
+  const paceFormatted = run ? formatPace(run.pace_min_km) : "--:--";
+  const calories = run?.calories_burned ?? 0;
+  const avgSpeed = run
+    ? (run.avg_speed_kmh ?? (run.duration_seconds > 0 ? Number(run.distance_km) / (run.duration_seconds / 3600) : 0))
+    : 0;
+  const elevationGain = (run?.route_data as any)?.elevation_gain_m ?? 0;
+  const dateString = run
+    ? new Date(run.started_at).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })
+    : "";
+
+  const handleShare = useCallback(async () => {
+    if (!run || sharing) return;
+    setSharing(true);
+    try {
+      // Wait one frame for the hidden card to render
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      if (!shareCardRef.current) throw new Error("Card not ready");
+
+      const canvas = await html2canvas(shareCardRef.current, {
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: null,
+        scale: 1,
+      });
+      const blob: Blob = await new Promise((resolve, reject) =>
+        canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("blob failed"))), "image/png", 0.95)
+      );
+      const file = new File([blob], `evocore-${run.id}.png`, { type: "image/png" });
+
+      // Try native share with file
+      const nav = navigator as any;
+      if (nav.share && nav.canShare && nav.canShare({ files: [file] })) {
+        await nav.share({ files: [file], title: "EvoCore", text: `${distanceKm.toFixed(2)} km · ${activityLabel}` });
+      } else {
+        // Fallback: download
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `evocore-${run.id}.png`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast.success("Imagem baixada");
+      }
+    } catch (e: any) {
+      if (e?.name !== "AbortError") {
+        console.error(e);
+        toast.error("Não foi possível compartilhar");
+      }
+    } finally {
+      setSharing(false);
+    }
+  }, [run, sharing, distanceKm, activityLabel]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -129,33 +152,74 @@ const RunResult = () => {
   }
   if (!run) return null;
 
-  const activityLabel = t(`running.${ACTIVITY_LABELS[run.activity_type] ?? "activities_run"}`);
-  const points = (run.route_data as any)?.points;
-  const hasRoute = Array.isArray(points) && points.length > 1;
-  const avgSpeed = run.avg_speed_kmh ?? (run.duration_seconds > 0 ? Number(run.distance_km) / (run.duration_seconds / 3600) : 0);
-
   return (
     <div className="min-h-screen bg-background pb-24 animate-fade-in">
+      {/* Header */}
       <div className="flex items-center justify-between px-4 pt-4 pb-2">
-        <button onClick={() => navigate("/corrida")} className="flex items-center gap-1 text-muted-foreground text-sm">
+        <button
+          onClick={() => navigate("/corrida")}
+          className="flex items-center gap-1 text-muted-foreground text-sm active:scale-95 transition-transform"
+        >
           <ArrowLeft className="w-4 h-4" /> {t("common.back")}
         </button>
         <h2 className="text-foreground font-heading font-bold text-base">{activityLabel}</h2>
-        <button onClick={handleDelete} disabled={deleting} className="text-muted-foreground active:scale-95 transition-transform" aria-label="Delete">
-          {deleting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={handleShare}
+            disabled={sharing}
+            className="w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground active:scale-95 transition-transform"
+            aria-label="Compartilhar"
+          >
+            {sharing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Share2 className="w-5 h-5" />}
+          </button>
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className="w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground active:scale-95 transition-transform"
+            aria-label="Excluir"
+          >
+            {deleting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
+          </button>
+        </div>
       </div>
 
-      <div className="w-full h-72 relative bg-secondary">
-        {hasRoute ? (
-          <div ref={mapContainerRef} className="w-full h-full" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <p className="text-muted-foreground text-sm">{t("running.routeUnavailable")}</p>
-          </div>
-        )}
+      {/* Mode tabs */}
+      <ActivityModeTabs mode={mode} onChange={setMode} hasPhoto={!!photoUrl} />
+
+      {/* Mode viewport */}
+      <div className="relative w-full h-80 mt-3 bg-secondary overflow-hidden">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={mode}
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.02 }}
+            transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+            className="absolute inset-0"
+          >
+            {mode === "map" && (
+              hasRoute ? (
+                <ActivityMapMode points={points} />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
+                  {t("running.routeUnavailable")}
+                </div>
+              )
+            )}
+            {mode === "animation" && <ActivityAnimationMode points={points} />}
+            {mode === "photo" && (
+              <ActivityPhotoMode
+                runId={run.id}
+                photoUrl={photoUrl}
+                points={points}
+                onPhotoChange={setPhotoUrl}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
 
+      {/* Stats card */}
       <div className="px-4 mt-6">
         <div className="glass-card rounded-2xl p-5">
           <div className="flex items-center gap-2 mb-4">
@@ -164,19 +228,17 @@ const RunResult = () => {
             </div>
             <div>
               <p className="text-foreground font-heading font-bold text-sm">{activityLabel}</p>
-              <p className="text-muted-foreground text-xs">
-                {new Date(run.started_at).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}
-              </p>
+              <p className="text-muted-foreground text-xs">{dateString}</p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-y-5 gap-x-4">
             {[
-              { label: t("running.distance"), value: Number(run.distance_km).toFixed(2), unit: "km" },
-              { label: t("running.time"), value: formatTime(run.duration_seconds), unit: "" },
-              { label: t("running.pace"), value: formatPace(run.pace_min_km), unit: "/km" },
-              { label: t("running.calories"), value: `${run.calories_burned ?? 0}`, unit: "kcal" },
+              { label: t("running.distance"), value: distanceKm.toFixed(2), unit: "km" },
+              { label: t("running.time"), value: durationFormatted, unit: "" },
+              { label: t("running.pace"), value: paceFormatted, unit: "/km" },
+              { label: t("running.calories"), value: `${calories}`, unit: "kcal" },
               { label: t("running.avgSpeed"), value: Number(avgSpeed).toFixed(1), unit: "km/h" },
-              { label: t("running.maxSpeed"), value: Number((run.route_data as any)?.max_speed_kmh ?? 0).toFixed(1), unit: "km/h" },
+              { label: "Elevação", value: `${Math.round(elevationGain)}`, unit: "m" },
             ].map((s) => (
               <div key={s.label}>
                 <p className="text-muted-foreground text-[10px] uppercase tracking-wider mb-0.5">{s.label}</p>
@@ -188,6 +250,19 @@ const RunResult = () => {
           </div>
         </div>
       </div>
+
+      {/* Hidden share card (rendered offscreen for html2canvas) */}
+      <ShareCard
+        ref={shareCardRef}
+        activityLabel={activityLabel}
+        distanceKm={distanceKm}
+        durationFormatted={durationFormatted}
+        paceFormatted={paceFormatted}
+        caloriesKcal={calories}
+        date={dateString}
+        photoUrl={photoUrl}
+        points={points}
+      />
     </div>
   );
 };
