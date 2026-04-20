@@ -1,7 +1,9 @@
 import React from "react";
+import { motion } from "framer-motion";
 import { useApp } from "@/contexts/AppContext";
 import { ChevronRight, Flame, Dumbbell, Apple, MapPin, TrendingUp } from "lucide-react";
 import { useStreak } from "@/hooks/useStreak";
+import { fadeUp, stagger, staggerFast, springSnappy, easeApple } from "@/lib/motion";
 
 const HomeScreen = () => {
   const { userProfile, setCurrentTab, isPremium } = useApp();
@@ -19,84 +21,113 @@ const HomeScreen = () => {
   ] as const;
 
   return (
-    <div className="pb-28 px-5 pt-10 max-w-lg mx-auto">
-      {/* Big centered greeting — Apple Fitness style */}
-      <header className="text-center mb-12 animate-fade-in">
+    <motion.div
+      className="pb-28 px-5 pt-10 max-w-lg mx-auto"
+      variants={stagger}
+      initial="hidden"
+      animate="visible"
+    >
+      {/* Greeting */}
+      <motion.header variants={fadeUp} className="text-center mb-12">
         <p className="text-[15px] text-muted-foreground tracking-tight mb-2">{greeting},</p>
-        <h1 className="text-[44px] leading-[1.05] font-bold text-foreground tracking-[-0.04em]">
+        <motion.h1
+          initial={{ opacity: 0, y: 16, letterSpacing: "0em" }}
+          animate={{ opacity: 1, y: 0, letterSpacing: "-0.04em" }}
+          transition={{ duration: 0.6, ease: easeApple, delay: 0.1 }}
+          className="text-[44px] leading-[1.05] font-bold text-foreground"
+        >
           {name}
-        </h1>
+        </motion.h1>
         {trainedToday && (
-          <div className="inline-flex items-center gap-1.5 mt-4 px-3 py-1 rounded-full bg-primary/10 animate-scale-in">
+          <motion.div
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ ...springSnappy, delay: 0.3 }}
+            className="inline-flex items-center gap-1.5 mt-4 px-3 py-1 rounded-full bg-primary/10"
+          >
             <span className="w-1.5 h-1.5 rounded-full accent-dot" />
             <span className="text-[12px] font-medium text-primary">Treinado hoje</span>
-          </div>
+          </motion.div>
         )}
-      </header>
+      </motion.header>
 
-      {/* Streak card with animated rings */}
-      <section className="mb-10 animate-fade-in" style={{ animationDelay: "60ms" }}>
+      {/* Streak card */}
+      <motion.section variants={fadeUp} className="mb-10">
         <div className="flex items-baseline justify-between mb-4 px-1">
           <h2 className="text-[22px] font-bold text-foreground tracking-[-0.02em]">Esta semana</h2>
           <span className="text-[13px] text-muted-foreground tabular">
             {activeWeek.filter(Boolean).length}/7
           </span>
         </div>
-        <div className="bg-card rounded-2xl p-5">
+        <motion.div
+          whileHover={{ y: -2, transition: springSnappy }}
+          className="bg-card rounded-2xl p-5 border border-border/40"
+        >
           <div className="flex items-center gap-2 mb-5">
             <Flame className={`w-4 h-4 transition-colors ${streak > 0 ? "text-primary" : "text-muted-foreground"}`} />
             <span className="text-[15px] font-medium text-foreground">
               {streak > 0 ? `${streak} dia${streak > 1 ? "s" : ""} de sequência` : "Sem sequência"}
             </span>
           </div>
-          <div className="flex justify-between">
+          <motion.div variants={staggerFast} initial="hidden" animate="visible" className="flex justify-between">
             {weekDayLabels.map((d, i) => (
-              <div key={i} className="flex flex-col items-center gap-2 animate-fade-in" style={{ animationDelay: `${i * 30}ms` }}>
+              <motion.div key={i} variants={fadeUp} className="flex flex-col items-center gap-2">
                 <span className="text-[11px] text-muted-foreground tabular">{d}</span>
-                <div
-                  className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300 ${
-                    activeWeek[i] ? "bg-primary scale-100" : "bg-secondary scale-90"
+                <motion.div
+                  initial={{ scale: 0.6 }}
+                  animate={{ scale: activeWeek[i] ? 1 : 0.85 }}
+                  transition={{ ...springSnappy, delay: i * 0.04 }}
+                  className={`w-7 h-7 rounded-full flex items-center justify-center ${
+                    activeWeek[i] ? "bg-primary" : "bg-secondary"
                   }`}
                 >
                   {activeWeek[i] && <div className="w-1.5 h-1.5 rounded-full bg-primary-foreground" />}
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
             ))}
-          </div>
-        </div>
-      </section>
+          </motion.div>
+        </motion.div>
+      </motion.section>
 
-      {/* Quick access — vibrant tiles */}
-      <section className="animate-fade-in" style={{ animationDelay: "120ms" }}>
+      {/* Activity tiles */}
+      <motion.section variants={fadeUp}>
         <h2 className="text-[22px] font-bold text-foreground tracking-[-0.02em] mb-3 px-1">Atividades</h2>
-        <div className="grid grid-cols-2 gap-3">
-          {tiles.map((t, i) => (
-            <button
+        <motion.div variants={staggerFast} initial="hidden" animate="visible" className="grid grid-cols-2 gap-3">
+          {tiles.map((t) => (
+            <motion.button
               key={t.id}
+              variants={fadeUp}
+              whileHover={{ y: -4, transition: springSnappy }}
+              whileTap={{ scale: 0.97 }}
               onClick={() => setCurrentTab(t.id)}
-              className={`group relative overflow-hidden bg-card rounded-2xl p-4 text-left active:scale-[0.97] hover:scale-[1.01] transition-transform duration-200 animate-fade-in border border-border/40`}
-              style={{ animationDelay: `${140 + i * 60}ms` }}
+              className="group relative overflow-hidden bg-card rounded-2xl p-4 text-left border border-border/40"
             >
               <div className={`absolute inset-0 bg-gradient-to-br ${t.tint} opacity-80 pointer-events-none`} />
               <div className="relative flex flex-col gap-3">
-                <div className={`w-10 h-10 rounded-xl bg-background/40 backdrop-blur-sm flex items-center justify-center shadow-sm`}>
+                <motion.div
+                  whileHover={{ rotate: -6, scale: 1.06 }}
+                  transition={springSnappy}
+                  className="w-10 h-10 rounded-xl bg-background/40 backdrop-blur-sm flex items-center justify-center shadow-sm"
+                >
                   <t.icon className={`w-5 h-5 ${t.ring}`} strokeWidth={2.2} />
-                </div>
+                </motion.div>
                 <div>
                   <p className="text-[16px] font-semibold text-foreground tracking-tight">{t.label}</p>
                   <p className="text-[12px] text-muted-foreground mt-0.5">{t.sub}</p>
                 </div>
               </div>
-            </button>
+            </motion.button>
           ))}
-        </div>
-      </section>
+        </motion.div>
+      </motion.section>
 
       {!isPremium && (
-        <button
+        <motion.button
+          variants={fadeUp}
+          whileHover={{ y: -2, transition: springSnappy }}
+          whileTap={{ scale: 0.98 }}
           onClick={() => setCurrentTab("premium")}
-          className="w-full mt-6 py-4 px-5 rounded-2xl bg-card flex items-center gap-3 animate-fade-in active:bg-secondary/40 transition-colors"
-          style={{ animationDelay: "300ms" }}
+          className="w-full mt-6 py-4 px-5 rounded-2xl bg-card border border-border/40 flex items-center gap-3"
         >
           <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
             <span className="text-[13px] font-bold text-primary">Pro</span>
@@ -106,9 +137,9 @@ const HomeScreen = () => {
             <p className="text-[13px] text-muted-foreground">Desbloqueie tudo</p>
           </div>
           <ChevronRight className="w-4 h-4 text-primary" />
-        </button>
+        </motion.button>
       )}
-    </div>
+    </motion.div>
   );
 };
 
