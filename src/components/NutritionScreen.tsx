@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useApp } from "@/contexts/AppContext";
-import { Loader2, RotateCcw, Plus, Minus } from "lucide-react";
+import { Loader2, RotateCcw, Plus, Minus, Pencil, BookOpen, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSavedPlan } from "@/hooks/useSavedPlan";
+import NutritionWizard, { type NutritionPreferences } from "./nutrition/NutritionWizard";
+import MealEditor, { type EditableMeal } from "./nutrition/MealEditor";
+import RecipesSection from "./nutrition/RecipesSection";
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/evo-ai-chat`;
 
@@ -15,17 +18,17 @@ interface NutritionPlan {
     fat: { grams: number; percentage: number };
   };
   waterLiters: number;
-  meals: {
-    name: string;
-    time: string;
-    calories: number;
-    foods: string[];
-    protein: number;
-    carbs: number;
-    fat: number;
-  }[];
+  meals: EditableMeal[];
   tips: string[];
+  preferences?: NutritionPreferences;
 }
+
+const SOURCES = [
+  "Diretrizes da Sociedade Brasileira de Nutrição Esportiva",
+  "International Society of Sports Nutrition (ISSN)",
+  "Academy of Nutrition and Dietetics",
+  "Tabela TACO — UNICAMP",
+];
 
 const NutritionScreen = () => {
   const { userProfile } = useApp();
@@ -33,26 +36,37 @@ const NutritionScreen = () => {
   const [nutritionPlan, setNutritionPlan] = useState<NutritionPlan | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateError, setGenerateError] = useState("");
+  const [thinkingStep, setThinkingStep] = useState(0);
+  const [editingIdx, setEditingIdx] = useState<number | null>(null);
+  const [adding, setAdding] = useState(false);
 
   const saved = useSavedPlan("nutrition");
 
   useEffect(() => {
     if (saved.plan && !nutritionPlan) {
-      const data = saved.plan.plan_data;
-      if (data.dailyCalories) setNutritionPlan(data as NutritionPlan);
+      const data = saved.plan.plan_data as any;
+      if (data?.dailyCalories) setNutritionPlan(data as NutritionPlan);
     }
   }, [saved.plan]);
 
-  const generateNutritionPlan = async () => {
+  // Discreet "thinking" rotation while generating
+  useEffect(() => {
+    if (!isGenerating) return;
+    const id = setInterval(() => setThinkingStep((s) => (s + 1) % 4), 1800);
+    return () => clearInterval(id);
+  }, [isGenerating]);
+
+  const generateNutritionPlan = async (prefs: NutritionPreferences) => {
     setIsGenerating(true);
     setGenerateError("");
+    setThinkingStep(0);
     try {
       const res = await fetch(CHAT_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           mode: "generate-nutrition",
-          userProfile,
+          userProfile: { ...userProfile, ...prefs },
           messages: [{ role: "user", content: "Gere meu plano nutricional personalizado completo." }],
         }),
       });
@@ -60,14 +74,40 @@ const NutritionScreen = () => {
       const data = await res.json();
       const parsed = JSON.parse(data.result);
       if (parsed.dailyCalories) {
-        setNutritionPlan(parsed);
-        await saved.savePlan(parsed.planName || "Plano Nutricional", `${parsed.dailyCalories} kcal/dia`, parsed);
+        const planWithPrefs = { ...parsed, preferences: prefs };
+        setNutritionPlan(planWithPrefs);
+        await saved.savePlan(parsed.planName || "Plano Nutricional", `${parsed.dailyCalories} kcal/dia`, planWithPrefs);
       }
     } catch {
-      setGenerateError("Erro ao gerar plano nutricional. Tente novamente.");
+      setGenerateError("Não conseguimos gerar agora. Tente novamente em alguns segundos.");
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const persist = async (updated: NutritionPlan) => {
+    setNutritionPlan(updated);
+    await saved.savePlan(updated.planName, `${updated.dailyCalories} kcal/dia`, updated);
+  };
+
+  const updateMeal = async (idx: number, meal: EditableMeal) => {
+    if (!nutritionPlan) return;
+    const meals = nutritionPlan.meals.map((m, i) => (i === idx ? meal : m));
+    await persist({ ...nutritionPlan, meals });
+    setEditingIdx(null);
+  };
+
+  const deleteMeal = async (idx: number) => {
+    if (!nutritionPlan) return;
+    const meals = nutritionPlan.meals.filter((_, i) => i !== idx);
+    await persist({ ...nutritionPlan, meals });
+    setEditingIdx(null);
+  };
+
+  const addMeal = async (meal: EditableMeal) => {
+    if (!nutritionPlan) return;
+    await persist({ ...nutritionPlan, meals: [...nutritionPlan.meals, meal] });
+    setAdding(false);
   };
 
   const resetPlan = async () => {
@@ -77,58 +117,57 @@ const NutritionScreen = () => {
 
   const waterGoal = nutritionPlan ? Math.round(nutritionPlan.waterLiters * 4) : 10;
 
+  // ============ Loading state with discreet "AI working" feedback ============
+  if (isGenerating) {
+    const phases = [
+      "Calculando suas calorias diárias…",
+      "Distribuindo proteína, carbo e gordura…",
+      "Selecionando alimentos da Tabela TACO…",
+      "Validando com diretrizes esportivas…",
+    ];
+    return (
+      <div className="pb-28 px-5 pt-20 max-w-lg mx-auto text-center">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-5 animate-pulse">
+          <Sparkles className="w-7 h-7 text-primary" />
+        </div>
+        <h2 className="text-[24px] font-bold text-foreground tracking-[-0.02em] mb-2">Montando seu plano</h2>
+        <p className="text-[14px] text-muted-foreground mb-8 transition-opacity" key={thinkingStep}>
+          {phases[thinkingStep]}
+        </p>
+        <div className="bg-card rounded-2xl p-5 text-left">
+          <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-3">Fontes consultadas</p>
+          <ul className="space-y-1.5">
+            {SOURCES.map((s) => (
+              <li key={s} className="text-[13px] text-foreground flex gap-2">
+                <span className="text-primary">·</span><span>{s}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    );
+  }
+
+  // ============ Wizard (no plan yet) ============
   if (!nutritionPlan) {
     return (
       <div className="pb-28 px-5 pt-8 max-w-lg mx-auto">
-        <h1 className="text-[32px] font-bold text-foreground tracking-[-0.03em] mb-10 animate-fade-in">Nutrição</h1>
-
+        <h1 className="text-[32px] font-bold text-foreground tracking-[-0.03em] mb-8 animate-fade-in">Nutrição</h1>
         {saved.loading ? (
-          <div className="flex flex-col items-center py-16 gap-3">
+          <div className="flex flex-col items-center py-16">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <div className="animate-fade-in">
-            <h2 className="text-[22px] font-semibold text-foreground tracking-[-0.02em] mb-2">
-              Crie sua dieta
-            </h2>
-            <p className="text-[15px] text-muted-foreground mb-8 leading-relaxed">
-              Calculamos suas calorias e macros baseado no seu perfil e objetivo.
-            </p>
-
-            <div className="bg-card rounded-2xl divide-y divide-border mb-8">
-              {[
-                ["Objetivo", userProfile.goal || "—"],
-                ["Peso", `${userProfile.weight} kg`],
-                ["Altura", `${userProfile.height} cm`],
-                ["Idade", `${userProfile.age} anos`],
-                ["Nível", userProfile.level || "—"],
-              ].map(([k, v]) => (
-                <div key={k} className="flex items-center justify-between px-5 py-3.5">
-                  <span className="text-[15px] text-foreground">{k}</span>
-                  <span className="text-[15px] text-muted-foreground">{v}</span>
-                </div>
-              ))}
-            </div>
-
+          <>
             {generateError && <p className="text-[13px] text-destructive mb-4">{generateError}</p>}
-
-            <Button
-              className="w-full h-12 rounded-xl text-[15px] font-semibold bg-primary text-primary-foreground hover:bg-primary/90"
-              onClick={generateNutritionPlan}
-              disabled={isGenerating}
-            >
-              {isGenerating ? (
-                <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Gerando…</>
-              ) : (
-                "Gerar dieta"
-              )}
-            </Button>
-          </div>
+            <NutritionWizard onComplete={generateNutritionPlan} loading={false} />
+          </>
         )}
       </div>
     );
   }
 
+  // ============ Active plan ============
   const consumed = nutritionPlan.meals.reduce((acc, m) => acc + m.calories, 0);
   const pct = Math.min((consumed / nutritionPlan.dailyCalories) * 100, 100);
 
@@ -141,7 +180,7 @@ const NutritionScreen = () => {
         </button>
       </div>
 
-      {/* Calorie ring — Apple Fitness style */}
+      {/* Calorie ring */}
       <section className="bg-card rounded-2xl p-6 mb-6 animate-fade-in">
         <div className="flex items-center gap-6">
           <div className="relative w-32 h-32 shrink-0">
@@ -210,13 +249,29 @@ const NutritionScreen = () => {
         </div>
       </section>
 
-      {/* Meals */}
-      <h2 className="text-[22px] font-bold text-foreground tracking-[-0.02em] mb-3">Refeições</h2>
+      {/* Meals — editable */}
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-[22px] font-bold text-foreground tracking-[-0.02em]">Refeições</h2>
+        <button
+          onClick={() => setAdding(true)}
+          className="text-[13px] text-primary font-medium flex items-center gap-1 active:opacity-60"
+        >
+          <Plus className="w-3.5 h-3.5" /> Adicionar
+        </button>
+      </div>
       <div className="bg-card rounded-2xl overflow-hidden mb-8">
         {nutritionPlan.meals.map((m, i) => (
-          <div key={i} className={`px-5 py-4 ${i > 0 ? "border-t border-border" : ""} animate-fade-in`} style={{ animationDelay: `${i * 40}ms` }}>
+          <button
+            key={i}
+            onClick={() => setEditingIdx(i)}
+            className={`w-full text-left px-5 py-4 ${i > 0 ? "border-t border-border" : ""} active:bg-secondary/40 transition-colors animate-fade-in`}
+            style={{ animationDelay: `${i * 40}ms` }}
+          >
             <div className="flex items-baseline justify-between mb-1">
-              <p className="text-[16px] font-medium text-foreground">{m.name}</p>
+              <p className="text-[16px] font-medium text-foreground flex items-center gap-2">
+                {m.name}
+                <Pencil className="w-3 h-3 text-muted-foreground" />
+              </p>
               <p className="text-[13px] text-muted-foreground tabular">{m.calories} kcal</p>
             </div>
             <p className="text-[13px] text-muted-foreground mb-2">{m.time}</p>
@@ -226,13 +281,13 @@ const NutritionScreen = () => {
               <span>C {m.carbs}g</span>
               <span>G {m.fat}g</span>
             </div>
-          </div>
+          </button>
         ))}
       </div>
 
       {/* Tips */}
       {nutritionPlan.tips?.length > 0 && (
-        <section className="animate-fade-in">
+        <section className="animate-fade-in mb-8">
           <h2 className="text-[22px] font-bold text-foreground tracking-[-0.02em] mb-3">Dicas</h2>
           <div className="bg-card rounded-2xl divide-y divide-border">
             {nutritionPlan.tips.map((tip, i) => (
@@ -240,6 +295,42 @@ const NutritionScreen = () => {
             ))}
           </div>
         </section>
+      )}
+
+      {/* Recipes section */}
+      <RecipesSection goal={nutritionPlan.preferences?.primaryGoal || (userProfile.goal as any)} />
+
+      {/* Sources footer */}
+      <section className="mt-8 animate-fade-in">
+        <details className="bg-card rounded-2xl px-5 py-4">
+          <summary className="text-[13px] text-muted-foreground cursor-pointer flex items-center gap-2 list-none">
+            <BookOpen className="w-3.5 h-3.5" /> Fontes utilizadas
+          </summary>
+          <ul className="mt-3 space-y-1.5">
+            {SOURCES.map((s) => (
+              <li key={s} className="text-[12px] text-muted-foreground flex gap-2">
+                <span className="text-primary">·</span><span>{s}</span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      </section>
+
+      {/* Editors */}
+      {editingIdx !== null && nutritionPlan.meals[editingIdx] && (
+        <MealEditor
+          meal={nutritionPlan.meals[editingIdx]}
+          onSave={(m) => updateMeal(editingIdx, m)}
+          onClose={() => setEditingIdx(null)}
+          onDelete={() => deleteMeal(editingIdx)}
+        />
+      )}
+      {adding && (
+        <MealEditor
+          meal={{ name: "Nova refeição", time: "12:00", calories: 0, foods: [], protein: 0, carbs: 0, fat: 0 }}
+          onSave={addMeal}
+          onClose={() => setAdding(false)}
+        />
       )}
     </div>
   );
