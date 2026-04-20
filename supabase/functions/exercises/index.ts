@@ -159,20 +159,14 @@ serve(async (req) => {
       );
     }
 
-    // 2) Busca direto da OSS API
-    let path: string;
-    if (search) {
-      path = `/exercises/search?q=${encodeURIComponent(search)}&limit=${limit}`;
-    } else if (bodyPart) {
-      path = `/bodyparts/${encodeURIComponent(bodyPart)}/exercises?limit=${limit}`;
-    } else if (target) {
-      path = `/muscles/${encodeURIComponent(target)}/exercises?limit=${limit}`;
-    } else {
-      path = `/exercises?limit=${limit}`;
-    }
-
-    const raw = await fetchOss(path);
-    const normalized = raw.slice(0, limit).map(normalize);
+    // 2) Busca da OSS API filtrando no servidor (a API ignora filtros nos query params)
+    const raw = await fetchAndFilter({
+      bodyPart: bodyPart ?? undefined,
+      target: target ?? undefined,
+      search: search ?? undefined,
+      needed: limit,
+    });
+    const normalized = raw.map(normalize);
 
     // Cache em background
     cacheExercises(normalized).catch((e) => console.error("cache error:", e));
