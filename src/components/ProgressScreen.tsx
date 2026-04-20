@@ -1,13 +1,19 @@
-import React, { useState } from "react";
-import { Camera, TrendingUp, Activity, Award } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Camera, TrendingUp, Activity, Award, Pencil, Check } from "lucide-react";
 import PremiumGate from "@/components/PremiumGate";
 import { useProgress } from "@/hooks/useProgress";
 import { useAchievements } from "@/hooks/useAchievements";
+import { Input } from "@/components/ui/input";
 
 const ProgressScreen = () => {
   const [tab, setTab] = useState<"overview" | "body" | "achievements">("overview");
   const data = useProgress();
   const { achievements, unlockedCount, totalCount } = useAchievements();
+  const [weeklyGoal, setWeeklyGoal] = useState<number>(() => Number(localStorage.getItem("evo_weekly_goal")) || 4);
+  const [editingGoal, setEditingGoal] = useState(false);
+  const [draftGoal, setDraftGoal] = useState(weeklyGoal);
+  useEffect(() => { localStorage.setItem("evo_weekly_goal", String(weeklyGoal)); }, [weeklyGoal]);
+  const goalReachedReal = Math.min(100, Math.round((data.weekWorkouts / Math.max(1, weeklyGoal)) * 100));
 
   const EmptyState = ({ icon: Icon, title, hint }: { icon: typeof Activity; title: string; hint: string }) => (
     <div className="bg-card rounded-2xl py-10 px-5 flex flex-col items-center text-center animate-fade-in">
@@ -90,13 +96,44 @@ const ProgressScreen = () => {
                   ["Treinos", data.weekWorkouts.toString()],
                   ["Corrida", `${data.weekDistanceKm} km`],
                   ["Calorias", data.weekCalories.toLocaleString("pt-BR")],
-                  ["Meta atingida", `${data.weekGoalReached}%`],
                 ].map(([k, v]) => (
                   <div key={k} className="flex items-center justify-between px-5 py-3.5">
                     <span className="text-[15px] text-foreground">{k}</span>
                     <span className="text-[15px] text-foreground tabular font-medium">{v}</span>
                   </div>
                 ))}
+                <div className="flex items-center justify-between px-5 py-3.5 gap-3">
+                  <span className="text-[15px] text-foreground flex items-center gap-2">
+                    Meta semanal
+                    {!editingGoal && (
+                      <button onClick={() => { setDraftGoal(weeklyGoal); setEditingGoal(true); }} className="active:opacity-60">
+                        <Pencil className="w-3 h-3 text-muted-foreground" />
+                      </button>
+                    )}
+                  </span>
+                  {editingGoal ? (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        min={1} max={14}
+                        value={draftGoal}
+                        onChange={(e) => setDraftGoal(Number(e.target.value) || 1)}
+                        className="w-16 h-8 text-right tabular"
+                      />
+                      <span className="text-[13px] text-muted-foreground">treinos</span>
+                      <button
+                        onClick={() => { setWeeklyGoal(Math.max(1, Math.min(14, draftGoal))); setEditingGoal(false); }}
+                        className="w-7 h-7 rounded-full bg-primary flex items-center justify-center active:opacity-60"
+                      >
+                        <Check className="w-3.5 h-3.5 text-primary-foreground" />
+                      </button>
+                    </div>
+                  ) : (
+                    <span className="text-[15px] text-foreground tabular font-medium">
+                      {data.weekWorkouts}/{weeklyGoal} <span className="text-primary text-[13px] ml-1">({goalReachedReal}%)</span>
+                    </span>
+                  )}
+                </div>
               </div>
             )}
           </section>

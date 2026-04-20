@@ -131,17 +131,30 @@ FORMATO DE RESPOSTA - OBRIGATÓRIO JSON:
 
 IMPORTANTE: Retorne APENAS o JSON, nada mais. Use exercícios REAIS e COMPROVADOS.`;
     } else if (mode === "generate-nutrition") {
-      systemPrompt = `Você é um nutricionista esportivo certificado. Baseado no perfil do usuário, crie um plano nutricional PERSONALIZADO, PRECISO e CIENTÍFICO.
+      const extra = userProfile?.primaryGoal || userProfile?.pace || userProfile?.mealsPerDay
+        ? `
+PREFERÊNCIAS DA SESSÃO (responda obedecendo a estas):
+- Objetivo principal: ${userProfile.primaryGoal || userProfile.goal}
+- Ritmo desejado: ${userProfile.pace || "moderado"}
+- Restrições alimentares: ${(userProfile.restrictions || []).join(", ") || "nenhuma"}
+- Refeições por dia: ${userProfile.mealsPerDay || 4}
+- Orçamento: ${userProfile.budget || "intermediário"}
+`
+        : "";
+
+      systemPrompt = `Você é um nutricionista esportivo certificado. Use métodos científicos validados e a Tabela TACO (UNICAMP) para alimentos brasileiros. Suas referências: International Society of Sports Nutrition, Academy of Nutrition and Dietetics, Sociedade Brasileira de Nutrição Esportiva.
 
 ${profileContext}
+${extra}
 
 INSTRUÇÕES OBRIGATÓRIAS:
-1. Calcule a TMB (Taxa Metabólica Basal) usando Harris-Benedict com os dados reais.
-2. Calcule o GET (Gasto Energético Total) baseado no nível de atividade.
-3. Ajuste calorias ao objetivo: déficit para emagrecer (-300 a -500kcal), superávit para ganhar massa (+200 a +400kcal).
-4. Distribua macros adequadamente: proteína (1.6-2.2g/kg para hipertrofia), carboidratos e gorduras.
-5. Crie refeições REAIS, acessíveis e práticas para brasileiros.
-6. Inclua horários sugeridos.
+1. Calcule a TMB usando Mifflin-St Jeor (mais preciso que Harris-Benedict).
+2. Calcule o GET multiplicando pelo fator de atividade adequado.
+3. Ajuste calorias ao ritmo: suave (±200kcal), moderado (±400kcal), acelerado (±600kcal). Direção depende do objetivo.
+4. Distribua macros: proteína 1.6-2.2g/kg para hipertrofia/perda; carbo conforme atividade; gordura mínimo 0.8g/kg.
+5. Crie EXATAMENTE o número de refeições solicitado em "mealsPerDay". Inclua horários realistas.
+6. Respeite restrições alimentares e orçamento. Use alimentos brasileiros acessíveis.
+7. Seja PRECISO nos macros e calorias por refeição — eles devem somar perto do total diário.
 
 FORMATO DE RESPOSTA - OBRIGATÓRIO JSON:
 Responda APENAS com um JSON válido neste formato exato:
@@ -165,10 +178,10 @@ Responda APENAS com um JSON válido neste formato exato:
       "fat": 15
     }
   ],
-  "tips": ["Dica 1", "Dica 2"]
+  "tips": ["Dica 1", "Dica 2", "Dica 3"]
 }
 
-IMPORTANTE: Retorne APENAS o JSON, nada mais. Use dados REAIS e PRECISOS baseados em ciência nutricional.`;
+IMPORTANTE: Retorne APENAS o JSON válido, sem markdown, sem texto antes ou depois.`;
     } else {
       systemPrompt = `Você é o EvoAI, um personal trainer virtual inteligente e amigável do app EVOCORE. Você é como um amigo especialista em fitness que realmente se importa com o progresso do usuário.
 
