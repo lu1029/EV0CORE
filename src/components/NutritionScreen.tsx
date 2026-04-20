@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useApp } from "@/contexts/AppContext";
 import { Loader2, RotateCcw, Plus, Minus, Pencil, BookOpen, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import { useSavedPlan } from "@/hooks/useSavedPlan";
 import NutritionWizard, { type NutritionPreferences } from "./nutrition/NutritionWizard";
 import MealEditor, { type EditableMeal } from "./nutrition/MealEditor";
 import RecipesSection from "./nutrition/RecipesSection";
+import { fadeUp, stagger, staggerFast, springSnappy, easeApple } from "@/lib/motion";
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/evo-ai-chat`;
 
@@ -172,25 +174,36 @@ const NutritionScreen = () => {
   const pct = Math.min((consumed / nutritionPlan.dailyCalories) * 100, 100);
 
   return (
-    <div className="pb-28 px-5 pt-8 max-w-lg mx-auto">
-      <div className="flex items-end justify-between mb-8 animate-fade-in">
+    <motion.div
+      className="pb-28 px-5 pt-8 max-w-lg mx-auto"
+      variants={stagger}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.div variants={fadeUp} className="flex items-end justify-between mb-8">
         <h1 className="text-[32px] font-bold text-foreground tracking-[-0.03em]">Nutrição</h1>
         <button onClick={resetPlan} className="text-[13px] text-muted-foreground flex items-center gap-1 active:opacity-60">
           <RotateCcw className="w-3.5 h-3.5" /> Refazer
         </button>
-      </div>
+      </motion.div>
 
       {/* Calorie ring */}
-      <section className="bg-card rounded-2xl p-6 mb-6 animate-fade-in">
+      <motion.section
+        variants={fadeUp}
+        whileHover={{ y: -2, transition: springSnappy }}
+        className="bg-card rounded-2xl p-6 mb-6 border border-border/40"
+      >
         <div className="flex items-center gap-6">
           <div className="relative w-32 h-32 shrink-0">
             <svg className="w-32 h-32 -rotate-90" viewBox="0 0 100 100">
               <circle cx="50" cy="50" r="44" stroke="hsl(var(--secondary))" strokeWidth="6" fill="none" />
-              <circle
+              <motion.circle
                 cx="50" cy="50" r="44"
                 stroke="hsl(var(--primary))" strokeWidth="6" fill="none"
-                strokeDasharray={`${(pct / 100) * 276} 276`}
                 strokeLinecap="round"
+                initial={{ strokeDasharray: "0 276" }}
+                animate={{ strokeDasharray: `${(pct / 100) * 276} 276` }}
+                transition={{ duration: 1, ease: easeApple, delay: 0.2 }}
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -203,20 +216,25 @@ const NutritionScreen = () => {
               { label: "Proteína", g: nutritionPlan.macros.protein.grams, pct: nutritionPlan.macros.protein.percentage },
               { label: "Carbos", g: nutritionPlan.macros.carbs.grams, pct: nutritionPlan.macros.carbs.percentage },
               { label: "Gordura", g: nutritionPlan.macros.fat.grams, pct: nutritionPlan.macros.fat.percentage },
-            ].map((m) => (
+            ].map((m, i) => (
               <div key={m.label}>
                 <div className="flex items-baseline justify-between mb-1.5">
                   <span className="text-[13px] text-muted-foreground">{m.label}</span>
                   <span className="text-[13px] text-foreground tabular font-medium">{m.g}g</span>
                 </div>
                 <div className="h-1 bg-secondary rounded-full overflow-hidden">
-                  <div className="h-full bg-primary rounded-full" style={{ width: `${m.pct}%` }} />
+                  <motion.div
+                    className="h-full bg-primary rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${m.pct}%` }}
+                    transition={{ duration: 0.8, ease: easeApple, delay: 0.3 + i * 0.1 }}
+                  />
                 </div>
               </div>
             ))}
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* Water */}
       <section className="bg-card rounded-2xl p-5 mb-8 animate-fade-in">
@@ -259,13 +277,15 @@ const NutritionScreen = () => {
           <Plus className="w-3.5 h-3.5" /> Adicionar
         </button>
       </div>
-      <div className="bg-card rounded-2xl overflow-hidden mb-8">
+      <motion.div variants={staggerFast} initial="hidden" animate="visible" className="bg-card rounded-2xl overflow-hidden mb-8 border border-border/40">
         {nutritionPlan.meals.map((m, i) => (
-          <button
+          <motion.button
             key={i}
+            variants={fadeUp}
+            whileHover={{ x: 4, transition: springSnappy }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => setEditingIdx(i)}
-            className={`w-full text-left px-5 py-4 ${i > 0 ? "border-t border-border" : ""} active:bg-secondary/40 transition-colors animate-fade-in`}
-            style={{ animationDelay: `${i * 40}ms` }}
+            className={`w-full text-left px-5 py-4 ${i > 0 ? "border-t border-border" : ""} active:bg-secondary/40 transition-colors`}
           >
             <div className="flex items-baseline justify-between mb-1">
               <p className="text-[16px] font-medium text-foreground flex items-center gap-2">
@@ -281,9 +301,9 @@ const NutritionScreen = () => {
               <span>C {m.carbs}g</span>
               <span>G {m.fat}g</span>
             </div>
-          </button>
+          </motion.button>
         ))}
-      </div>
+      </motion.div>
 
       {/* Tips */}
       {nutritionPlan.tips?.length > 0 && (
@@ -332,7 +352,7 @@ const NutritionScreen = () => {
           onClose={() => setAdding(false)}
         />
       )}
-    </div>
+    </motion.div>
   );
 };
 
