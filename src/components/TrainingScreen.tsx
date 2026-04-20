@@ -157,17 +157,27 @@ const TrainingScreen = () => {
   const savedLoading = tab === "gym" ? gymSaved.loading : homeSaved.loading;
 
   return (
-    <div className="pb-32 max-w-lg mx-auto relative z-10">
-      {/* Large title — Apple style */}
-      <div className="px-5 pt-6 pb-4 animate-fade-in">
+    <motion.div
+      className="pb-32 max-w-lg mx-auto relative z-10"
+      variants={stagger}
+      initial="hidden"
+      animate="visible"
+    >
+      {/* Large title */}
+      <motion.div variants={fadeUp} className="px-5 pt-6 pb-4">
         <p className="text-[13px] font-medium text-muted-foreground mb-1">Treino</p>
-        <h1 className="text-[34px] leading-tight font-bold tracking-tight text-foreground">
+        <motion.h1
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: easeApple, delay: 0.1 }}
+          className="text-[34px] leading-tight font-bold tracking-tight text-foreground"
+        >
           Hoje
-        </h1>
-      </div>
+        </motion.h1>
+      </motion.div>
 
-      {/* Segmented control — iOS */}
-      <div className="px-5 mb-6 animate-fade-in">
+      {/* Segmented control with sliding pill */}
+      <motion.div variants={fadeUp} className="px-5 mb-6">
         <div className="flex bg-white/[0.06] rounded-[10px] p-[3px]">
           {([
             { key: "gym",     label: "Academia" },
@@ -177,127 +187,171 @@ const TrainingScreen = () => {
             <button
               key={opt.key}
               onClick={() => setTab(opt.key)}
-              className={`flex-1 py-1.5 rounded-[8px] text-[13px] font-semibold transition-all ${
-                tab === opt.key
-                  ? "bg-white/[0.14] text-foreground shadow-[0_1px_0_rgba(0,0,0,0.2)]"
-                  : "text-muted-foreground"
+              className={`relative flex-1 py-1.5 rounded-[8px] text-[13px] font-semibold transition-colors ${
+                tab === opt.key ? "text-foreground" : "text-muted-foreground"
               }`}
             >
-              {opt.label}
+              {tab === opt.key && (
+                <motion.div
+                  layoutId="training-tab-pill"
+                  transition={springSnappy}
+                  className="absolute inset-0 bg-white/[0.14] rounded-[8px] shadow-[0_1px_0_rgba(0,0,0,0.2)]"
+                />
+              )}
+              <span className="relative">{opt.label}</span>
             </button>
           ))}
         </div>
-      </div>
+      </motion.div>
 
-      {tab === "library" ? (
-        <ExerciseLibraryBrowser />
-      ) : (
-      <>
-      {/* Level selector — horizontal blocks (no cards) */}
-      <div className="px-5 mb-2 animate-fade-in">
-        <h2 className="text-[22px] font-bold tracking-tight text-foreground mb-3">Nível</h2>
-        <div className="rounded-2xl bg-card overflow-hidden border border-white/[0.06]">
-          {LEVELS.map((lvl, idx) => {
-            const active = selectedLevel === lvl.key;
-            return (
-              <button
-                key={lvl.key}
-                onClick={() => setSelectedLevel(lvl.key)}
-                className={`w-full flex items-center gap-4 px-5 py-4 text-left transition-colors active:bg-white/[0.04] ${
-                  idx > 0 ? "border-t border-white/[0.06]" : ""
-                }`}
-              >
-                <div className={`w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
-                  active ? "border-primary" : "border-white/20"
-                }`}>
-                  {active && <div className="w-[10px] h-[10px] rounded-full bg-primary" />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[17px] font-semibold text-foreground leading-tight">{lvl.title}</p>
-                  <p className="text-[13px] text-muted-foreground mt-0.5 leading-snug">{lvl.subtitle}</p>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Plan section */}
-      <div className="px-5 pt-8 animate-fade-in">
-        <div className="flex items-end justify-between mb-3">
-          <h2 className="text-[22px] font-bold tracking-tight text-foreground">
-            {currentPlan ? "Treinos" : "Seu plano"}
-          </h2>
-          {currentPlan && (
-            <button
-              onClick={onGenerate}
-              disabled={loading}
-              className="text-[15px] text-primary font-medium active:opacity-60 transition-opacity disabled:opacity-40"
-            >
-              Refazer
-            </button>
-          )}
-        </div>
-
-        {savedLoading ? (
-          <div className="flex items-center gap-3 py-10 justify-center">
-            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-            <p className="text-[13px] text-muted-foreground">Carregando…</p>
-          </div>
-        ) : !currentPlan ? (
-          <div className="rounded-2xl bg-card border border-white/[0.06] p-5">
-            <p className="text-[15px] text-foreground leading-relaxed">
-              {tab === "gym"
-                ? "Vamos montar seu plano com base no seu perfil e nível."
-                : "Treino em casa adaptado, sem equipamentos."}
-            </p>
-            <p className="text-[13px] text-muted-foreground mt-1">
-              {currentName || `Nível selecionado: ${LEVELS.find(l => l.key === selectedLevel)?.title}`}
-            </p>
-
-            {error && <p className="text-[13px] text-destructive mt-3">{error}</p>}
-
-            <button
-              onClick={onGenerate}
-              disabled={loading}
-              className="mt-4 w-full h-12 rounded-full bg-primary text-primary-foreground font-semibold text-[15px] flex items-center justify-center gap-2 active:opacity-80 transition-opacity disabled:opacity-50"
-            >
-              {loading ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Gerando…</>
-              ) : (
-                <><Plus className="w-4 h-4" /> Gerar plano</>
-              )}
-            </button>
-          </div>
+      <AnimatePresence mode="wait">
+        {tab === "library" ? (
+          <motion.div
+            key="library"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.25, ease: easeApple }}
+          >
+            <ExerciseLibraryBrowser />
+          </motion.div>
         ) : (
-          <div className="rounded-2xl bg-card border border-white/[0.06] overflow-hidden">
-            {Object.entries(currentPlan).map(([workoutName, exercises], idx, arr) => {
-              const totalMin = exercises.length * 7;
-              return (
-                <button
-                  key={workoutName}
-                  onClick={() => startWorkout(workoutName, currentPlan)}
-                  className={`w-full flex items-center gap-4 px-5 py-4 text-left transition-colors active:bg-white/[0.04] ${
-                    idx > 0 ? "border-t border-white/[0.06]" : ""
-                  }`}
-                  style={{ animationDelay: `${idx * 40}ms` }}
+          <motion.div
+            key={tab}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.25, ease: easeApple }}
+          >
+            <motion.div variants={fadeUp} className="px-5 mb-2">
+              <h2 className="text-[22px] font-bold tracking-tight text-foreground mb-3">Nível</h2>
+              <div className="rounded-2xl bg-card overflow-hidden border border-white/[0.06]">
+                {LEVELS.map((lvl, idx) => {
+                  const active = selectedLevel === lvl.key;
+                  return (
+                    <motion.button
+                      key={lvl.key}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setSelectedLevel(lvl.key)}
+                      className={`w-full flex items-center gap-4 px-5 py-4 text-left transition-colors active:bg-white/[0.04] ${
+                        idx > 0 ? "border-t border-white/[0.06]" : ""
+                      }`}
+                    >
+                      <motion.div
+                        animate={{ borderColor: active ? "hsl(var(--primary))" : "hsl(var(--border))" }}
+                        className="w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center shrink-0"
+                      >
+                        <AnimatePresence>
+                          {active && (
+                            <motion.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              exit={{ scale: 0 }}
+                              transition={springSnappy}
+                              className="w-[10px] h-[10px] rounded-full bg-primary"
+                            />
+                          )}
+                        </AnimatePresence>
+                      </motion.div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[17px] font-semibold text-foreground leading-tight">{lvl.title}</p>
+                        <p className="text-[13px] text-muted-foreground mt-0.5 leading-snug">{lvl.subtitle}</p>
+                      </div>
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </motion.div>
+
+            <motion.div variants={fadeUp} className="px-5 pt-8">
+              <div className="flex items-end justify-between mb-3">
+                <h2 className="text-[22px] font-bold tracking-tight text-foreground">
+                  {currentPlan ? "Treinos" : "Seu plano"}
+                </h2>
+                {currentPlan && (
+                  <button
+                    onClick={onGenerate}
+                    disabled={loading}
+                    className="text-[15px] text-primary font-medium active:opacity-60 transition-opacity disabled:opacity-40"
+                  >
+                    Refazer
+                  </button>
+                )}
+              </div>
+
+              {savedLoading ? (
+                <div className="flex items-center gap-3 py-10 justify-center">
+                  <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                  <p className="text-[13px] text-muted-foreground">Carregando…</p>
+                </div>
+              ) : !currentPlan ? (
+                <motion.div
+                  whileHover={{ y: -2, transition: springSnappy }}
+                  className="rounded-2xl bg-card border border-white/[0.06] p-5"
                 >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[17px] font-semibold text-foreground leading-tight truncate">{workoutName}</p>
-                    <p className="text-[13px] text-muted-foreground mt-1">
-                      {exercises.length} exercícios · {totalMin} min · {LEVELS.find(l => l.key === selectedLevel)?.title}
-                    </p>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
-                </button>
-              );
-            })}
-          </div>
+                  <p className="text-[15px] text-foreground leading-relaxed">
+                    {tab === "gym"
+                      ? "Vamos montar seu plano com base no seu perfil e nível."
+                      : "Treino em casa adaptado, sem equipamentos."}
+                  </p>
+                  <p className="text-[13px] text-muted-foreground mt-1">
+                    {currentName || `Nível selecionado: ${LEVELS.find(l => l.key === selectedLevel)?.title}`}
+                  </p>
+
+                  {error && <p className="text-[13px] text-destructive mt-3">{error}</p>}
+
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.97 }}
+                    transition={springSnappy}
+                    onClick={onGenerate}
+                    disabled={loading}
+                    className="mt-4 w-full h-12 rounded-full bg-primary text-primary-foreground font-semibold text-[15px] flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    {loading ? (
+                      <><Loader2 className="w-4 h-4 animate-spin" /> Gerando…</>
+                    ) : (
+                      <><Plus className="w-4 h-4" /> Gerar plano</>
+                    )}
+                  </motion.button>
+                </motion.div>
+              ) : (
+                <motion.div
+                  variants={staggerFast}
+                  initial="hidden"
+                  animate="visible"
+                  className="rounded-2xl bg-card border border-white/[0.06] overflow-hidden"
+                >
+                  {Object.entries(currentPlan).map(([workoutName, exercises], idx) => {
+                    const totalMin = exercises.length * 7;
+                    return (
+                      <motion.button
+                        key={workoutName}
+                        variants={fadeUp}
+                        whileHover={{ x: 4, transition: springSnappy }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => startWorkout(workoutName, currentPlan)}
+                        className={`w-full flex items-center gap-4 px-5 py-4 text-left transition-colors active:bg-white/[0.04] ${
+                          idx > 0 ? "border-t border-white/[0.06]" : ""
+                        }`}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[17px] font-semibold text-foreground leading-tight truncate">{workoutName}</p>
+                          <p className="text-[13px] text-muted-foreground mt-1">
+                            {exercises.length} exercícios · {totalMin} min · {LEVELS.find(l => l.key === selectedLevel)?.title}
+                          </p>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+                      </motion.button>
+                    );
+                  })}
+                </motion.div>
+              )}
+            </motion.div>
+          </motion.div>
         )}
-      </div>
-      </>
-      )}
-    </div>
+      </AnimatePresence>
+    </motion.div>
   );
 };
 
