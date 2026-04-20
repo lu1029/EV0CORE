@@ -30,38 +30,51 @@ function playSuccessChime() {
   }
 }
 
-function fireConfetti() {
+function fireConfetti(): () => void {
   const duration = 2500;
   const end = Date.now() + duration;
   const colors = ["#00C853", "#69F0AE", "#FFD700", "#ffffff"];
 
   // Initial burst
-  confetti({
-    particleCount: 120,
-    spread: 90,
-    origin: { y: 0.6 },
-    colors,
-    scalar: 1.1,
-  });
+  try {
+    confetti({
+      particleCount: 120,
+      spread: 90,
+      origin: { y: 0.6 },
+      colors,
+      scalar: 1.1,
+    });
+  } catch {
+    /* ignore */
+  }
 
   // Side cannons
   const interval = window.setInterval(() => {
-    if (Date.now() > end) return clearInterval(interval);
-    confetti({
-      particleCount: 4,
-      angle: 60,
-      spread: 60,
-      origin: { x: 0, y: 0.7 },
-      colors,
-    });
-    confetti({
-      particleCount: 4,
-      angle: 120,
-      spread: 60,
-      origin: { x: 1, y: 0.7 },
-      colors,
-    });
+    if (Date.now() > end) {
+      clearInterval(interval);
+      return;
+    }
+    try {
+      confetti({
+        particleCount: 4,
+        angle: 60,
+        spread: 60,
+        origin: { x: 0, y: 0.7 },
+        colors,
+      });
+      confetti({
+        particleCount: 4,
+        angle: 120,
+        spread: 60,
+        origin: { x: 1, y: 0.7 },
+        colors,
+      });
+    } catch {
+      clearInterval(interval);
+    }
   }, 220);
+
+  return () => clearInterval(interval);
 }
 
 const benefits = [
@@ -77,6 +90,12 @@ export default function CheckoutReturn() {
   const navigate = useNavigate();
   const [soundOn, setSoundOn] = useState(true);
   const triggered = useRef(false);
+  const stopConfettiRef = useRef<(() => void) | null>(null);
+
+  const goHome = () => {
+    stopConfettiRef.current?.();
+    navigate("/home", { replace: true });
+  };
 
   useEffect(() => {
     if (!sessionId || triggered.current) return;
@@ -84,16 +103,20 @@ export default function CheckoutReturn() {
 
     // Slight delay so the user sees the screen render first
     const t = setTimeout(() => {
-      fireConfetti();
+      stopConfettiRef.current = fireConfetti();
       if (soundOn) playSuccessChime();
     }, 250);
 
-    return () => clearTimeout(t);
+    return () => {
+      clearTimeout(t);
+      stopConfettiRef.current?.();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
 
   const replay = () => {
-    fireConfetti();
+    stopConfettiRef.current?.();
+    stopConfettiRef.current = fireConfetti();
     if (soundOn) playSuccessChime();
   };
 
