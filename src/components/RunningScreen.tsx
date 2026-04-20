@@ -373,18 +373,52 @@ const RunningScreen = () => {
           <h2 className="text-foreground font-heading font-bold text-base">{selectedActivity}</h2>
           <button className="text-muted-foreground"><Share2 className="w-5 h-5" /></button>
         </div>
-        <div className="w-full h-72 relative bg-secondary">
-          {routePath.length > 1 ? (
-            <div ref={summaryMapRef} className="w-full h-full" />
-          ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center gap-2 px-6 text-center">
-              <Route className="w-8 h-8 text-muted-foreground/40" />
-              <p className="text-muted-foreground text-sm">Rota não disponível</p>
-              <p className="text-muted-foreground/70 text-xs">
-                Sinal GPS fraco ou movimento insuficiente. Tente em ambiente externo com boa visada do céu.
-              </p>
-            </div>
-          )}
+        {/* Mode selector tabs */}
+        <ActivityModeTabs mode={summaryMode} onChange={setSummaryMode} hasPhoto={!!summaryPhotoUrl} />
+
+        {/* Mode viewport */}
+        <div className="w-full h-72 relative bg-secondary mt-3 overflow-hidden">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={summaryMode}
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.02 }}
+              transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+              className="absolute inset-0"
+            >
+              {summaryMode === "map" && (
+                routePath.length > 1 ? (
+                  <div ref={summaryMapRef} className="w-full h-full" />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center gap-2 px-6 text-center">
+                    <Route className="w-8 h-8 text-muted-foreground/40" />
+                    <p className="text-muted-foreground text-sm">Rota não disponível</p>
+                    <p className="text-muted-foreground/70 text-xs">
+                      Sinal GPS fraco ou movimento insuficiente. Tente em ambiente externo com boa visada do céu.
+                    </p>
+                  </div>
+                )
+              )}
+              {summaryMode === "animation" && <ActivityAnimationMode points={routePath} />}
+              {summaryMode === "photo" && (
+                savedRunId ? (
+                  <ActivityPhotoMode
+                    runId={savedRunId}
+                    photoUrl={summaryPhotoUrl}
+                    points={routePath}
+                    onPhotoChange={setSummaryPhotoUrl}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center px-6 text-center">
+                    <p className="text-muted-foreground text-sm">
+                      Salve a atividade primeiro para adicionar uma foto
+                    </p>
+                  </div>
+                )
+              )}
+            </motion.div>
+          </AnimatePresence>
         </div>
         <div className="px-4 -mt-5 relative z-10">
           <Button
