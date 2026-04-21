@@ -5,6 +5,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { Loader2, ChevronRight, Plus, Sparkles, Pencil, Lock } from "lucide-react";
 import ActiveWorkout from "./training/ActiveWorkout";
 import ExerciseLibraryBrowser from "./training/ExerciseLibraryBrowser";
+import CommunityPlanCard from "./training/CommunityPlanCard";
 import WorkoutBuilder from "./training/WorkoutBuilder";
 import type { Exercise } from "./training/ExerciseCard";
 import { getGifUrl } from "./training/homeExerciseGifs";
@@ -361,53 +362,25 @@ const TrainingScreen = () => {
               </>
             )}
 
-            {/* Treinos prontos curados */}
+            {/* Treinos da Comunidade — cards estilo feed (foto + autor verificado + nível + sessões) */}
             <motion.div variants={fadeUp} className="px-5 pt-8">
               <div className="flex items-end justify-between mb-3">
-                <h2 className="text-[22px] font-bold tracking-tight text-foreground">Prontos para começar</h2>
+                <h2 className="text-[22px] font-bold tracking-tight text-foreground">Treinos da Comunidade</h2>
                 <span className="text-[13px] text-muted-foreground">{LEVELS.find(l => l.key === selectedLevel)?.title}</span>
               </div>
 
-              <motion.div variants={staggerFast} initial="hidden" animate="visible" className="space-y-3">
+              <motion.div variants={staggerFast} initial="hidden" animate="visible" className="space-y-2.5">
                 {curatedForTab.map((curated) => (
-                  <motion.div
-                    key={curated.id}
-                    variants={fadeUp}
-                    className="rounded-2xl bg-card border border-white/[0.06] overflow-hidden"
-                  >
-                    <div className="px-5 pt-4 pb-2 flex items-start justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[17px] font-semibold text-foreground leading-tight">{curated.name}</p>
-                        <p className="text-[13px] text-muted-foreground mt-0.5">{curated.description}</p>
-                      </div>
-                      <button
-                        onClick={() => openBuilderFromCurated(curated)}
-                        className="text-[12px] font-medium text-primary px-2 py-1 rounded-full bg-primary/10 inline-flex items-center gap-1 shrink-0"
-                        title={isPremium ? "Duplicar e editar" : "Premium"}
-                      >
-                        {isPremium ? <Pencil className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
-                        Editar
-                      </button>
-                    </div>
-                    <div>
-                      {Object.entries(curated.workouts).map(([wname, exs], idx) => (
-                        <button
-                          key={wname}
-                          onClick={() => startCuratedWorkout(curated, wname)}
-                          className={`w-full flex items-center gap-3 px-5 py-3 text-left active:bg-white/[0.04] ${
-                            idx === 0 ? "border-t border-white/[0.06]" : "border-t border-white/[0.04]"
-                          }`}
-                        >
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[15px] font-semibold text-foreground truncate">{wname}</p>
-                            <p className="text-[12px] text-muted-foreground mt-0.5">
-                              {exs.length} exercícios · ~{exs.length * 7} min
-                            </p>
-                          </div>
-                          <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-                        </button>
-                      ))}
-                    </div>
+                  <motion.div key={curated.id} variants={fadeUp}>
+                    <CommunityPlanCard
+                      plan={curated}
+                      isPremium={isPremium}
+                      onStart={(wname, exs) => {
+                        setActiveExercises(exs);
+                        setActiveWorkout(wname);
+                      }}
+                      onEdit={() => openBuilderFromCurated(curated)}
+                    />
                   </motion.div>
                 ))}
               </motion.div>

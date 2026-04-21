@@ -30,8 +30,16 @@ function slug(s: string) {
     .slice(0, 80);
 }
 
-/** Prompt otimizado para ilustração técnica fiel ao movimento do exercício. */
+/** Prompt otimizado. Suporta dois modos:
+ *   - exercício (padrão): demonstração técnica do movimento
+ *   - capa de plano (prefixo "[plan:...]"): hero photo motivacional do plano */
 function buildPrompt(name: string, hint?: string) {
+  const planMatch = name.match(/^\[plan:[^\]]+\]\s*(.+)$/i);
+  if (planMatch) {
+    const theme = planMatch[1];
+    const muscleHint = hint ? `, focused on ${hint}` : "";
+    return `Cinematic high-end fitness magazine cover photo: ${theme}${muscleHint}. Single fit athlete in dynamic powerful pose, dramatic studio lighting with subtle blue and purple accent rim light, modern dark background with soft gradient, shallow depth of field, professional photography, ultra sharp focus, hyperrealistic muscle definition, athletic apparel. Premium fitness brand aesthetic, 8k detail. No text, no logos, no watermarks, no graphics overlays, single still image.`;
+  }
   const muscleHint = hint ? `, emphasizing the ${hint} muscles being worked` : "";
   return `Photorealistic professional fitness photography of a single fit athlete demonstrating the exercise "${name}" with perfect technical form${muscleHint}. Full body visible, side angle showing correct posture and movement, clean modern gym environment with soft natural lighting. Sharp focus on the athlete, anatomically accurate, realistic muscles and proportions, proper equipment if needed. Magazine quality, 8k detail, no text, no watermark, no logos, no graphics overlays, no multiple frames, single still image.`;
 }
