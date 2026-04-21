@@ -6,7 +6,20 @@ const IMG = (id: string) => `https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-d
 export type Level = "iniciante" | "intermediario" | "avancado";
 export type Mode = "gym" | "home";
 
-export interface CuratedPlan {
+export interface PlanMeta {
+  /** Texto curto em inglês usado como tema da foto IA da capa. */
+  coverPrompt: string;
+  /** Autor "verificado" exibido no card. */
+  author: string;
+  /** Total de sessões previstas no programa (ex.: 12 = 4 semanas × 3 dias). */
+  sessions: number;
+  /** Duração média de cada sessão em minutos. */
+  durationMin: number;
+  /** Bullets curtos: como executar / progressão / aquecimento. */
+  guidelines: string[];
+}
+
+export interface CuratedPlan extends PlanMeta {
   id: string;
   name: string;
   description: string;
@@ -14,6 +27,14 @@ export interface CuratedPlan {
   mode: Mode;
   workouts: Record<string, Exercise[]>;
 }
+
+const meta = (
+  coverPrompt: string,
+  sessions: number,
+  durationMin: number,
+  guidelines: string[],
+  author = "@evocore",
+): PlanMeta => ({ coverPrompt, author, sessions, durationMin, guidelines });
 
 // Helper: build home exercise with gifKey
 const homeEx = (
