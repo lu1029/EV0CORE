@@ -9,6 +9,24 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Exercise } from "./ExerciseCard";
 import { fadeUp, stagger, springSnappy } from "@/lib/motion";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface WorkoutBuilderProps {
   mode: "gym" | "home";
@@ -91,6 +109,25 @@ const WorkoutBuilder: React.FC<WorkoutBuilderProps> = ({
     const list = [...(workouts[activeWorkout] || [])];
     list.splice(idx, 1);
     setWorkouts({ ...workouts, [activeWorkout]: list });
+  };
+
+  const reorderExercises = (fromIdx: number, toIdx: number) => {
+    const list = workouts[activeWorkout] || [];
+    setWorkouts({ ...workouts, [activeWorkout]: arrayMove(list, fromIdx, toIdx) });
+  };
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 180, tolerance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const from = parseInt(String(active.id).replace("ex-", ""), 10);
+    const to = parseInt(String(over.id).replace("ex-", ""), 10);
+    if (Number.isFinite(from) && Number.isFinite(to)) reorderExercises(from, to);
   };
 
   const addWorkoutDay = () => {
@@ -215,14 +252,22 @@ const WorkoutBuilder: React.FC<WorkoutBuilderProps> = ({
           </div>
         ) : (
           <div className="space-y-2">
-            {currentList.map((ex, idx) => (
-              <ExerciseEditor
-                key={idx}
-                exercise={ex}
-                onChange={(patch) => updateExercise(idx, patch)}
-                onRemove={() => removeExercise(idx)}
-              />
-            ))}
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext
+                items={currentList.map((_, i) => `ex-${i}`)}
+                strategy={verticalListSortingStrategy}
+              >
+                {currentList.map((ex, idx) => (
+                  <SortableExerciseEditor
+                    key={`ex-${idx}`}
+                    id={`ex-${idx}`}
+                    exercise={ex}
+                    onChange={(patch) => updateExercise(idx, patch)}
+                    onRemove={() => removeExercise(idx)}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
             <button
               onClick={() => setShowLibrary(true)}
               className="w-full h-12 rounded-2xl border border-dashed border-white/[0.12] text-[14px] font-medium text-muted-foreground inline-flex items-center justify-center gap-2 active:opacity-60"
@@ -292,39 +337,83 @@ const WorkoutBuilder: React.FC<WorkoutBuilderProps> = ({
   );
 };
 
+const SortableExerciseEditor: React.FC<{
+  id: string;
+  exercise: Exercise;
+  onChange: (patch: Partial<Exercise>) => void;
+  onRemove: () => void;
+}> = ({ id, exercise, onChange, onRemove }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : ("auto" as any),
+    opacity: isDragging ? 0.85 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className={isDragging ? "shadow-2xl shadow-black/40 rounded-2xl" : ""}>
+      <ExerciseEditor
+        exercise={exercise}
+        onChange={onChange}
+        onRemove={onRemove}
+        dragHandleProps={{ ...attributes, ...listeners }}
+      />
+    </div>
+  );
+};
+
 const ExerciseEditor: React.FC<{
   exercise: Exercise;
   onChange: (patch: Partial<Exercise>) => void;
   onRemove: () => void;
-}> = ({ exercise, onChange, onRemove }) => {
+  dragHandleProps?: Record<string, any>;
+}> = ({ exercise, onChange, onRemove, dragHandleProps }) => {
   const [expanded, setExpanded] = useState(false);
 
   return (
     <div className="rounded-2xl bg-card border border-white/[0.06] overflow-hidden">
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center gap-3 p-3 text-left active:bg-white/[0.04]"
-      >
-        {exercise.gifUrl ? (
-          <img src={exercise.gifUrl} alt="" className="w-12 h-12 rounded-lg object-cover bg-black" />
-        ) : (
-          <div className="w-12 h-12 rounded-lg bg-white/[0.06] flex items-center justify-center text-xl">
-            {exercise.emoji}
-          </div>
+      <div className="w-full flex items-center gap-2 p-3">
+        {dragHandleProps && (
+          <button
+            type="button"
+            {...dragHandleProps}
+            aria-label="Arrastar para reordenar"
+            className="p-1.5 -ml-1 text-muted-foreground touch-none cursor-grab active:cursor-grabbing"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <GripVertical className="w-4 h-4" />
+          </button>
         )}
-        <div className="flex-1 min-w-0">
-          <p className="text-[14px] font-semibold truncate">{exercise.name}</p>
-          <p className="text-[12px] text-muted-foreground">
-            {exercise.sets}× {exercise.reps} · {exercise.rest}s
-          </p>
-        </div>
         <button
+          type="button"
+          onClick={() => setExpanded(!expanded)}
+          className="flex-1 flex items-center gap-3 text-left active:opacity-70 min-w-0"
+        >
+          {exercise.gifUrl ? (
+            <img src={exercise.gifUrl} alt="" className="w-12 h-12 rounded-lg object-cover bg-black shrink-0" />
+          ) : (
+            <div className="w-12 h-12 rounded-lg bg-white/[0.06] flex items-center justify-center text-xl shrink-0">
+              {exercise.emoji}
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <p className="text-[14px] font-semibold truncate">{exercise.name}</p>
+            <p className="text-[12px] text-muted-foreground">
+              {exercise.sets}× {exercise.reps} · {exercise.rest}s
+            </p>
+          </div>
+        </button>
+        <button
+          type="button"
           onClick={(e) => { e.stopPropagation(); onRemove(); }}
           className="p-2 text-muted-foreground"
+          aria-label="Remover exercício"
         >
           <Trash2 className="w-4 h-4" />
         </button>
-      </button>
+      </div>
       {expanded && (
         <div className="px-3 pb-3 grid grid-cols-3 gap-2 border-t border-white/[0.06] pt-3">
           <Field label="Séries" value={String(exercise.sets)} onChange={(v) => onChange({ sets: parseInt(v) || 1 })} type="number" />
