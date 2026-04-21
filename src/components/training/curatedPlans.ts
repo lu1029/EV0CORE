@@ -237,10 +237,44 @@ export const homePlans: CuratedPlan[] = [
       ],
     },
   },
+  {
+    id: "home-hiit-intermediario",
+    name: "HIIT Queima-gordura",
+    description: "30 minutos intensos. Cardio + força em circuito. 3x na semana.",
+    level: "intermediario",
+    mode: "home",
+    workouts: {
+      "Circuito HIIT — 4 rounds": [
+        homeEx("Burpees", "Full Body", "🔥", 4, "10", 30, "Desça ao chão, flexão, salte com mãos para cima.", "burpee"),
+        homeEx("Agachamento com salto", "Pernas", "🦵", 4, "15", 30, "Explosivo. Aterrise suave.", "agachamento_salto"),
+        homeEx("Mountain climbers", "Cardio/Core", "🏔️", 4, "30s", 30, "Velocidade alta.", "mountain_climber"),
+        homeEx("Flexão", "Peito", "💪", 4, "12", 30, "Forma perfeita, controle.", "flexao"),
+        homeEx("Skater jumps", "Cardio/Pernas", "⛸️", 4, "20", 30, "Salte lateralmente.", "skater"),
+        homeEx("Prancha", "Core", "💪", 4, "30s", 30, "Antebraços, corpo reto.", "prancha"),
+      ],
+    },
+  },
+  {
+    id: "home-upper-intermediario",
+    name: "Upper Body com Mochila",
+    description: "Foco em peito, costas, ombros e braços. 3x na semana.",
+    level: "intermediario",
+    mode: "home",
+    workouts: {
+      "Membros superiores": [
+        homeEx("Flexão", "Peito", "💪", 4, "12-15", 45, "Mãos na largura dos ombros.", "flexao"),
+        homeEx("Remada com mochila", "Costas", "🚣", 4, "12", 45, "Mochila pesada. Tronco 45°.", "remada_curvada_mochila"),
+        homeEx("Pike push-up", "Ombros", "🏋️", 4, "10", 45, "V invertido, desça a cabeça ao chão.", "pike_pushup"),
+        homeEx("Mergulho na cadeira", "Tríceps", "💪", 4, "12", 45, "Cadeira firme, desça até 90°.", "mergulho_cadeira"),
+        homeEx("Rosca com mochila", "Bíceps", "💪", 4, "12", 45, "Mochila pesada, controle total.", "rosca_mochila"),
+        homeEx("Elevação lateral garrafas", "Ombros", "↔️", 3, "15", 30, "Garrafas 2L, suba até altura dos ombros.", "elevacao_lateral_garrafa"),
+      ],
+    },
+  },
   // AVANÇADO
   {
     id: "home-pro-avancado",
-    name: "Em casa — Avançado",
+    name: "Calistenia Avançada",
     description: "Calistenia + mochila pesada. Volume e intensidade altos.",
     level: "avancado",
     mode: "home",
