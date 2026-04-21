@@ -335,9 +335,30 @@ const TrainingScreen = () => {
               </div>
             </motion.div>
 
-            {/* Equipamentos disponíveis (apenas em casa) */}
+            {/* Equipamentos disponíveis + atalho de geração (apenas em casa) */}
             {tab === "home" && (
-              <EquipmentSelector selected={equipment} onChange={setEquipment} />
+              <>
+                <EquipmentSelector selected={equipment} onChange={setEquipment} />
+                <motion.div variants={fadeUp} className="px-5 pt-4">
+                  <button
+                    onClick={generateHomePlan}
+                    disabled={isGeneratingHome}
+                    className="w-full h-12 rounded-full bg-primary text-primary-foreground font-semibold text-[15px] flex items-center justify-center gap-2 disabled:opacity-50 active:opacity-80"
+                  >
+                    {isGeneratingHome ? (
+                      <><Loader2 className="w-4 h-4 animate-spin" /> Gerando treino…</>
+                    ) : (
+                      <><Sparkles className="w-4 h-4" /> Gerar treino com IA</>
+                    )}
+                  </button>
+                  {homeError && (
+                    <p className="text-[13px] text-destructive mt-2 text-center">{homeError}</p>
+                  )}
+                  <p className="text-[12px] text-muted-foreground mt-2 text-center">
+                    Personalizado para o seu nível e itens disponíveis
+                  </p>
+                </motion.div>
+              </>
             )}
 
             {/* Treinos prontos curados */}
