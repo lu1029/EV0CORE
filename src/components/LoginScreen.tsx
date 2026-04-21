@@ -21,12 +21,37 @@ const LoginScreen = () => {
   const [mounted, setMounted] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [customDomainDown, setCustomDomainDown] = useState(false);
 
   useEffect(() => {
     // Staggered entrance animations
     const t1 = setTimeout(() => setMounted(true), 100);
     const t2 = setTimeout(() => setShowForm(true), 800);
     return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []);
+
+  // Detect if the custom domain is reachable. If we're already on the
+  // Lovable domain or localhost, no check is needed.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const host = window.location.hostname;
+    const isCustomDomain = !/lovable\.app$/i.test(host) && !/^localhost$/i.test(host) && host !== "127.0.0.1";
+    if (!isCustomDomain) return;
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 4000);
+    // Probe a tiny static asset on the same origin. If it fails (offline,
+    // ERR_CONNECTION_CLOSED, DNS issue), surface the fallback notice.
+    fetch(`${window.location.origin}/favicon.ico?cb=${Date.now()}`, {
+      method: "HEAD",
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then((r) => { if (!r.ok) setCustomDomainDown(true); })
+      .catch(() => setCustomDomainDown(true))
+      .finally(() => clearTimeout(timeout));
+
+    return () => { clearTimeout(timeout); controller.abort(); };
   }, []);
 
   const passwordStrength = getPasswordStrength(password);
@@ -155,6 +180,20 @@ const LoginScreen = () => {
     </div>
   ) : (
     <div className="space-y-4">
+      {customDomainDown && (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-left animate-fade-in">
+          <p className="text-xs font-semibold text-amber-200">Conexão instável neste domínio</p>
+          <p className="text-[11px] text-amber-100/80 mt-1 leading-snug">
+            Estamos com instabilidade em <span className="font-mono">ev0core.com</span>. Para entrar agora, use o domínio oficial:
+          </p>
+          <a
+            href="https://ev0core.lovable.app"
+            className="inline-block mt-2 text-xs font-semibold text-primary-foreground bg-primary px-3 py-1.5 rounded-lg active:scale-95 transition-transform"
+          >
+            Abrir ev0core.lovable.app →
+          </a>
+        </div>
+      )}
       <div className="text-center mb-4">
         <h2 className="text-2xl font-heading font-bold text-foreground">
           {isSignUp ? "Criar conta" : "Bem-vindo de volta"}
