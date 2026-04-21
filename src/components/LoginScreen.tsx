@@ -5,7 +5,7 @@ import { Mail, Lock, Eye, EyeOff, User, CheckSquare, Square } from "lucide-react
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
-import { getOAuthRedirectUri } from "@/lib/oauthRedirect";
+import { getOAuthRedirectUri, getOAuthRedirectUriCandidates } from "@/lib/oauthRedirect";
 import { validatePassword, getPasswordStrength, validateEmail, sanitizeText } from "@/lib/sanitize";
 import { logSecurityEvent } from "@/lib/auditLog";
 import evocoreLogo from "@/assets/evocore-logo.png";
@@ -22,6 +22,12 @@ const LoginScreen = () => {
   const [showForm, setShowForm] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [customDomainDown, setCustomDomainDown] = useState(false);
+  const [retryState, setRetryState] = useState<{
+    provider: "google" | "apple";
+    failedUri: string;
+    nextUri: string;
+    errorMessage: string;
+  } | null>(null);
 
   useEffect(() => {
     // Staggered entrance animations
