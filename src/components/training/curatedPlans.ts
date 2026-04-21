@@ -162,11 +162,45 @@ export const homePlans: CuratedPlan[] = [
       ],
     },
   },
+  {
+    id: "home-cardio-iniciante",
+    name: "Cardio + Core em Casa",
+    description: "Queima calorias e fortalece o core. Sem impacto, ideal para começar.",
+    level: "iniciante",
+    mode: "home",
+    workouts: {
+      "Cardio leve + Core": [
+        homeEx("Polichinelo", "Cardio", "🤸", 3, "30s", 30, "Salte abrindo pernas e levantando os braços.", "polichinelo"),
+        homeEx("Joelho alto no lugar", "Cardio", "🏃", 3, "30s", 30, "Corra no lugar levando os joelhos à altura do quadril.", "joelho_alto"),
+        homeEx("Mountain climbers lentos", "Core/Cardio", "🏔️", 3, "20", 30, "Em prancha, alterne joelhos ao peito controlado.", "mountain_climber"),
+        homeEx("Prancha", "Core", "💪", 3, "20s", 30, "Corpo reto, antebraços apoiados.", "prancha"),
+        homeEx("Glute bridge", "Glúteos", "🍑", 3, "12", 30, "Eleve o quadril apertando os glúteos.", "glute_bridge"),
+        homeEx("Abdominal", "Core", "💪", 3, "12", 30, "Suba o tronco contraindo o abdômen.", "abdominal"),
+      ],
+    },
+  },
+  {
+    id: "home-mobilidade-iniciante",
+    name: "Mobilidade + Força Suave",
+    description: "Destrava o corpo. Ideal para sedentários ou recuperação.",
+    level: "iniciante",
+    mode: "home",
+    workouts: {
+      "Mobilidade global": [
+        homeEx("Gato-vaca", "Coluna", "🐱", 3, "10", 20, "Alterne arquear e arredondar a coluna.", "gato_vaca"),
+        homeEx("Cobra", "Lombar/Peito", "🐍", 3, "30s", 20, "Deite de bruços, eleve o tronco com os braços.", "cobra"),
+        homeEx("Postura da criança", "Costas", "🧘", 3, "30s", 20, "Joelhos abertos, sente nos calcanhares.", "child_pose"),
+        homeEx("Cachorro olhando para baixo", "Posterior", "🐕", 3, "30s", 20, "V invertido. Calcanhares descendo.", "downward_dog"),
+        homeEx("Agachamento devagar", "Pernas", "🦵", 3, "10", 30, "Desça em 3s, suba em 2s.", "agachamento"),
+        homeEx("Glute bridge", "Glúteos", "🍑", 3, "15", 30, "Eleve o quadril apertando os glúteos.", "glute_bridge"),
+      ],
+    },
+  },
   // INTERMEDIÁRIO
   {
     id: "home-split-intermediario",
-    name: "Em casa — Intermediário",
-    description: "Push/Pull/Legs com mochila e cadeira. 4 dias.",
+    name: "Push/Pull/Legs em Casa",
+    description: "Com mochila, cadeira e garrafas. 4 dias na semana.",
     level: "intermediario",
     mode: "home",
     workouts: {
