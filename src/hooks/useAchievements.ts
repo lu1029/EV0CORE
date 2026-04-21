@@ -50,7 +50,13 @@ export function useAchievements() {
   const load = useCallback(async () => {
     if (!user) { setLoading(false); return; }
     try {
-      // Load existing unlocked achievements
+      // Ask the server to evaluate stats and grant any newly-earned achievements.
+      // The client cannot insert directly (RLS restricts inserts to service_role)
+      // to prevent users from awarding themselves arbitrary achievements.
+      const { data: granted } = await supabase.functions.invoke("grant-achievements");
+      const newlyGrantedKeys: string[] = Array.isArray(granted?.unlocked) ? granted.unlocked : [];
+
+      // Load the up-to-date list of unlocked achievements.
       const { data: unlocked } = await supabase
         .from("achievements")
         .select("name, unlocked_at")
@@ -59,68 +65,24 @@ export function useAchievements() {
       const unlockedMap = new Map<string, string>();
       (unlocked || []).forEach(a => unlockedMap.set(a.name, a.unlocked_at));
 
-      // Load stats for checking
-      const [workoutsRes, exercisesRes, runsRes] = await Promise.all([
-        supabase.from("workouts").select("completed_at").eq("user_id", user.id).eq("completed", true).order("completed_at", { ascending: false }),
-        supabase.from("workout_exercises").select("sets, reps, weight_kg").eq("user_id", user.id),
-        supabase.from("runs").select("distance_km").eq("user_id", user.id),
-      ]);
-
-      const workouts = workoutsRes.data || [];
-      const exercises = exercisesRes.data || [];
-      const runs = runsRes.data || [];
-
-      // Calc stats
-      const totalWorkouts = workouts.length;
-      const totalVolume = exercises.reduce((a, e) => a + (e.sets || 0) * (e.reps || 0) * (Number(e.weight_kg) || 0), 0);
-      const totalDistanceKm = runs.reduce((a, r) => a + (Number(r.distance_km) || 0), 0);
-      const totalRuns = runs.length;
-
-      // Streak
-      const uniqueDates = new Set<string>();
-      workouts.forEach(w => { if (w.completed_at) uniqueDates.add(new Date(w.completed_at).toISOString().slice(0, 10)); });
-      const today = new Date().toISOString().slice(0, 10);
-      let streak = 0;
-      const d = new Date();
-      if (!uniqueDates.has(today)) d.setDate(d.getDate() - 1);
-      while (uniqueDates.has(d.toISOString().slice(0, 10))) { streak++; d.setDate(d.getDate() - 1); }
-      if (uniqueDates.has(today)) streak = Math.max(streak, 1);
-
-      const stats: Stats = { totalWorkouts, streak, totalVolume, totalRuns, totalDistanceKm };
-
-      // Check and unlock new achievements
       const newUnlocks: Achievement[] = [];
       const allAchievements: Achievement[] = ACHIEVEMENT_DEFS.map(def => {
         const isUnlocked = unlockedMap.has(def.key);
-        const shouldUnlock = def.check(stats);
-        
-        if (shouldUnlock && !isUnlocked) {
-          // New unlock!
-          newUnlocks.push({ id: def.key, key: def.key, name: def.name, description: def.description, icon: def.icon, unlocked: true, unlockedAt: new Date().toISOString() });
+        if (newlyGrantedKeys.includes(def.key)) {
+          newUnlocks.push({ id: def.key, key: def.key, name: def.name, description: def.description, icon: def.icon, unlocked: true, unlockedAt: unlockedMap.get(def.key) });
         }
-
         return {
           id: def.key,
           key: def.key,
           name: def.name,
           description: def.description,
           icon: def.icon,
-          unlocked: isUnlocked || shouldUnlock,
+          unlocked: isUnlocked,
           unlockedAt: unlockedMap.get(def.key),
         };
       });
 
-      // Save new unlocks to DB
       if (newUnlocks.length > 0) {
-        const rows = newUnlocks.map(a => ({
-          user_id: user.id,
-          name: a.key,
-          description: a.description,
-          icon: a.icon,
-        }));
-        await supabase.from("achievements").insert(rows);
-        
-        // Show toasts for new unlocks
         newUnlocks.forEach(a => {
           toast.success(`${a.icon} Conquista desbloqueada: ${a.name}!`, { description: a.description });
         });
