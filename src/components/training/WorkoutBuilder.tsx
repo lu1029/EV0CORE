@@ -374,30 +374,46 @@ const ExerciseEditor: React.FC<{
 
   return (
     <div className="rounded-2xl bg-card border border-white/[0.06] overflow-hidden">
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center gap-3 p-3 text-left active:bg-white/[0.04]"
-      >
-        {exercise.gifUrl ? (
-          <img src={exercise.gifUrl} alt="" className="w-12 h-12 rounded-lg object-cover bg-black" />
-        ) : (
-          <div className="w-12 h-12 rounded-lg bg-white/[0.06] flex items-center justify-center text-xl">
-            {exercise.emoji}
-          </div>
+      <div className="w-full flex items-center gap-2 p-3">
+        {dragHandleProps && (
+          <button
+            type="button"
+            {...dragHandleProps}
+            aria-label="Arrastar para reordenar"
+            className="p-1.5 -ml-1 text-muted-foreground touch-none cursor-grab active:cursor-grabbing"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <GripVertical className="w-4 h-4" />
+          </button>
         )}
-        <div className="flex-1 min-w-0">
-          <p className="text-[14px] font-semibold truncate">{exercise.name}</p>
-          <p className="text-[12px] text-muted-foreground">
-            {exercise.sets}× {exercise.reps} · {exercise.rest}s
-          </p>
-        </div>
         <button
+          type="button"
+          onClick={() => setExpanded(!expanded)}
+          className="flex-1 flex items-center gap-3 text-left active:opacity-70 min-w-0"
+        >
+          {exercise.gifUrl ? (
+            <img src={exercise.gifUrl} alt="" className="w-12 h-12 rounded-lg object-cover bg-black shrink-0" />
+          ) : (
+            <div className="w-12 h-12 rounded-lg bg-white/[0.06] flex items-center justify-center text-xl shrink-0">
+              {exercise.emoji}
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <p className="text-[14px] font-semibold truncate">{exercise.name}</p>
+            <p className="text-[12px] text-muted-foreground">
+              {exercise.sets}× {exercise.reps} · {exercise.rest}s
+            </p>
+          </div>
+        </button>
+        <button
+          type="button"
           onClick={(e) => { e.stopPropagation(); onRemove(); }}
           className="p-2 text-muted-foreground"
+          aria-label="Remover exercício"
         >
           <Trash2 className="w-4 h-4" />
         </button>
-      </button>
+      </div>
       {expanded && (
         <div className="px-3 pb-3 grid grid-cols-3 gap-2 border-t border-white/[0.06] pt-3">
           <Field label="Séries" value={String(exercise.sets)} onChange={(v) => onChange({ sets: parseInt(v) || 1 })} type="number" />
