@@ -18,25 +18,17 @@ async function lookupCover(
   if (memCache.has(planId)) return memCache.get(planId) ?? null;
   if (inflight.has(planId)) return inflight.get(planId)!;
 
-  const cacheKey = `plan-cover:${planId}`;
+  // O edge `generate-exercise-image` cacheia por name.toLowerCase().
+  // Passamos uma chave única por plano como `name` para evitar colisão entre planos
+  // e garantir que a thumbnail só seja gerada uma vez por plano.
+  const uniqueName = `[plan:${planId}] ${coverPrompt}`;
 
   const promise = (async () => {
-    // 1) Cache (se já gerado antes para este plano)
-    try {
-      const { data } = await supabase
-        .from("exercise_image_cache")
-        .select("image_url")
-        .eq("name_key", cacheKey)
-        .maybeSingle();
-      if (data?.image_url) return data.image_url;
-    } catch { /* ignore */ }
-
-    // 2) Gera via edge function (a edge já cacheia com a name_key passada)
     try {
       const { data, error } = await supabase.functions.invoke("generate-exercise-image", {
-        body: { name: coverPrompt, muscle: muscleHint, cacheKey },
+        body: { name: uniqueName, muscle: muscleHint },
       });
-      if (!error && data?.image_url) return data.image_url;
+      if (!error && data?.image_url) return data.image_url as string;
     } catch { /* ignore */ }
 
     return null;
