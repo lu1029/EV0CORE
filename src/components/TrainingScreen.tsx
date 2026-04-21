@@ -1,26 +1,27 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useApp } from "@/contexts/AppContext";
-import { Loader2, ChevronRight, Plus } from "lucide-react";
+import { useSubscription } from "@/hooks/useSubscription";
+import { Loader2, ChevronRight, Plus, Sparkles, Pencil, Lock } from "lucide-react";
 import ActiveWorkout from "./training/ActiveWorkout";
 import ExerciseLibraryBrowser from "./training/ExerciseLibraryBrowser";
+import WorkoutBuilder from "./training/WorkoutBuilder";
 import type { Exercise } from "./training/ExerciseCard";
 import { getGifUrl } from "./training/homeExerciseGifs";
+import { getCuratedPlans, type Level, type CuratedPlan } from "./training/curatedPlans";
 import { useSavedPlan } from "@/hooks/useSavedPlan";
 import { TrainingSkeleton } from "./skeletons/TrainingSkeleton";
 import { fadeUp, stagger, staggerFast, springSnappy, easeApple } from "@/lib/motion";
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/evo-ai-chat`;
 
-type LevelKey = "iniciante" | "intermediario" | "avancado";
-
-const LEVELS: { key: LevelKey; title: string; subtitle: string }[] = [
+const LEVELS: { key: Level; title: string; subtitle: string }[] = [
   { key: "iniciante",     title: "Iniciante",     subtitle: "Construindo a base. Foco em forma e consistência." },
   { key: "intermediario", title: "Intermediário", subtitle: "Volume crescente. Maior intensidade e variação." },
   { key: "avancado",      title: "Avançado",      subtitle: "Alta carga e técnica refinada. Treinos densos." },
 ];
 
-const inferLevelFromProfile = (level?: string): LevelKey => {
+const inferLevelFromProfile = (level?: string): Level => {
   const l = (level || "").toLowerCase();
   if (l.includes("avan")) return "avancado";
   if (l.includes("inter")) return "intermediario";
@@ -29,10 +30,13 @@ const inferLevelFromProfile = (level?: string): LevelKey => {
 
 const TrainingScreen = () => {
   const { userProfile } = useApp();
+  const { isActive: isPremium } = useSubscription();
   const [tab, setTab] = useState<"gym" | "home" | "library">("gym");
   const [activeWorkout, setActiveWorkout] = useState<string | null>(null);
   const [activeExercises, setActiveExercises] = useState<Exercise[]>([]);
-  const [selectedLevel, setSelectedLevel] = useState<LevelKey>(inferLevelFromProfile(userProfile.level));
+  const [selectedLevel, setSelectedLevel] = useState<Level>(inferLevelFromProfile(userProfile.level));
+  const [showBuilder, setShowBuilder] = useState(false);
+  const [builderInitial, setBuilderInitial] = useState<{ name: string; workouts: Record<string, Exercise[]> } | undefined>();
 
   const gymSaved = useSavedPlan("gym");
   const homeSaved = useSavedPlan("home");
@@ -139,6 +143,55 @@ const TrainingScreen = () => {
     }
   };
 
+  const startCuratedWorkout = (curated: CuratedPlan, workoutName: string) => {
+    setActiveExercises(curated.workouts[workoutName]);
+    setActiveWorkout(workoutName);
+  };
+
+  const openBuilderEmpty = () => {
+    setBuilderInitial(undefined);
+    setShowBuilder(true);
+  };
+
+  const openBuilderFromCurated = (curated: CuratedPlan) => {
+    setBuilderInitial({ name: `${curated.name} (cópia)`, workouts: curated.workouts });
+    setShowBuilder(true);
+  };
+
+  const openBuilderFromGenerated = () => {
+    const current = tab === "gym" ? generatedPlan : homePlan;
+    const currName = tab === "gym" ? planName : homePlanName;
+    if (current) {
+      setBuilderInitial({ name: `${currName} (cópia)`, workouts: current });
+      setShowBuilder(true);
+    }
+  };
+
+  const curatedForTab = useMemo(() => {
+    if (tab === "library") return [];
+    return getCuratedPlans(tab as "gym" | "home", selectedLevel);
+  }, [tab, selectedLevel]);
+
+  if (showBuilder) {
+    return (
+      <WorkoutBuilder
+        mode={tab === "home" ? "home" : "gym"}
+        initialPlanName={builderInitial?.name}
+        initialWorkouts={builderInitial?.workouts}
+        onClose={() => setShowBuilder(false)}
+        onSaved={(name, workouts) => {
+          if (tab === "home") {
+            setHomePlan(workouts);
+            setHomePlanName(name);
+          } else {
+            setGeneratedPlan(workouts);
+            setPlanName(name);
+          }
+        }}
+      />
+    );
+  }
+
   if (activeWorkout) {
     return (
       <ActiveWorkout
@@ -177,7 +230,7 @@ const TrainingScreen = () => {
         </motion.h1>
       </motion.div>
 
-      {/* Segmented control with sliding pill */}
+      {/* Segmented control */}
       <motion.div variants={fadeUp} className="px-5 mb-6">
         <div className="flex bg-white/[0.06] rounded-[10px] p-[3px]">
           {([
@@ -224,6 +277,7 @@ const TrainingScreen = () => {
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.25, ease: easeApple }}
           >
+            {/* Nível */}
             <motion.div variants={fadeUp} className="px-5 mb-2">
               <h2 className="text-[22px] font-bold tracking-tight text-foreground mb-3">Nível</h2>
               <div className="rounded-2xl bg-card overflow-hidden border border-white/[0.06]">
@@ -264,10 +318,84 @@ const TrainingScreen = () => {
               </div>
             </motion.div>
 
+            {/* Treinos prontos curados */}
             <motion.div variants={fadeUp} className="px-5 pt-8">
               <div className="flex items-end justify-between mb-3">
-                <h2 className="text-[22px] font-bold tracking-tight text-foreground">
-                  {currentPlan ? "Treinos" : "Seu plano"}
+                <h2 className="text-[22px] font-bold tracking-tight text-foreground">Prontos para começar</h2>
+                <span className="text-[13px] text-muted-foreground">{LEVELS.find(l => l.key === selectedLevel)?.title}</span>
+              </div>
+
+              <motion.div variants={staggerFast} initial="hidden" animate="visible" className="space-y-3">
+                {curatedForTab.map((curated) => (
+                  <motion.div
+                    key={curated.id}
+                    variants={fadeUp}
+                    className="rounded-2xl bg-card border border-white/[0.06] overflow-hidden"
+                  >
+                    <div className="px-5 pt-4 pb-2 flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[17px] font-semibold text-foreground leading-tight">{curated.name}</p>
+                        <p className="text-[13px] text-muted-foreground mt-0.5">{curated.description}</p>
+                      </div>
+                      <button
+                        onClick={() => openBuilderFromCurated(curated)}
+                        className="text-[12px] font-medium text-primary px-2 py-1 rounded-full bg-primary/10 inline-flex items-center gap-1 shrink-0"
+                        title={isPremium ? "Duplicar e editar" : "Premium"}
+                      >
+                        {isPremium ? <Pencil className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
+                        Editar
+                      </button>
+                    </div>
+                    <div>
+                      {Object.entries(curated.workouts).map(([wname, exs], idx) => (
+                        <button
+                          key={wname}
+                          onClick={() => startCuratedWorkout(curated, wname)}
+                          className={`w-full flex items-center gap-3 px-5 py-3 text-left active:bg-white/[0.04] ${
+                            idx === 0 ? "border-t border-white/[0.06]" : "border-t border-white/[0.04]"
+                          }`}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[15px] font-semibold text-foreground truncate">{wname}</p>
+                            <p className="text-[12px] text-muted-foreground mt-0.5">
+                              {exs.length} exercícios · ~{exs.length * 7} min
+                            </p>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            </motion.div>
+
+            {/* Criar próprio (Premium) */}
+            <motion.div variants={fadeUp} className="px-5 pt-6">
+              <button
+                onClick={openBuilderEmpty}
+                className="w-full flex items-center gap-3 p-4 rounded-2xl bg-card border border-white/[0.06] text-left active:bg-white/[0.04]"
+              >
+                <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+                  {isPremium ? <Plus className="w-5 h-5 text-primary" /> : <Lock className="w-5 h-5 text-primary" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[15px] font-semibold text-foreground leading-tight">
+                    Criar meu próprio treino {!isPremium && <span className="text-[11px] uppercase tracking-wider text-primary ml-1">Premium</span>}
+                  </p>
+                  <p className="text-[12px] text-muted-foreground mt-0.5">
+                    Monte do zero com exercícios da biblioteca
+                  </p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+              </button>
+            </motion.div>
+
+            {/* Plano IA / Gerado */}
+            <motion.div variants={fadeUp} className="px-5 pt-6">
+              <div className="flex items-end justify-between mb-3">
+                <h2 className="text-[22px] font-bold tracking-tight text-foreground inline-flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-primary" /> Plano com IA
                 </h2>
                 {currentPlan && (
                   <button
@@ -283,67 +411,57 @@ const TrainingScreen = () => {
               {savedLoading ? (
                 <TrainingSkeleton />
               ) : !currentPlan ? (
-                <motion.div
-                  whileHover={{ y: -2, transition: springSnappy }}
-                  className="rounded-2xl bg-card border border-white/[0.06] p-5"
-                >
+                <motion.div className="rounded-2xl bg-card border border-white/[0.06] p-5">
                   <p className="text-[15px] text-foreground leading-relaxed">
                     {tab === "gym"
-                      ? "Vamos montar seu plano com base no seu perfil e nível."
-                      : "Treino em casa adaptado, sem equipamentos."}
+                      ? "Gere um plano 100% personalizado pelo seu perfil e nível."
+                      : "Gere um treino em casa adaptado, com itens do seu dia-a-dia."}
                   </p>
-                  <p className="text-[13px] text-muted-foreground mt-1">
-                    {currentName || `Nível selecionado: ${LEVELS.find(l => l.key === selectedLevel)?.title}`}
-                  </p>
-
                   {error && <p className="text-[13px] text-destructive mt-3">{error}</p>}
 
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.97 }}
-                    transition={springSnappy}
+                  <button
                     onClick={onGenerate}
                     disabled={loading}
-                    className="mt-4 w-full h-12 rounded-full bg-primary text-primary-foreground font-semibold text-[15px] flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="mt-4 w-full h-12 rounded-full bg-primary text-primary-foreground font-semibold text-[15px] flex items-center justify-center gap-2 disabled:opacity-50 active:opacity-80"
                   >
                     {loading ? (
                       <><Loader2 className="w-4 h-4 animate-spin" /> Gerando…</>
                     ) : (
-                      <><Plus className="w-4 h-4" /> Gerar plano</>
+                      <><Sparkles className="w-4 h-4" /> Gerar com IA</>
                     )}
-                  </motion.button>
+                  </button>
                 </motion.div>
               ) : (
-                <motion.div
-                  variants={staggerFast}
-                  initial="hidden"
-                  animate="visible"
-                  className="rounded-2xl bg-card border border-white/[0.06] overflow-hidden"
-                >
-                  {Object.entries(currentPlan).map(([workoutName, exercises], idx) => {
-                    const totalMin = exercises.length * 7;
-                    return (
-                      <motion.button
-                        key={workoutName}
-                        variants={fadeUp}
-                        whileHover={{ x: 4, transition: springSnappy }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => startWorkout(workoutName, currentPlan)}
-                        className={`w-full flex items-center gap-4 px-5 py-4 text-left transition-colors active:bg-white/[0.04] ${
-                          idx > 0 ? "border-t border-white/[0.06]" : ""
-                        }`}
-                      >
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[17px] font-semibold text-foreground leading-tight truncate">{workoutName}</p>
-                          <p className="text-[13px] text-muted-foreground mt-1">
-                            {exercises.length} exercícios · {totalMin} min · {LEVELS.find(l => l.key === selectedLevel)?.title}
-                          </p>
-                        </div>
-                        <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
-                      </motion.button>
-                    );
-                  })}
-                </motion.div>
+                <div className="rounded-2xl bg-card border border-white/[0.06] overflow-hidden">
+                  <div className="px-5 pt-4 pb-2 flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[17px] font-semibold text-foreground leading-tight truncate">{currentName}</p>
+                      <p className="text-[13px] text-muted-foreground mt-0.5">Gerado pela IA</p>
+                    </div>
+                    <button
+                      onClick={openBuilderFromGenerated}
+                      className="text-[12px] font-medium text-primary px-2 py-1 rounded-full bg-primary/10 inline-flex items-center gap-1 shrink-0"
+                    >
+                      {isPremium ? <Pencil className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
+                      Editar
+                    </button>
+                  </div>
+                  {Object.entries(currentPlan).map(([workoutName, exercises], idx) => (
+                    <button
+                      key={workoutName}
+                      onClick={() => startWorkout(workoutName, currentPlan)}
+                      className={`w-full flex items-center gap-3 px-5 py-3 text-left active:bg-white/[0.04] border-t border-white/[0.06]`}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[15px] font-semibold text-foreground truncate">{workoutName}</p>
+                        <p className="text-[12px] text-muted-foreground mt-0.5">
+                          {exercises.length} exercícios · ~{exercises.length * 7} min
+                        </p>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                    </button>
+                  ))}
+                </div>
               )}
             </motion.div>
           </motion.div>
