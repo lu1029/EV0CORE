@@ -335,6 +335,11 @@ const TrainingScreen = () => {
               </div>
             </motion.div>
 
+            {/* Equipamentos disponíveis (apenas em casa) */}
+            {tab === "home" && (
+              <EquipmentSelector selected={equipment} onChange={setEquipment} />
+            )}
+
             {/* Treinos prontos curados */}
             <motion.div variants={fadeUp} className="px-5 pt-8">
               <div className="flex items-end justify-between mb-3">
