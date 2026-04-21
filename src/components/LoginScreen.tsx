@@ -126,35 +126,72 @@ const LoginScreen = () => {
 
   const getRedirectUri = () => getOAuthRedirectUri();
 
-  const handleGoogleLogin = async () => {
-    setLoading(true);
+  const validateRedirectUri = (uri: string): string | null => {
+    if (!uri) return "Redirect URI vazio";
     try {
-      const redirect_uri = getRedirectUri();
-      if (!redirect_uri) throw new Error("Redirect URI indisponível");
-      const result = await lovable.auth.signInWithOAuth("google", { redirect_uri });
+      const u = new URL(uri);
+      if (!/^https?:$/.test(u.protocol)) return `Protocolo inválido: ${u.protocol}`;
+      if (!u.hostname) return "Hostname ausente";
+      return null;
+    } catch (e) {
+      return `URL malformada: ${uri}`;
+    }
+  };
+
+  const runOAuth = async (provider: "google" | "apple") => {
+    setLoading(true);
+    const redirect_uri = getRedirectUri();
+    const meta = {
+      provider,
+      redirect_uri,
+      origin: typeof window !== "undefined" ? window.location.origin : null,
+      hostname: typeof window !== "undefined" ? window.location.hostname : null,
+      href: typeof window !== "undefined" ? window.location.href : null,
+      userAgent: typeof navigator !== "undefined" ? navigator.userAgent : null,
+      timestamp: new Date().toISOString(),
+    };
+    console.info(`[OAuth:${provider}] iniciando com:`, meta);
+
+    const validationError = validateRedirectUri(redirect_uri);
+    if (validationError) {
+      console.error(`[OAuth:${provider}] redirect_uri inválido:`, validationError, meta);
+      logSecurityEvent("login_failure", { reason: "invalid_redirect_uri", provider, detail: validationError, ...meta });
+      toast.error(`Não foi possível iniciar o login: ${validationError}`);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const result = await lovable.auth.signInWithOAuth(provider, { redirect_uri });
+      console.info(`[OAuth:${provider}] resposta:`, {
+        redirected: result?.redirected,
+        hasError: !!result?.error,
+        errorMessage: result?.error?.message,
+      });
       if (result.error) throw result.error;
       if (result.redirected) return;
     } catch (err: any) {
-      console.error("Google login error:", err);
-      toast.error(err?.message || "Erro ao entrar com Google");
+      const errorDetail = {
+        ...meta,
+        message: err?.message,
+        name: err?.name,
+        code: err?.code,
+        status: err?.status,
+        stack: err?.stack,
+      };
+      console.error(`[OAuth:${provider}] falhou:`, errorDetail);
+      logSecurityEvent("login_failure", { reason: "oauth_error", ...errorDetail });
+      const friendly = err?.message?.includes("redirect_uri")
+        ? `Erro de redirect_uri. Enviado: ${redirect_uri}`
+        : err?.message || `Erro ao entrar com ${provider === "google" ? "Google" : "Apple"}`;
+      toast.error(friendly);
       setLoading(false);
     }
   };
 
-  const handleAppleLogin = async () => {
-    setLoading(true);
-    try {
-      const redirect_uri = getRedirectUri();
-      if (!redirect_uri) throw new Error("Redirect URI indisponível");
-      const result = await lovable.auth.signInWithOAuth("apple", { redirect_uri });
-      if (result.error) throw result.error;
-      if (result.redirected) return;
-    } catch (err: any) {
-      console.error("Apple login error:", err);
-      toast.error(err?.message || "Erro ao entrar com Apple");
-      setLoading(false);
-    }
-  };
+  const handleGoogleLogin = () => runOAuth("google");
+  const handleAppleLogin = () => runOAuth("apple");
+
 
   const formContent = isForgotPassword ? (
     <div className="space-y-4">
