@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
-import { Loader2, X, Search, Home, Dumbbell } from "lucide-react";
+import { X, Search, Home, Dumbbell, Sparkles, Loader2 } from "lucide-react";
 import { useExerciseLibrary, type LibraryExercise } from "@/hooks/useExerciseLibrary";
+import { useExerciseGif } from "@/hooks/useExerciseGif";
 import ExercisePlaceholder from "./ExercisePlaceholder";
 import {
   translateExerciseName,
@@ -25,9 +26,31 @@ type LocationFilter = "all" | "home" | "gym";
 
 const GifThumb = ({ ex }: { ex: LibraryExercise }) => {
   const [loaded, setLoaded] = useState(false);
-  const [error, setError] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
-  if (!ex.gif_url || error) {
+  // Se a biblioteca já tem GIF, usa direto. Senão, dispara geração IA (cacheada).
+  const { gifUrl: aiUrl, loading: aiLoading } = useExerciseGif(
+    ex.gif_url ? "" : translateExerciseName(ex.name),
+    ex.gif_url || undefined,
+    ex.target || ex.body_part || undefined,
+  );
+
+  const finalUrl = (!imgError && ex.gif_url) || aiUrl;
+  const isAI = !ex.gif_url || imgError;
+
+  if (!finalUrl && aiLoading) {
+    return (
+      <div className="relative w-full aspect-square overflow-hidden bg-black rounded-xl flex items-center justify-center">
+        <div className="absolute inset-0 animate-pulse bg-secondary" />
+        <div className="relative flex flex-col items-center gap-1.5 text-muted-foreground">
+          <Sparkles className="w-5 h-5 animate-pulse" />
+          <span className="text-[10px] font-medium">Gerando…</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!finalUrl) {
     return (
       <div className="w-full aspect-square">
         <ExercisePlaceholder exerciseName={ex.name} muscleGroup={ex.body_part || ""} />
@@ -39,13 +62,18 @@ const GifThumb = ({ ex }: { ex: LibraryExercise }) => {
     <div className="relative w-full aspect-square overflow-hidden bg-black rounded-xl">
       {!loaded && <div className="absolute inset-0 animate-pulse bg-secondary" />}
       <img
-        src={ex.gif_url}
+        src={finalUrl}
         alt={ex.name}
         loading="lazy"
         onLoad={() => setLoaded(true)}
-        onError={() => setError(true)}
+        onError={() => setImgError(true)}
         className={`w-full h-full object-contain transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
       />
+      {isAI && loaded && (
+        <span className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-md bg-black/60 backdrop-blur-sm text-[9px] font-semibold text-white inline-flex items-center gap-0.5">
+          <Sparkles className="w-2.5 h-2.5" /> IA
+        </span>
+      )}
     </div>
   );
 };
