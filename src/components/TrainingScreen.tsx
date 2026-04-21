@@ -5,6 +5,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { Loader2, ChevronRight, Plus, Sparkles, Pencil, Lock } from "lucide-react";
 import ActiveWorkout from "./training/ActiveWorkout";
 import ExerciseLibraryBrowser from "./training/ExerciseLibraryBrowser";
+import CommunityPlanCard from "./training/CommunityPlanCard";
 import WorkoutBuilder from "./training/WorkoutBuilder";
 import type { Exercise } from "./training/ExerciseCard";
 import { getGifUrl } from "./training/homeExerciseGifs";
