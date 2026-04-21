@@ -144,9 +144,27 @@ const LoginScreen = () => {
     }
   };
 
-  const runOAuth = async (provider: "google" | "apple") => {
+  const isRedirectUriError = (err: any): boolean => {
+    const msg = (err?.message || "").toLowerCase();
+    return (
+      msg.includes("redirect_uri is required") ||
+      msg.includes("redirect_uri") ||
+      err?.code === "invalid_request"
+    );
+  };
+
+  const pickNextRedirectUri = (failed: string): string | null => {
+    const candidates = getOAuthRedirectUriCandidates();
+    const idx = candidates.indexOf(failed);
+    if (idx >= 0 && candidates[idx + 1]) return candidates[idx + 1];
+    // Fallback: any candidate that isn't the one that just failed
+    return candidates.find((c) => c !== failed) ?? null;
+  };
+
+  const runOAuth = async (provider: "google" | "apple", explicitUri?: string) => {
     setLoading(true);
-    const redirect_uri = getRedirectUri();
+    setRetryState(null);
+    const redirect_uri = explicitUri || getOAuthRedirectUri();
     const meta = {
       provider,
       redirect_uri,
@@ -187,6 +205,22 @@ const LoginScreen = () => {
       };
       console.error(`[OAuth:${provider}] falhou:`, errorDetail);
       logSecurityEvent("login_failure", { reason: "oauth_error", ...errorDetail });
+
+      // If it's a redirect_uri error, surface the retry modal with the next candidate.
+      if (isRedirectUriError(err)) {
+        const nextUri = pickNextRedirectUri(redirect_uri);
+        if (nextUri) {
+          setRetryState({
+            provider,
+            failedUri: redirect_uri,
+            nextUri,
+            errorMessage: err?.message || "redirect_uri is required",
+          });
+          setLoading(false);
+          return;
+        }
+      }
+
       const friendly = err?.message?.includes("redirect_uri")
         ? `Erro de redirect_uri. Enviado: ${redirect_uri}`
         : err?.message || `Erro ao entrar com ${provider === "google" ? "Google" : "Apple"}`;
@@ -197,6 +231,13 @@ const LoginScreen = () => {
 
   const handleGoogleLogin = () => runOAuth("google");
   const handleAppleLogin = () => runOAuth("apple");
+
+  const handleRetryWithFallback = () => {
+    if (!retryState) return;
+    const { provider, nextUri } = retryState;
+    runOAuth(provider, nextUri);
+  };
+
 
 
   const formContent = isForgotPassword ? (
