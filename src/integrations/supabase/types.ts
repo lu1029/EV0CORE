@@ -110,6 +110,90 @@ export type Database = {
         }
         Relationships: []
       }
+      feed_posts: {
+        Row: {
+          activity_data: Json | null
+          caption: string | null
+          comments_count: number
+          created_at: string
+          id: string
+          likes_count: number
+          photo_url: string | null
+          post_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activity_data?: Json | null
+          caption?: string | null
+          comments_count?: number
+          created_at?: string
+          id?: string
+          likes_count?: number
+          photo_url?: string | null
+          post_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activity_data?: Json | null
+          caption?: string | null
+          comments_count?: number
+          created_at?: string
+          id?: string
+          likes_count?: number
+          photo_url?: string | null
+          post_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      food_analyses: {
+        Row: {
+          confidence: string | null
+          created_at: string
+          detected_items: Json
+          id: string
+          input_text: string | null
+          photo_url: string | null
+          source: string
+          total_calories: number
+          total_carbs_g: number
+          total_fat_g: number
+          total_protein_g: number
+          user_id: string
+        }
+        Insert: {
+          confidence?: string | null
+          created_at?: string
+          detected_items?: Json
+          id?: string
+          input_text?: string | null
+          photo_url?: string | null
+          source: string
+          total_calories?: number
+          total_carbs_g?: number
+          total_fat_g?: number
+          total_protein_g?: number
+          user_id: string
+        }
+        Update: {
+          confidence?: string | null
+          created_at?: string
+          detected_items?: Json
+          id?: string
+          input_text?: string | null
+          photo_url?: string | null
+          source?: string
+          total_calories?: number
+          total_carbs_g?: number
+          total_fat_g?: number
+          total_protein_g?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       generated_plans: {
         Row: {
           created_at: string
@@ -223,6 +307,70 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      post_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          post_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          post_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "feed_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_likes: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "feed_posts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
