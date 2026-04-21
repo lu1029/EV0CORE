@@ -310,6 +310,39 @@ export const homePlans: CuratedPlan[] = [
       ],
     },
   },
+  {
+    id: "home-metcon-avancado",
+    name: "MetCon Brutal",
+    description: "Condicionamento metabólico extremo. AMRAP em 25 minutos.",
+    level: "avancado",
+    mode: "home",
+    workouts: {
+      "AMRAP 25 min": [
+        homeEx("Burpees com flexão", "Full Body", "🔥", 5, "15", 30, "Quantas rondas conseguir em 25min.", "burpee"),
+        homeEx("Pistol squat", "Pernas", "🦵", 5, "8 cada", 30, "Profundo, controle total.", "agachamento_pistola"),
+        homeEx("Pull-up no batente", "Costas", "🔻", 5, "10", 30, "Amplitude completa.", "remada_invertida_mesa"),
+        homeEx("Handstand push-up parcial", "Ombros", "🏋️", 5, "8", 30, "Parede como apoio.", "handstand_parede"),
+        homeEx("Mountain climbers", "Cardio", "🏔️", 5, "40s", 20, "Velocidade máxima.", "mountain_climber"),
+      ],
+    },
+  },
+  {
+    id: "home-skill-avancado",
+    name: "Skill + Força Estática",
+    description: "Domínio corporal: handstand, hollow, isometrias avançadas.",
+    level: "avancado",
+    mode: "home",
+    workouts: {
+      "Skill work": [
+        homeEx("Handstand parede (tempo)", "Ombros/Core", "🤸", 5, "30s", 90, "Segure parado encostado na parede.", "handstand_parede"),
+        homeEx("Hollow body hold", "Core", "💪", 5, "45s", 60, "Lombar colada, ombros e pés elevados.", "hollow_body"),
+        homeEx("Pistol squat", "Pernas", "🦵", 4, "5-8 cada", 90, "Sem apoio. Desça lentamente.", "agachamento_pistola"),
+        homeEx("Flexão archer", "Peito", "💪", 4, "6 cada", 75, "Peso para um lado de cada vez.", "flexao_aberta"),
+        homeEx("Superman segurado", "Lombar", "🦸", 4, "20s", 45, "Eleve e segure.", "superman"),
+        homeEx("L-sit (cadeira)", "Core/Tríceps", "💪", 4, "15s", 60, "Mãos na cadeira, pernas estendidas à frente.", "hollow_body"),
+      ],
+    },
+  },
 ];
 
 export function getCuratedPlans(mode: Mode, level: Level): CuratedPlan[] {
