@@ -140,18 +140,18 @@ export const gymPlans: CuratedPlan[] = [
 ];
 
 // ============================================================
-// EM CASA — 3 planos prontos por nível, com objetos do dia-a-dia
+// EM CASA — múltiplos planos por nível, com objetos do dia-a-dia
 // ============================================================
 export const homePlans: CuratedPlan[] = [
-  // INICIANTE
+  // ============= INICIANTE =============
   {
     id: "home-fullbody-iniciante",
-    name: "Em casa — Iniciante",
-    description: "Sem equipamento. Foco em base e mobilidade.",
+    name: "Full Body em Casa",
+    description: "Sem equipamento. Foco em base, técnica e mobilidade. 3x na semana.",
     level: "iniciante",
     mode: "home",
     workouts: {
-      "Full Body — 3x na semana": [
+      "Full Body — Corpo todo": [
         homeEx("Agachamento livre", "Pernas", "🦵", 3, "12-15", 45, "Pés na largura dos ombros, desça até 90°. Joelhos seguem os pés.", "agachamento"),
         homeEx("Flexão de joelhos", "Peito", "💪", 3, "8-12", 45, "Joelhos no chão. Desça o peito até quase tocar o chão.", "flexao_joelho"),
         homeEx("Mergulho na cadeira", "Tríceps", "💪", 3, "8-10", 45, "Cadeira firme atrás. Mãos na borda, desça flexionando os cotovelos.", "mergulho_cadeira"),
