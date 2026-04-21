@@ -265,7 +265,7 @@ const WorkoutBuilder: React.FC<WorkoutBuilderProps> = ({
                   <div className="space-y-2 mt-2">
                     {libraryExercises.map((libEx) => (
                       <button
-                        key={libEx.id}
+                        key={libEx.external_id}
                         onClick={() => addExercise(libEx)}
                         className="w-full flex items-center gap-3 p-3 rounded-2xl bg-card border border-white/[0.06] text-left active:opacity-70"
                       >
