@@ -174,8 +174,12 @@ const TrainingScreen = () => {
 
   const curatedForTab = useMemo(() => {
     if (tab === "library") return [];
-    return getCuratedPlans(tab as "gym" | "home", selectedLevel);
-  }, [tab, selectedLevel]);
+    const all = getCuratedPlans(tab as "gym" | "home", selectedLevel);
+    if (tab !== "home") return all;
+    const filtered = all.filter(p => planFits(p, equipment));
+    // se filtro deixar tudo vazio, mostra todos para não bloquear UX
+    return filtered.length ? filtered : all;
+  }, [tab, selectedLevel, equipment]);
 
   if (showBuilder) {
     return (
