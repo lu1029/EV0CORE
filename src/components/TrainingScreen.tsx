@@ -112,13 +112,20 @@ const TrainingScreen = () => {
     setIsGeneratingHome(true);
     setHomeError("");
     try {
+      const equipmentLabels = equipment
+        .map(k => EQUIPMENT_OPTIONS.find(o => o.key === k)?.aiHint)
+        .filter(Boolean);
+      const equipmentDesc = equipmentLabels.length
+        ? `Itens disponíveis em casa: ${equipmentLabels.join("; ")}.`
+        : "Apenas peso corporal — nenhum item adicional disponível.";
+
       const res = await fetch(CHAT_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           mode: "generate-home-training",
-          userProfile: { ...userProfile, preference: "home", level: selectedLevel },
-          messages: [{ role: "user", content: `Gere meu plano de treino em casa para o nível ${selectedLevel}, com equivalentes de academia.` }],
+          userProfile: { ...userProfile, preference: "home", level: selectedLevel, availableEquipment: equipment },
+          messages: [{ role: "user", content: `Gere meu plano de treino em casa para o nível ${selectedLevel}. ${equipmentDesc} Use APENAS exercícios compatíveis com esses itens.` }],
         }),
       });
       if (!res.ok) throw new Error("Erro ao gerar plano");
