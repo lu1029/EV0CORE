@@ -98,22 +98,39 @@ const LoginScreen = () => {
     }
   };
 
+  const getRedirectUri = () => {
+    if (typeof window === "undefined") return "";
+    return window.location.origin || `${window.location.protocol}//${window.location.host}`;
+  };
+
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
-      const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+      const redirect_uri = getRedirectUri();
+      if (!redirect_uri) throw new Error("Redirect URI indisponível");
+      const result = await lovable.auth.signInWithOAuth("google", { redirect_uri });
       if (result.error) throw result.error;
       if (result.redirected) return;
-    } catch { toast.error("Erro ao entrar com Google"); setLoading(false); }
+    } catch (err: any) {
+      console.error("Google login error:", err);
+      toast.error(err?.message || "Erro ao entrar com Google");
+      setLoading(false);
+    }
   };
 
   const handleAppleLogin = async () => {
     setLoading(true);
     try {
-      const result = await lovable.auth.signInWithOAuth("apple", { redirect_uri: window.location.origin });
+      const redirect_uri = getRedirectUri();
+      if (!redirect_uri) throw new Error("Redirect URI indisponível");
+      const result = await lovable.auth.signInWithOAuth("apple", { redirect_uri });
       if (result.error) throw result.error;
       if (result.redirected) return;
-    } catch { toast.error("Erro ao entrar com Apple"); setLoading(false); }
+    } catch (err: any) {
+      console.error("Apple login error:", err);
+      toast.error(err?.message || "Erro ao entrar com Apple");
+      setLoading(false);
+    }
   };
 
   const formContent = isForgotPassword ? (
