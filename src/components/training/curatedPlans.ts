@@ -140,18 +140,18 @@ export const gymPlans: CuratedPlan[] = [
 ];
 
 // ============================================================
-// EM CASA — 3 planos prontos por nível, com objetos do dia-a-dia
+// EM CASA — múltiplos planos por nível, com objetos do dia-a-dia
 // ============================================================
 export const homePlans: CuratedPlan[] = [
-  // INICIANTE
+  // ============= INICIANTE =============
   {
     id: "home-fullbody-iniciante",
-    name: "Em casa — Iniciante",
-    description: "Sem equipamento. Foco em base e mobilidade.",
+    name: "Full Body em Casa",
+    description: "Sem equipamento. Foco em base, técnica e mobilidade. 3x na semana.",
     level: "iniciante",
     mode: "home",
     workouts: {
-      "Full Body — 3x na semana": [
+      "Full Body — Corpo todo": [
         homeEx("Agachamento livre", "Pernas", "🦵", 3, "12-15", 45, "Pés na largura dos ombros, desça até 90°. Joelhos seguem os pés.", "agachamento"),
         homeEx("Flexão de joelhos", "Peito", "💪", 3, "8-12", 45, "Joelhos no chão. Desça o peito até quase tocar o chão.", "flexao_joelho"),
         homeEx("Mergulho na cadeira", "Tríceps", "💪", 3, "8-10", 45, "Cadeira firme atrás. Mãos na borda, desça flexionando os cotovelos.", "mergulho_cadeira"),
@@ -162,11 +162,45 @@ export const homePlans: CuratedPlan[] = [
       ],
     },
   },
+  {
+    id: "home-cardio-iniciante",
+    name: "Cardio + Core em Casa",
+    description: "Queima calorias e fortalece o core. Sem impacto, ideal para começar.",
+    level: "iniciante",
+    mode: "home",
+    workouts: {
+      "Cardio leve + Core": [
+        homeEx("Polichinelo", "Cardio", "🤸", 3, "30s", 30, "Salte abrindo pernas e levantando os braços.", "polichinelo"),
+        homeEx("Joelho alto no lugar", "Cardio", "🏃", 3, "30s", 30, "Corra no lugar levando os joelhos à altura do quadril.", "joelho_alto"),
+        homeEx("Mountain climbers lentos", "Core/Cardio", "🏔️", 3, "20", 30, "Em prancha, alterne joelhos ao peito controlado.", "mountain_climber"),
+        homeEx("Prancha", "Core", "💪", 3, "20s", 30, "Corpo reto, antebraços apoiados.", "prancha"),
+        homeEx("Glute bridge", "Glúteos", "🍑", 3, "12", 30, "Eleve o quadril apertando os glúteos.", "glute_bridge"),
+        homeEx("Abdominal", "Core", "💪", 3, "12", 30, "Suba o tronco contraindo o abdômen.", "abdominal"),
+      ],
+    },
+  },
+  {
+    id: "home-mobilidade-iniciante",
+    name: "Mobilidade + Força Suave",
+    description: "Destrava o corpo. Ideal para sedentários ou recuperação.",
+    level: "iniciante",
+    mode: "home",
+    workouts: {
+      "Mobilidade global": [
+        homeEx("Gato-vaca", "Coluna", "🐱", 3, "10", 20, "Alterne arquear e arredondar a coluna.", "gato_vaca"),
+        homeEx("Cobra", "Lombar/Peito", "🐍", 3, "30s", 20, "Deite de bruços, eleve o tronco com os braços.", "cobra"),
+        homeEx("Postura da criança", "Costas", "🧘", 3, "30s", 20, "Joelhos abertos, sente nos calcanhares.", "child_pose"),
+        homeEx("Cachorro olhando para baixo", "Posterior", "🐕", 3, "30s", 20, "V invertido. Calcanhares descendo.", "downward_dog"),
+        homeEx("Agachamento devagar", "Pernas", "🦵", 3, "10", 30, "Desça em 3s, suba em 2s.", "agachamento"),
+        homeEx("Glute bridge", "Glúteos", "🍑", 3, "15", 30, "Eleve o quadril apertando os glúteos.", "glute_bridge"),
+      ],
+    },
+  },
   // INTERMEDIÁRIO
   {
     id: "home-split-intermediario",
-    name: "Em casa — Intermediário",
-    description: "Push/Pull/Legs com mochila e cadeira. 4 dias.",
+    name: "Push/Pull/Legs em Casa",
+    description: "Com mochila, cadeira e garrafas. 4 dias na semana.",
     level: "intermediario",
     mode: "home",
     workouts: {
@@ -203,10 +237,44 @@ export const homePlans: CuratedPlan[] = [
       ],
     },
   },
+  {
+    id: "home-hiit-intermediario",
+    name: "HIIT Queima-gordura",
+    description: "30 minutos intensos. Cardio + força em circuito. 3x na semana.",
+    level: "intermediario",
+    mode: "home",
+    workouts: {
+      "Circuito HIIT — 4 rounds": [
+        homeEx("Burpees", "Full Body", "🔥", 4, "10", 30, "Desça ao chão, flexão, salte com mãos para cima.", "burpee"),
+        homeEx("Agachamento com salto", "Pernas", "🦵", 4, "15", 30, "Explosivo. Aterrise suave.", "agachamento_salto"),
+        homeEx("Mountain climbers", "Cardio/Core", "🏔️", 4, "30s", 30, "Velocidade alta.", "mountain_climber"),
+        homeEx("Flexão", "Peito", "💪", 4, "12", 30, "Forma perfeita, controle.", "flexao"),
+        homeEx("Skater jumps", "Cardio/Pernas", "⛸️", 4, "20", 30, "Salte lateralmente.", "skater"),
+        homeEx("Prancha", "Core", "💪", 4, "30s", 30, "Antebraços, corpo reto.", "prancha"),
+      ],
+    },
+  },
+  {
+    id: "home-upper-intermediario",
+    name: "Upper Body com Mochila",
+    description: "Foco em peito, costas, ombros e braços. 3x na semana.",
+    level: "intermediario",
+    mode: "home",
+    workouts: {
+      "Membros superiores": [
+        homeEx("Flexão", "Peito", "💪", 4, "12-15", 45, "Mãos na largura dos ombros.", "flexao"),
+        homeEx("Remada com mochila", "Costas", "🚣", 4, "12", 45, "Mochila pesada. Tronco 45°.", "remada_curvada_mochila"),
+        homeEx("Pike push-up", "Ombros", "🏋️", 4, "10", 45, "V invertido, desça a cabeça ao chão.", "pike_pushup"),
+        homeEx("Mergulho na cadeira", "Tríceps", "💪", 4, "12", 45, "Cadeira firme, desça até 90°.", "mergulho_cadeira"),
+        homeEx("Rosca com mochila", "Bíceps", "💪", 4, "12", 45, "Mochila pesada, controle total.", "rosca_mochila"),
+        homeEx("Elevação lateral garrafas", "Ombros", "↔️", 3, "15", 30, "Garrafas 2L, suba até altura dos ombros.", "elevacao_lateral_garrafa"),
+      ],
+    },
+  },
   // AVANÇADO
   {
     id: "home-pro-avancado",
-    name: "Em casa — Avançado",
+    name: "Calistenia Avançada",
     description: "Calistenia + mochila pesada. Volume e intensidade altos.",
     level: "avancado",
     mode: "home",
@@ -239,6 +307,39 @@ export const homePlans: CuratedPlan[] = [
         homeEx("Burpees com flexão", "Full Body", "🔥", 4, "12", 45, "Burpee completo com flexão no chão e salto explosivo.", "burpee"),
         homeEx("Mountain climbers rápidos", "Cardio/Core", "🏔️", 4, "40s", 30, "Velocidade máxima.", "mountain_climber"),
         homeEx("Skater jumps", "Cardio/Pernas", "⛸️", 4, "20", 30, "Salte lateralmente de um pé ao outro.", "skater"),
+      ],
+    },
+  },
+  {
+    id: "home-metcon-avancado",
+    name: "MetCon Brutal",
+    description: "Condicionamento metabólico extremo. AMRAP em 25 minutos.",
+    level: "avancado",
+    mode: "home",
+    workouts: {
+      "AMRAP 25 min": [
+        homeEx("Burpees com flexão", "Full Body", "🔥", 5, "15", 30, "Quantas rondas conseguir em 25min.", "burpee"),
+        homeEx("Pistol squat", "Pernas", "🦵", 5, "8 cada", 30, "Profundo, controle total.", "agachamento_pistola"),
+        homeEx("Pull-up no batente", "Costas", "🔻", 5, "10", 30, "Amplitude completa.", "remada_invertida_mesa"),
+        homeEx("Handstand push-up parcial", "Ombros", "🏋️", 5, "8", 30, "Parede como apoio.", "handstand_parede"),
+        homeEx("Mountain climbers", "Cardio", "🏔️", 5, "40s", 20, "Velocidade máxima.", "mountain_climber"),
+      ],
+    },
+  },
+  {
+    id: "home-skill-avancado",
+    name: "Skill + Força Estática",
+    description: "Domínio corporal: handstand, hollow, isometrias avançadas.",
+    level: "avancado",
+    mode: "home",
+    workouts: {
+      "Skill work": [
+        homeEx("Handstand parede (tempo)", "Ombros/Core", "🤸", 5, "30s", 90, "Segure parado encostado na parede.", "handstand_parede"),
+        homeEx("Hollow body hold", "Core", "💪", 5, "45s", 60, "Lombar colada, ombros e pés elevados.", "hollow_body"),
+        homeEx("Pistol squat", "Pernas", "🦵", 4, "5-8 cada", 90, "Sem apoio. Desça lentamente.", "agachamento_pistola"),
+        homeEx("Flexão archer", "Peito", "💪", 4, "6 cada", 75, "Peso para um lado de cada vez.", "flexao_aberta"),
+        homeEx("Superman segurado", "Lombar", "🦸", 4, "20s", 45, "Eleve e segure.", "superman"),
+        homeEx("L-sit (cadeira)", "Core/Tríceps", "💪", 4, "15s", 60, "Mãos na cadeira, pernas estendidas à frente.", "hollow_body"),
       ],
     },
   },
