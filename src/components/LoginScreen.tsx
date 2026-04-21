@@ -5,7 +5,6 @@ import { Mail, Lock, Eye, EyeOff, User, CheckSquare, Square } from "lucide-react
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
-import { getOAuthRedirectUri, getOAuthRedirectUriCandidates } from "@/lib/oauthRedirect";
 import { validatePassword, getPasswordStrength, validateEmail, sanitizeText } from "@/lib/sanitize";
 import { logSecurityEvent } from "@/lib/auditLog";
 import evocoreLogo from "@/assets/evocore-logo.png";
