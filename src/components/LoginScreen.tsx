@@ -135,47 +135,22 @@ const LoginScreen = () => {
     const redirect_uri = typeof window !== "undefined" ? window.location.origin : "";
     console.info(`[OAuth:${provider}] iniciando`, { redirect_uri });
 
-    // Method 1: Try Lovable managed OAuth first
     try {
       const result = await lovable.auth.signInWithOAuth(provider, { redirect_uri });
-      console.info(`[OAuth:${provider}] lovable result:`, {
+      console.info(`[OAuth:${provider}] result:`, {
         redirected: result?.redirected,
         hasError: !!result?.error,
         errorMessage: result?.error?.message,
       });
       if (result?.redirected) return;
-      if (!result?.error) return;
-      throw result.error;
-    } catch (lovableErr: any) {
-      console.warn(`[OAuth:${provider}] lovable falhou, tentando supabase nativo:`, lovableErr?.message);
-
-      // Method 2: Fallback to Supabase native OAuth
-      try {
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider,
-          options: { redirectTo: redirect_uri },
-        });
-        if (error) throw error;
-        // Supabase will redirect the browser
-        return;
-      } catch (supabaseErr: any) {
-        console.error(`[OAuth:${provider}] ambos métodos falharam:`, {
-          lovable: lovableErr?.message,
-          supabase: supabaseErr?.message,
-        });
-        logSecurityEvent("login_failure", {
-          reason: "oauth_error",
-          provider,
-          lovable_error: lovableErr?.message,
-          supabase_error: supabaseErr?.message,
-        });
-        const msg =
-          supabaseErr?.message ||
-          lovableErr?.message ||
-          `Erro ao entrar com ${provider === "google" ? "Google" : "Apple"}`;
-        toast.error(msg);
-        setLoading(false);
-      }
+      if (result?.error) throw result.error;
+      // success — session set
+    } catch (err: any) {
+      console.error(`[OAuth:${provider}] falhou:`, err);
+      logSecurityEvent("login_failure", { reason: "oauth_error", provider, message: err?.message });
+      const msg = err?.message || `Erro ao entrar com ${provider === "google" ? "Google" : "Apple"}`;
+      toast.error(msg);
+      setLoading(false);
     }
   };
 
