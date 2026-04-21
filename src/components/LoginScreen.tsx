@@ -438,6 +438,65 @@ const LoginScreen = () => {
           {formContent}
         </div>
       </div>
+
+      {/* Retry modal: shown when OAuth fails with a redirect_uri error */}
+      {retryState && (
+        <div
+          className="fixed inset-0 z-[110] bg-background/80 backdrop-blur-sm flex items-center justify-center p-6 animate-fade-in"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="oauth-retry-title"
+        >
+          <div className="glass-card max-w-sm w-full p-6 rounded-2xl space-y-4">
+            <div className="text-center space-y-2">
+              <div className="w-12 h-12 rounded-full bg-destructive/15 mx-auto flex items-center justify-center">
+                <Lock className="w-6 h-6 text-destructive" />
+              </div>
+              <h2 id="oauth-retry-title" className="text-xl font-heading font-bold text-foreground">
+                Falha no login com {retryState.provider === "google" ? "Google" : "Apple"}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                O servidor recusou o endereço de retorno. Podemos tentar novamente usando um endereço alternativo.
+              </p>
+            </div>
+
+            <div className="space-y-2 text-xs bg-secondary/40 rounded-lg p-3 border border-border/30">
+              <div>
+                <p className="text-muted-foreground">Endereço que falhou</p>
+                <p className="font-mono text-foreground break-all">{retryState.failedUri}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Será usado agora</p>
+                <p className="font-mono text-primary break-all">{retryState.nextUri}</p>
+              </div>
+              {retryState.errorMessage && (
+                <div>
+                  <p className="text-muted-foreground">Erro original</p>
+                  <p className="text-foreground/80 break-words">{retryState.errorMessage}</p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Button
+                onClick={handleRetryWithFallback}
+                className="w-full h-12 rounded-xl gradient-primary text-primary-foreground font-semibold"
+                disabled={loading}
+              >
+                {loading ? "Tentando..." : "Tentar novamente"}
+              </Button>
+              <Button
+                onClick={() => setRetryState(null)}
+                variant="ghost"
+                className="w-full h-10 rounded-xl text-muted-foreground"
+                disabled={loading}
+              >
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
