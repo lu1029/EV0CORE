@@ -111,6 +111,25 @@ const WorkoutBuilder: React.FC<WorkoutBuilderProps> = ({
     setWorkouts({ ...workouts, [activeWorkout]: list });
   };
 
+  const reorderExercises = (fromIdx: number, toIdx: number) => {
+    const list = workouts[activeWorkout] || [];
+    setWorkouts({ ...workouts, [activeWorkout]: arrayMove(list, fromIdx, toIdx) });
+  };
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 180, tolerance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const from = parseInt(String(active.id).replace("ex-", ""), 10);
+    const to = parseInt(String(over.id).replace("ex-", ""), 10);
+    if (Number.isFinite(from) && Number.isFinite(to)) reorderExercises(from, to);
+  };
+
   const addWorkoutDay = () => {
     const letters = ["A", "B", "C", "D", "E", "F"];
     const next = letters[Object.keys(workouts).length] || `${Object.keys(workouts).length + 1}`;
