@@ -9,6 +9,24 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Exercise } from "./ExerciseCard";
 import { fadeUp, stagger, springSnappy } from "@/lib/motion";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface WorkoutBuilderProps {
   mode: "gym" | "home";
