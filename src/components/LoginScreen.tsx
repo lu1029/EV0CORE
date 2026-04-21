@@ -5,7 +5,7 @@ import { Mail, Lock, Eye, EyeOff, User, CheckSquare, Square } from "lucide-react
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
-import { getOAuthRedirectUri } from "@/lib/oauthRedirect";
+import { getOAuthRedirectUri, getOAuthRedirectUriCandidates } from "@/lib/oauthRedirect";
 import { validatePassword, getPasswordStrength, validateEmail, sanitizeText } from "@/lib/sanitize";
 import { logSecurityEvent } from "@/lib/auditLog";
 import evocoreLogo from "@/assets/evocore-logo.png";
@@ -22,6 +22,12 @@ const LoginScreen = () => {
   const [showForm, setShowForm] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [customDomainDown, setCustomDomainDown] = useState(false);
+  const [retryState, setRetryState] = useState<{
+    provider: "google" | "apple";
+    failedUri: string;
+    nextUri: string;
+    errorMessage: string;
+  } | null>(null);
 
   useEffect(() => {
     // Staggered entrance animations
@@ -138,9 +144,27 @@ const LoginScreen = () => {
     }
   };
 
-  const runOAuth = async (provider: "google" | "apple") => {
+  const isRedirectUriError = (err: any): boolean => {
+    const msg = (err?.message || "").toLowerCase();
+    return (
+      msg.includes("redirect_uri is required") ||
+      msg.includes("redirect_uri") ||
+      err?.code === "invalid_request"
+    );
+  };
+
+  const pickNextRedirectUri = (failed: string): string | null => {
+    const candidates = getOAuthRedirectUriCandidates();
+    const idx = candidates.indexOf(failed);
+    if (idx >= 0 && candidates[idx + 1]) return candidates[idx + 1];
+    // Fallback: any candidate that isn't the one that just failed
+    return candidates.find((c) => c !== failed) ?? null;
+  };
+
+  const runOAuth = async (provider: "google" | "apple", explicitUri?: string) => {
     setLoading(true);
-    const redirect_uri = getRedirectUri();
+    setRetryState(null);
+    const redirect_uri = explicitUri || getOAuthRedirectUri();
     const meta = {
       provider,
       redirect_uri,
@@ -181,6 +205,22 @@ const LoginScreen = () => {
       };
       console.error(`[OAuth:${provider}] falhou:`, errorDetail);
       logSecurityEvent("login_failure", { reason: "oauth_error", ...errorDetail });
+
+      // If it's a redirect_uri error, surface the retry modal with the next candidate.
+      if (isRedirectUriError(err)) {
+        const nextUri = pickNextRedirectUri(redirect_uri);
+        if (nextUri) {
+          setRetryState({
+            provider,
+            failedUri: redirect_uri,
+            nextUri,
+            errorMessage: err?.message || "redirect_uri is required",
+          });
+          setLoading(false);
+          return;
+        }
+      }
+
       const friendly = err?.message?.includes("redirect_uri")
         ? `Erro de redirect_uri. Enviado: ${redirect_uri}`
         : err?.message || `Erro ao entrar com ${provider === "google" ? "Google" : "Apple"}`;
@@ -191,6 +231,13 @@ const LoginScreen = () => {
 
   const handleGoogleLogin = () => runOAuth("google");
   const handleAppleLogin = () => runOAuth("apple");
+
+  const handleRetryWithFallback = () => {
+    if (!retryState) return;
+    const { provider, nextUri } = retryState;
+    runOAuth(provider, nextUri);
+  };
+
 
 
   const formContent = isForgotPassword ? (
@@ -391,6 +438,65 @@ const LoginScreen = () => {
           {formContent}
         </div>
       </div>
+
+      {/* Retry modal: shown when OAuth fails with a redirect_uri error */}
+      {retryState && (
+        <div
+          className="fixed inset-0 z-[110] bg-background/80 backdrop-blur-sm flex items-center justify-center p-6 animate-fade-in"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="oauth-retry-title"
+        >
+          <div className="glass-card max-w-sm w-full p-6 rounded-2xl space-y-4">
+            <div className="text-center space-y-2">
+              <div className="w-12 h-12 rounded-full bg-destructive/15 mx-auto flex items-center justify-center">
+                <Lock className="w-6 h-6 text-destructive" />
+              </div>
+              <h2 id="oauth-retry-title" className="text-xl font-heading font-bold text-foreground">
+                Falha no login com {retryState.provider === "google" ? "Google" : "Apple"}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                O servidor recusou o endereço de retorno. Podemos tentar novamente usando um endereço alternativo.
+              </p>
+            </div>
+
+            <div className="space-y-2 text-xs bg-secondary/40 rounded-lg p-3 border border-border/30">
+              <div>
+                <p className="text-muted-foreground">Endereço que falhou</p>
+                <p className="font-mono text-foreground break-all">{retryState.failedUri}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Será usado agora</p>
+                <p className="font-mono text-primary break-all">{retryState.nextUri}</p>
+              </div>
+              {retryState.errorMessage && (
+                <div>
+                  <p className="text-muted-foreground">Erro original</p>
+                  <p className="text-foreground/80 break-words">{retryState.errorMessage}</p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Button
+                onClick={handleRetryWithFallback}
+                className="w-full h-12 rounded-xl gradient-primary text-primary-foreground font-semibold"
+                disabled={loading}
+              >
+                {loading ? "Tentando..." : "Tentar novamente"}
+              </Button>
+              <Button
+                onClick={() => setRetryState(null)}
+                variant="ghost"
+                className="w-full h-10 rounded-xl text-muted-foreground"
+                disabled={loading}
+              >
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

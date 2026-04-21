@@ -1,35 +1,38 @@
 /**
  * Resolve a stable OAuth redirect URI.
  *
- * Order of preference:
+ * Returns an ordered list of candidates:
  * 1. Current window origin (works on .lovable.app, custom domains, localhost)
- * 2. VITE_PUBLIC_APP_URL (build-time fallback, e.g. published Lovable URL)
+ * 2. VITE_PUBLIC_APP_URL (build-time fallback)
  * 3. Hardcoded published Lovable URL (last-resort fallback)
  *
- * This avoids "redirect_uri is required" errors when the custom domain
- * (e.g. ev0core.com) is temporarily unreachable or DNS is misconfigured.
+ * `getOAuthRedirectUri()` returns the first candidate.
+ * `getOAuthRedirectUriCandidates()` returns the full deduped list,
+ * which lets us retry with the next option if the first fails.
  */
 const FALLBACK_PUBLISHED_URL = "https://ev0core.lovable.app";
 
-export function getOAuthRedirectUri(): string {
-  // 1. Browser origin
+export function getOAuthRedirectUriCandidates(): string[] {
+  const list: string[] = [];
+
   if (typeof window !== "undefined") {
     const origin =
       window.location.origin ||
       (window.location.protocol && window.location.host
         ? `${window.location.protocol}//${window.location.host}`
         : "");
-    if (origin && /^https?:\/\//.test(origin)) {
-      return origin;
-    }
+    if (origin && /^https?:\/\//.test(origin)) list.push(origin);
   }
 
-  // 2. Build-time env override
   const envUrl = (import.meta as any)?.env?.VITE_PUBLIC_APP_URL as string | undefined;
-  if (envUrl && /^https?:\/\//.test(envUrl)) {
-    return envUrl.replace(/\/$/, "");
-  }
+  if (envUrl && /^https?:\/\//.test(envUrl)) list.push(envUrl.replace(/\/$/, ""));
 
-  // 3. Hardcoded published Lovable URL
-  return FALLBACK_PUBLISHED_URL;
+  list.push(FALLBACK_PUBLISHED_URL);
+
+  // Dedupe while preserving order
+  return Array.from(new Set(list));
+}
+
+export function getOAuthRedirectUri(): string {
+  return getOAuthRedirectUriCandidates()[0] ?? FALLBACK_PUBLISHED_URL;
 }
