@@ -284,7 +284,7 @@ export function translateEquipment(name?: string | null): string {
   return equipmentDict[key] || capitalize(name);
 }
 
-/** Define se o equipamento permite treinar em casa (sem academia). */
+/** Equipamentos que permitem treinar em casa (sem academia/máquinas). */
 const HOME_EQUIPMENT = new Set([
   "body weight",
   "bodyweight",
@@ -300,10 +300,36 @@ const HOME_EQUIPMENT = new Set([
   "rope",
   "wheel roller",
   "roller",
+]);
+
+/** Equipamentos exclusivamente de academia (máquinas, barras olímpicas, cabos). */
+const GYM_ONLY_EQUIPMENT = new Set([
+  "barbell",
   "ez barbell",
+  "olympic barbell",
+  "trap bar",
+  "cable",
+  "leverage machine",
+  "sled machine",
+  "smith machine",
+  "hammer",
+  "stationary bike",
+  "stepmill machine",
+  "elliptical machine",
+  "rower",
+  "tire",
+  "weighted",
 ]);
 
 export function isHomeFriendly(equipment?: string | null): boolean {
   if (!equipment) return true; // sem equipamento => peso do corpo => casa
-  return HOME_EQUIPMENT.has(equipment.toLowerCase().trim());
+  const key = equipment.toLowerCase().trim();
+  if (HOME_EQUIPMENT.has(key)) return true;
+  if (GYM_ONLY_EQUIPMENT.has(key)) return false;
+  return false; // desconhecido => trata como academia (mais conservador)
+}
+
+export function isGymOnly(equipment?: string | null): boolean {
+  if (!equipment) return false;
+  return GYM_ONLY_EQUIPMENT.has(equipment.toLowerCase().trim());
 }

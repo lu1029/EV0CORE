@@ -28,17 +28,18 @@ const GifThumb = ({ ex }: { ex: LibraryExercise }) => {
   const [loaded, setLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
 
-  // Se a biblioteca já tem GIF, usa direto. Senão, dispara geração IA (cacheada).
+  // Dispara geração IA sempre que faltar gif_url OU quando o gif original der erro.
+  const needsAI = !ex.gif_url || imgError;
   const { gifUrl: aiUrl, loading: aiLoading } = useExerciseGif(
-    ex.gif_url ? "" : translateExerciseName(ex.name),
-    ex.gif_url || undefined,
+    needsAI ? translateExerciseName(ex.name) : "",
+    needsAI ? undefined : ex.gif_url || undefined,
     ex.target || ex.body_part || undefined,
   );
 
-  const finalUrl = (!imgError && ex.gif_url) || aiUrl;
+  const finalUrl = imgError ? aiUrl : (ex.gif_url || aiUrl);
   const isAI = !ex.gif_url || imgError;
 
-  if (!finalUrl && aiLoading) {
+  if (!finalUrl && (aiLoading || needsAI)) {
     return (
       <div className="relative w-full aspect-square overflow-hidden bg-black rounded-xl flex items-center justify-center">
         <div className="absolute inset-0 animate-pulse bg-secondary" />
@@ -66,7 +67,10 @@ const GifThumb = ({ ex }: { ex: LibraryExercise }) => {
         alt={ex.name}
         loading="lazy"
         onLoad={() => setLoaded(true)}
-        onError={() => setImgError(true)}
+        onError={() => {
+          setImgError(true);
+          setLoaded(false);
+        }}
         className={`w-full h-full object-contain transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
       />
       {isAI && loaded && (
