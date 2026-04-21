@@ -181,9 +181,9 @@ const LoginScreen = () => {
   ) : (
     <div className="space-y-4">
       {customDomainDown && (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-left animate-fade-in">
-          <p className="text-xs font-semibold text-amber-200">Conexão instável neste domínio</p>
-          <p className="text-[11px] text-amber-100/80 mt-1 leading-snug">
+        <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-left animate-fade-in">
+          <p className="text-xs font-semibold text-foreground">Conexão instável neste domínio</p>
+          <p className="text-[11px] text-muted-foreground mt-1 leading-snug">
             Estamos com instabilidade em <span className="font-mono">ev0core.com</span>. Para entrar agora, use o domínio oficial:
           </p>
           <a
