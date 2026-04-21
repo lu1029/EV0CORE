@@ -78,6 +78,17 @@ export const gymPlans: CuratedPlan[] = [
     description: "3 dias na semana. Foco em forma e adaptação.",
     level: "iniciante",
     mode: "gym",
+    ...meta(
+      "beginner full body gym workout, fit man and woman lifting light dumbbells together",
+      12,
+      45,
+      [
+        "Aqueça 5 min em esteira ou bike antes de começar",
+        "Descanso de 60-90s entre séries",
+        "Aumente a carga 5% quando completar todas as reps com folga",
+        "Foque em técnica perfeita, não em peso",
+      ],
+    ),
     workouts: {
       "Treino A — Corpo todo": [
         gymEx("Agachamento livre", "Pernas", "🦵", 3, "10-12", "20kg", 90, "Pés na largura dos ombros, desça até paralelo. Joelhos seguem os pés.", "Barbell_Squat"),
@@ -97,6 +108,17 @@ export const gymPlans: CuratedPlan[] = [
     description: "3 divisões clássicas: Peito/Tríceps, Costas/Bíceps, Pernas/Ombros.",
     level: "intermediario",
     mode: "gym",
+    ...meta(
+      "intermediate ABC split bodybuilding workout, athlete bench pressing barbell in modern gym",
+      16,
+      55,
+      [
+        "Treine A-B-C-descanso, repita 4 semanas",
+        "Aqueça com 1-2 séries leves antes do exercício pesado",
+        "Descanso de 90s nos compostos, 60s nos isoladores",
+        "Progrida 2,5kg quando atingir o limite superior de reps",
+      ],
+    ),
     workouts: {
       "A — Peito + Tríceps": [
         gymEx("Supino reto barra", "Peito", "🏋️", 4, "8-12", "60kg", 90, "Desça a barra até o peito e empurre com controle. Cotovelos a 45°.", "Barbell_Bench_Press_-_Medium_Grip"),
@@ -131,6 +153,17 @@ export const gymPlans: CuratedPlan[] = [
     description: "6 dias. Volume e intensidade altos para hipertrofia.",
     level: "avancado",
     mode: "gym",
+    ...meta(
+      "advanced bodybuilder doing heavy barbell deadlift in dramatic gym lighting",
+      24,
+      75,
+      [
+        "Push-Pull-Legs ×2 por semana, 1 dia de descanso",
+        "Aqueça 8-10 min e faça 2-3 séries de aproximação",
+        "Use técnicas avançadas: drop sets, rest-pause na última série",
+        "Durma 8h e consuma 1.8g de proteína por kg",
+      ],
+    ),
     workouts: {
       "Push — Peito/Ombro/Tríceps": [
         gymEx("Supino reto barra", "Peito", "🏋️", 5, "5-8", "90kg", 120, "Pesado, técnica perfeita. Pause 1s no peito.", "Barbell_Bench_Press_-_Medium_Grip"),
@@ -171,6 +204,17 @@ export const homePlans: CuratedPlan[] = [
     description: "Sem equipamento. Foco em base, técnica e mobilidade. 3x na semana.",
     level: "iniciante",
     mode: "home",
+    ...meta(
+      "beginner doing bodyweight squat at home in bright living room",
+      12,
+      30,
+      [
+        "Aqueça 3 min com polichinelos e mobilidade articular",
+        "Descanso de 30-45s entre séries",
+        "Foque na técnica antes de aumentar repetições",
+        "Treine segunda, quarta e sexta",
+      ],
+    ),
     workouts: {
       "Full Body — Corpo todo": [
         homeEx("Agachamento livre", "Pernas", "🦵", 3, "12-15", 45, "Pés na largura dos ombros, desça até 90°. Joelhos seguem os pés.", "agachamento"),
@@ -189,6 +233,17 @@ export const homePlans: CuratedPlan[] = [
     description: "Queima calorias e fortalece o core. Sem impacto, ideal para começar.",
     level: "iniciante",
     mode: "home",
+    ...meta(
+      "athletic woman doing mountain climbers at home, energetic morning light",
+      12,
+      25,
+      [
+        "Aqueça 3 min com polichinelo lento",
+        "Descanso de 30s entre exercícios",
+        "Mantenha respiração ritmada, não prenda o ar",
+        "Hidrate-se antes, durante e depois",
+      ],
+    ),
     workouts: {
       "Cardio leve + Core": [
         homeEx("Polichinelo", "Cardio", "🤸", 3, "30s", 30, "Salte abrindo pernas e levantando os braços.", "polichinelo"),
@@ -206,6 +261,17 @@ export const homePlans: CuratedPlan[] = [
     description: "Destrava o corpo. Ideal para sedentários ou recuperação.",
     level: "iniciante",
     mode: "home",
+    ...meta(
+      "person doing yoga downward dog stretch at home with morning sunlight",
+      8,
+      20,
+      [
+        "Faça em sequência fluida, sem pressa",
+        "Respire fundo em cada postura (4s inspira / 6s expira)",
+        "Pode ser feito todos os dias, ideal pela manhã",
+        "Pare se sentir dor aguda — desconforto leve é normal",
+      ],
+    ),
     workouts: {
       "Mobilidade global": [
         homeEx("Gato-vaca", "Coluna", "🐱", 3, "10", 20, "Alterne arquear e arredondar a coluna.", "gato_vaca"),
@@ -224,6 +290,17 @@ export const homePlans: CuratedPlan[] = [
     description: "Com mochila, cadeira e garrafas. 4 dias na semana.",
     level: "intermediario",
     mode: "home",
+    ...meta(
+      "fit athlete doing pike push up at home with backpack nearby",
+      16,
+      45,
+      [
+        "Push-Pull-Legs-Core, 4 dias por semana",
+        "Aqueça 5 min antes (polichinelo + mobilidade)",
+        "Descanso de 45-60s entre séries",
+        "Aumente o peso da mochila quando dominar as reps",
+      ],
+    ),
     workouts: {
       "Push — Peito/Ombro/Tríceps": [
         homeEx("Flexão tradicional", "Peito", "💪", 4, "12-15", 45, "Mãos na largura dos ombros, corpo reto. Desça até quase tocar o chão.", "flexao"),
@@ -264,6 +341,17 @@ export const homePlans: CuratedPlan[] = [
     description: "30 minutos intensos. Cardio + força em circuito. 3x na semana.",
     level: "intermediario",
     mode: "home",
+    ...meta(
+      "intense HIIT workout, athlete doing burpees with sweat, dynamic motion",
+      12,
+      30,
+      [
+        "Faça 4 rondas do circuito, 30s descanso entre exercícios",
+        "1-2 min de descanso entre rondas",
+        "Aqueça 5 min antes para evitar lesões",
+        "Não faça em dias seguidos — exige recuperação",
+      ],
+    ),
     workouts: {
       "Circuito HIIT — 4 rounds": [
         homeEx("Burpees", "Full Body", "🔥", 4, "10", 30, "Desça ao chão, flexão, salte com mãos para cima.", "burpee"),
@@ -281,6 +369,17 @@ export const homePlans: CuratedPlan[] = [
     description: "Foco em peito, costas, ombros e braços. 3x na semana.",
     level: "intermediario",
     mode: "home",
+    ...meta(
+      "athlete doing rows with weighted backpack at home, defined back muscles",
+      12,
+      40,
+      [
+        "Use mochila com 8-15kg de carga (livros, garrafas)",
+        "Descanso de 45-60s entre séries",
+        "Combine com 1 dia de pernas e 1 dia de cardio na semana",
+        "Foco em squeeze e contração máxima",
+      ],
+    ),
     workouts: {
       "Membros superiores": [
         homeEx("Flexão", "Peito", "💪", 4, "12-15", 45, "Mãos na largura dos ombros.", "flexao"),
@@ -299,6 +398,17 @@ export const homePlans: CuratedPlan[] = [
     description: "Calistenia + mochila pesada. Volume e intensidade altos.",
     level: "avancado",
     mode: "home",
+    ...meta(
+      "muscular calisthenics athlete doing handstand against wall, dramatic light",
+      16,
+      60,
+      [
+        "Push-Pull-Legs-Core, 4 dias por semana",
+        "Aqueça 8 min com mobilidade + ativação específica",
+        "Use mochila pesada (≥15kg) para sobrecarga progressiva",
+        "Inclua 1 dia de skill work (handstand, pistol)",
+      ],
+    ),
     workouts: {
       "Push pesado": [
         homeEx("Flexão diamante", "Tríceps", "💪", 4, "15-20", 60, "Mãos formando diamante sob o peito.", "flexao_diamante"),
@@ -337,6 +447,17 @@ export const homePlans: CuratedPlan[] = [
     description: "Condicionamento metabólico extremo. AMRAP em 25 minutos.",
     level: "avancado",
     mode: "home",
+    ...meta(
+      "crossfit athlete mid burpee, intense workout, sweat and motion blur",
+      8,
+      25,
+      [
+        "AMRAP 25 min: o máximo de rondas que conseguir",
+        "Anote o número de rondas para comparar na próxima semana",
+        "Descanse só quando absolutamente necessário",
+        "Não faça mais de 2x por semana — recuperação é crítica",
+      ],
+    ),
     workouts: {
       "AMRAP 25 min": [
         homeEx("Burpees com flexão", "Full Body", "🔥", 5, "15", 30, "Quantas rondas conseguir em 25min.", "burpee"),
@@ -353,6 +474,17 @@ export const homePlans: CuratedPlan[] = [
     description: "Domínio corporal: handstand, hollow, isometrias avançadas.",
     level: "avancado",
     mode: "home",
+    ...meta(
+      "athlete holding perfect handstand position with control and balance",
+      12,
+      45,
+      [
+        "Pratique 3-4x por semana em dias diferentes",
+        "Foque em qualidade do movimento, não em fadiga",
+        "Filme-se para corrigir alinhamento",
+        "Combine com força tradicional para evolução",
+      ],
+    ),
     workouts: {
       "Skill work": [
         homeEx("Handstand parede (tempo)", "Ombros/Core", "🤸", 5, "30s", 90, "Segure parado encostado na parede.", "handstand_parede"),
