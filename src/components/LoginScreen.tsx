@@ -5,7 +5,6 @@ import { Mail, Lock, Eye, EyeOff, User, CheckSquare, Square } from "lucide-react
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
-import { getOAuthRedirectUri, getOAuthRedirectUriCandidates } from "@/lib/oauthRedirect";
 import { validatePassword, getPasswordStrength, validateEmail, sanitizeText } from "@/lib/sanitize";
 import { logSecurityEvent } from "@/lib/auditLog";
 import evocoreLogo from "@/assets/evocore-logo.png";
@@ -130,102 +129,53 @@ const LoginScreen = () => {
     }
   };
 
-  const getRedirectUri = () => getOAuthRedirectUri();
-
-  const validateRedirectUri = (uri: string): string | null => {
-    if (!uri) return "Redirect URI vazio";
-    try {
-      const u = new URL(uri);
-      if (!/^https?:$/.test(u.protocol)) return `Protocolo inválido: ${u.protocol}`;
-      if (!u.hostname) return "Hostname ausente";
-      return null;
-    } catch (e) {
-      return `URL malformada: ${uri}`;
-    }
-  };
-
-  const isRedirectUriError = (err: any): boolean => {
-    const msg = (err?.message || "").toLowerCase();
-    return (
-      msg.includes("redirect_uri is required") ||
-      msg.includes("redirect_uri") ||
-      err?.code === "invalid_request"
-    );
-  };
-
-  const pickNextRedirectUri = (failed: string): string | null => {
-    const candidates = getOAuthRedirectUriCandidates();
-    const idx = candidates.indexOf(failed);
-    if (idx >= 0 && candidates[idx + 1]) return candidates[idx + 1];
-    // Fallback: any candidate that isn't the one that just failed
-    return candidates.find((c) => c !== failed) ?? null;
-  };
-
-  const runOAuth = async (provider: "google" | "apple", explicitUri?: string) => {
+  const runOAuth = async (provider: "google" | "apple") => {
     setLoading(true);
     setRetryState(null);
-    const redirect_uri = explicitUri || getOAuthRedirectUri();
-    const meta = {
-      provider,
-      redirect_uri,
-      origin: typeof window !== "undefined" ? window.location.origin : null,
-      hostname: typeof window !== "undefined" ? window.location.hostname : null,
-      href: typeof window !== "undefined" ? window.location.href : null,
-      userAgent: typeof navigator !== "undefined" ? navigator.userAgent : null,
-      timestamp: new Date().toISOString(),
-    };
-    console.info(`[OAuth:${provider}] iniciando com:`, meta);
+    const redirect_uri = typeof window !== "undefined" ? window.location.origin : "";
+    console.info(`[OAuth:${provider}] iniciando`, { redirect_uri });
 
-    const validationError = validateRedirectUri(redirect_uri);
-    if (validationError) {
-      console.error(`[OAuth:${provider}] redirect_uri inválido:`, validationError, meta);
-      logSecurityEvent("login_failure", { reason: "invalid_redirect_uri", provider, detail: validationError, ...meta });
-      toast.error(`Não foi possível iniciar o login: ${validationError}`);
-      setLoading(false);
-      return;
-    }
-
+    // Method 1: Try Lovable managed OAuth first
     try {
       const result = await lovable.auth.signInWithOAuth(provider, { redirect_uri });
-      console.info(`[OAuth:${provider}] resposta:`, {
+      console.info(`[OAuth:${provider}] lovable result:`, {
         redirected: result?.redirected,
         hasError: !!result?.error,
         errorMessage: result?.error?.message,
       });
-      if (result.error) throw result.error;
-      if (result.redirected) return;
-    } catch (err: any) {
-      const errorDetail = {
-        ...meta,
-        message: err?.message,
-        name: err?.name,
-        code: err?.code,
-        status: err?.status,
-        stack: err?.stack,
-      };
-      console.error(`[OAuth:${provider}] falhou:`, errorDetail);
-      logSecurityEvent("login_failure", { reason: "oauth_error", ...errorDetail });
+      if (result?.redirected) return;
+      if (!result?.error) return;
+      throw result.error;
+    } catch (lovableErr: any) {
+      console.warn(`[OAuth:${provider}] lovable falhou, tentando supabase nativo:`, lovableErr?.message);
 
-      // If it's a redirect_uri error, surface the retry modal with the next candidate.
-      if (isRedirectUriError(err)) {
-        const nextUri = pickNextRedirectUri(redirect_uri);
-        if (nextUri) {
-          setRetryState({
-            provider,
-            failedUri: redirect_uri,
-            nextUri,
-            errorMessage: err?.message || "redirect_uri is required",
-          });
-          setLoading(false);
-          return;
-        }
+      // Method 2: Fallback to Supabase native OAuth
+      try {
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider,
+          options: { redirectTo: redirect_uri },
+        });
+        if (error) throw error;
+        // Supabase will redirect the browser
+        return;
+      } catch (supabaseErr: any) {
+        console.error(`[OAuth:${provider}] ambos métodos falharam:`, {
+          lovable: lovableErr?.message,
+          supabase: supabaseErr?.message,
+        });
+        logSecurityEvent("login_failure", {
+          reason: "oauth_error",
+          provider,
+          lovable_error: lovableErr?.message,
+          supabase_error: supabaseErr?.message,
+        });
+        const msg =
+          supabaseErr?.message ||
+          lovableErr?.message ||
+          `Erro ao entrar com ${provider === "google" ? "Google" : "Apple"}`;
+        toast.error(msg);
+        setLoading(false);
       }
-
-      const friendly = err?.message?.includes("redirect_uri")
-        ? `Erro de redirect_uri. Enviado: ${redirect_uri}`
-        : err?.message || `Erro ao entrar com ${provider === "google" ? "Google" : "Apple"}`;
-      toast.error(friendly);
-      setLoading(false);
     }
   };
 
@@ -234,8 +184,7 @@ const LoginScreen = () => {
 
   const handleRetryWithFallback = () => {
     if (!retryState) return;
-    const { provider, nextUri } = retryState;
-    runOAuth(provider, nextUri);
+    runOAuth(retryState.provider);
   };
 
 
