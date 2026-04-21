@@ -86,9 +86,30 @@ Responda APENAS com um JSON válido neste formato exato, sem markdown, sem texto
 
 IMPORTANTE: Retorne APENAS o JSON, nada mais.`;
     } else if (mode === "generate-home-training") {
-      systemPrompt = `Você é um personal trainer certificado especialista em TREINOS EM CASA e CALISTENIA. Crie um plano de treino COMPLETO usando APENAS o corpo e ITENS COMUNS DA CASA — nada de equipamento de academia.
+      const equipMap: Record<string, string> = {
+        cadeira:  "🪑 Cadeira firme (mergulho de tríceps, step-up, búlgaro com pé apoiado, remada invertida)",
+        sofa:     "🛋️ Sofá baixo (hip thrust, flexão declinada com pés no sofá, búlgaro)",
+        mochila:  "🎒 Mochila com livros 5–15kg (goblet squat, afundo, rosca, remada, peso extra na flexão)",
+        garrafas: "💧 Garrafas PET 1.5–2L como halteres (rosca, elevação lateral/frontal, crucifixo, tríceps francês)",
+        toalha:   "🧺 Toalha (remada na porta, deslizamentos, alongamento)",
+        parede:   "🧱 Parede (wall sit, handstand, flexão na parede, push-up pliométrico)",
+      };
+      const available: string[] = Array.isArray(userProfile?.availableEquipment) ? userProfile.availableEquipment : [];
+      const allKeys = ["cadeira", "sofa", "mochila", "garrafas", "toalha", "parede"];
+      const useAll = available.length === 0 || available.length === allKeys.length;
+      const availableList = useAll ? allKeys : available;
+      const unavailable = allKeys.filter(k => !availableList.includes(k));
+
+      const equipBlock = `
+EQUIPAMENTOS DISPONÍVEIS NESTA CASA (USE APENAS ESTES):
+${availableList.map(k => `- ${equipMap[k]}`).join("\n")}
+${unavailable.length ? `\nNÃO USAR (o usuário não tem): ${unavailable.map(k => equipMap[k]).join("; ")}` : ""}
+`;
+
+      systemPrompt = `Você é um personal trainer certificado especialista em TREINOS EM CASA e CALISTENIA. Crie um plano de treino COMPLETO usando APENAS o corpo e os ITENS LISTADOS ABAIXO — nada de equipamento de academia, e NUNCA itens fora da lista.
 
 ${profileContext}
+${equipBlock}
 
 INSTRUÇÕES OBRIGATÓRIAS:
 1. Crie um plano semanal completo baseado nos dias disponíveis do usuário.
