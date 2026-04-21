@@ -12,6 +12,8 @@ import { getCuratedPlans, type Level, type CuratedPlan } from "./training/curate
 import { useSavedPlan } from "@/hooks/useSavedPlan";
 import { TrainingSkeleton } from "./skeletons/TrainingSkeleton";
 import { fadeUp, stagger, staggerFast, springSnappy, easeApple } from "@/lib/motion";
+import EquipmentSelector from "./training/EquipmentSelector";
+import { EQUIPMENT_OPTIONS, loadEquipment, saveEquipment, planFits, type EquipmentKey } from "./training/equipmentTypes";
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/evo-ai-chat`;
 
@@ -37,6 +39,9 @@ const TrainingScreen = () => {
   const [selectedLevel, setSelectedLevel] = useState<Level>(inferLevelFromProfile(userProfile.level));
   const [showBuilder, setShowBuilder] = useState(false);
   const [builderInitial, setBuilderInitial] = useState<{ name: string; workouts: Record<string, Exercise[]> } | undefined>();
+  const [equipment, setEquipment] = useState<EquipmentKey[]>(() => loadEquipment());
+
+  useEffect(() => { saveEquipment(equipment); }, [equipment]);
 
   const gymSaved = useSavedPlan("gym");
   const homeSaved = useSavedPlan("home");
@@ -107,13 +112,20 @@ const TrainingScreen = () => {
     setIsGeneratingHome(true);
     setHomeError("");
     try {
+      const equipmentLabels = equipment
+        .map(k => EQUIPMENT_OPTIONS.find(o => o.key === k)?.aiHint)
+        .filter(Boolean);
+      const equipmentDesc = equipmentLabels.length
+        ? `Itens disponíveis em casa: ${equipmentLabels.join("; ")}.`
+        : "Apenas peso corporal — nenhum item adicional disponível.";
+
       const res = await fetch(CHAT_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           mode: "generate-home-training",
-          userProfile: { ...userProfile, preference: "home", level: selectedLevel },
-          messages: [{ role: "user", content: `Gere meu plano de treino em casa para o nível ${selectedLevel}, com equivalentes de academia.` }],
+          userProfile: { ...userProfile, preference: "home", level: selectedLevel, availableEquipment: equipment },
+          messages: [{ role: "user", content: `Gere meu plano de treino em casa para o nível ${selectedLevel}. ${equipmentDesc} Use APENAS exercícios compatíveis com esses itens.` }],
         }),
       });
       if (!res.ok) throw new Error("Erro ao gerar plano");
@@ -169,8 +181,12 @@ const TrainingScreen = () => {
 
   const curatedForTab = useMemo(() => {
     if (tab === "library") return [];
-    return getCuratedPlans(tab as "gym" | "home", selectedLevel);
-  }, [tab, selectedLevel]);
+    const all = getCuratedPlans(tab as "gym" | "home", selectedLevel);
+    if (tab !== "home") return all;
+    const filtered = all.filter(p => planFits(p, equipment));
+    // se filtro deixar tudo vazio, mostra todos para não bloquear UX
+    return filtered.length ? filtered : all;
+  }, [tab, selectedLevel, equipment]);
 
   if (showBuilder) {
     return (
@@ -318,6 +334,11 @@ const TrainingScreen = () => {
                 })}
               </div>
             </motion.div>
+
+            {/* Equipamentos disponíveis (apenas em casa) */}
+            {tab === "home" && (
+              <EquipmentSelector selected={equipment} onChange={setEquipment} />
+            )}
 
             {/* Treinos prontos curados */}
             <motion.div variants={fadeUp} className="px-5 pt-8">
