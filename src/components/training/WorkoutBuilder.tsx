@@ -337,11 +337,39 @@ const WorkoutBuilder: React.FC<WorkoutBuilderProps> = ({
   );
 };
 
+const SortableExerciseEditor: React.FC<{
+  id: string;
+  exercise: Exercise;
+  onChange: (patch: Partial<Exercise>) => void;
+  onRemove: () => void;
+}> = ({ id, exercise, onChange, onRemove }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : ("auto" as any),
+    opacity: isDragging ? 0.85 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className={isDragging ? "shadow-2xl shadow-black/40 rounded-2xl" : ""}>
+      <ExerciseEditor
+        exercise={exercise}
+        onChange={onChange}
+        onRemove={onRemove}
+        dragHandleProps={{ ...attributes, ...listeners }}
+      />
+    </div>
+  );
+};
+
 const ExerciseEditor: React.FC<{
   exercise: Exercise;
   onChange: (patch: Partial<Exercise>) => void;
   onRemove: () => void;
-}> = ({ exercise, onChange, onRemove }) => {
+  dragHandleProps?: Record<string, any>;
+}> = ({ exercise, onChange, onRemove, dragHandleProps }) => {
   const [expanded, setExpanded] = useState(false);
 
   return (
