@@ -34,7 +34,7 @@ const WorkoutBuilder: React.FC<WorkoutBuilderProps> = ({
   const [search, setSearch] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const { exercises: libraryExercises, loading: libLoading } = useExerciseLibrary({
+  const { items: libraryExercises, loading: libLoading } = useExerciseLibrary({
     search: search || undefined,
     limit: 30,
   });
@@ -117,7 +117,7 @@ const WorkoutBuilder: React.FC<WorkoutBuilderProps> = ({
     }
     setSaving(true);
     try {
-      const planData = { planName, description: "Plano personalizado", workouts };
+      const planData = { planName, description: "Plano personalizado", workouts } as any;
       // Upsert: replace user's plan of this type
       const { data: existing } = await supabase
         .from("generated_plans")
@@ -136,7 +136,7 @@ const WorkoutBuilder: React.FC<WorkoutBuilderProps> = ({
         await supabase.from("generated_plans").insert({
           user_id: user.id, type: mode, plan_name: planName,
           description: "Plano personalizado", plan_data: planData,
-        });
+        } as any);
       }
       toast.success("Plano salvo!");
       onSaved(planName, workouts);
