@@ -252,14 +252,22 @@ const WorkoutBuilder: React.FC<WorkoutBuilderProps> = ({
           </div>
         ) : (
           <div className="space-y-2">
-            {currentList.map((ex, idx) => (
-              <ExerciseEditor
-                key={idx}
-                exercise={ex}
-                onChange={(patch) => updateExercise(idx, patch)}
-                onRemove={() => removeExercise(idx)}
-              />
-            ))}
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext
+                items={currentList.map((_, i) => `ex-${i}`)}
+                strategy={verticalListSortingStrategy}
+              >
+                {currentList.map((ex, idx) => (
+                  <SortableExerciseEditor
+                    key={`ex-${idx}`}
+                    id={`ex-${idx}`}
+                    exercise={ex}
+                    onChange={(patch) => updateExercise(idx, patch)}
+                    onRemove={() => removeExercise(idx)}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
             <button
               onClick={() => setShowLibrary(true)}
               className="w-full h-12 rounded-2xl border border-dashed border-white/[0.12] text-[14px] font-medium text-muted-foreground inline-flex items-center justify-center gap-2 active:opacity-60"
