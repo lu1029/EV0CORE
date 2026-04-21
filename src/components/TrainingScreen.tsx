@@ -12,6 +12,8 @@ import { getCuratedPlans, type Level, type CuratedPlan } from "./training/curate
 import { useSavedPlan } from "@/hooks/useSavedPlan";
 import { TrainingSkeleton } from "./skeletons/TrainingSkeleton";
 import { fadeUp, stagger, staggerFast, springSnappy, easeApple } from "@/lib/motion";
+import EquipmentSelector from "./training/EquipmentSelector";
+import { EQUIPMENT_OPTIONS, loadEquipment, saveEquipment, planFits, type EquipmentKey } from "./training/equipmentTypes";
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/evo-ai-chat`;
 
@@ -37,6 +39,9 @@ const TrainingScreen = () => {
   const [selectedLevel, setSelectedLevel] = useState<Level>(inferLevelFromProfile(userProfile.level));
   const [showBuilder, setShowBuilder] = useState(false);
   const [builderInitial, setBuilderInitial] = useState<{ name: string; workouts: Record<string, Exercise[]> } | undefined>();
+  const [equipment, setEquipment] = useState<EquipmentKey[]>(() => loadEquipment());
+
+  useEffect(() => { saveEquipment(equipment); }, [equipment]);
 
   const gymSaved = useSavedPlan("gym");
   const homeSaved = useSavedPlan("home");
