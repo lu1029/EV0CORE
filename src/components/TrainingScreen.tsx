@@ -272,9 +272,10 @@ const TrainingScreen = () => {
         ) : (
           <motion.div
             key={tab}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial="hidden"
+            animate="visible"
             exit={{ opacity: 0, y: -8 }}
+            variants={stagger}
             transition={{ duration: 0.25, ease: easeApple }}
           >
             {/* Nível */}
