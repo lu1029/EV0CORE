@@ -268,6 +268,7 @@ export type Database = {
           likes_count: number
           photo_url: string | null
           post_type: string
+          submission_token: string | null
           updated_at: string
           user_id: string
         }
@@ -280,6 +281,7 @@ export type Database = {
           likes_count?: number
           photo_url?: string | null
           post_type: string
+          submission_token?: string | null
           updated_at?: string
           user_id: string
         }
@@ -292,6 +294,7 @@ export type Database = {
           likes_count?: number
           photo_url?: string | null
           post_type?: string
+          submission_token?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -642,6 +645,24 @@ export type Database = {
           photo_url?: string | null
           user_id?: string
           weight_kg?: number | null
+        }
+        Relationships: []
+      }
+      rate_limits: {
+        Row: {
+          count: number
+          key: string
+          window_start: string
+        }
+        Insert: {
+          count?: number
+          key: string
+          window_start: string
+        }
+        Update: {
+          count?: number
+          key?: string
+          window_start?: string
         }
         Relationships: []
       }
