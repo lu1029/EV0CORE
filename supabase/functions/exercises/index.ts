@@ -3,12 +3,7 @@
 // Cache em exercise_library para reduzir latência.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-};
+import { getCorsHeaders, securityHeaders } from "../_shared/cors.ts";
 
 const API_BASE = "https://oss.exercisedb.dev/api/v1";
 
@@ -107,6 +102,7 @@ async function cacheExercises(items: NormalizedExercise[]) {
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -117,7 +113,7 @@ serve(async (req) => {
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders, ...securityHeaders, "Content-Type": "application/json" },
       });
     }
     const userClient = createClient(
@@ -131,7 +127,7 @@ serve(async (req) => {
     if (authErr || !claims?.claims) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders, ...securityHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -155,7 +151,7 @@ serve(async (req) => {
     if (cached && cached.length >= Math.min(limit, 8)) {
       return new Response(
         JSON.stringify({ source: "cache", items: cached }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        { headers: { ...corsHeaders, ...securityHeaders, "Content-Type": "application/json" } },
       );
     }
 
@@ -173,7 +169,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ source: "oss", items: normalized }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      { headers: { ...corsHeaders, ...securityHeaders, "Content-Type": "application/json" } },
     );
   } catch (e) {
     console.error("exercises error:", e);
@@ -181,7 +177,7 @@ serve(async (req) => {
       JSON.stringify({ error: e instanceof Error ? e.message : "Internal error" }),
       {
         status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders, ...securityHeaders, "Content-Type": "application/json" },
       },
     );
   }

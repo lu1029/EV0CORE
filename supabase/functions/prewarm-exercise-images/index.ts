@@ -1,10 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders, securityHeaders } from "../_shared/cors.ts";
 
 // Lista enxuta de exercícios mais comuns (academia + casa com objetos)
 // que devem ter imagem fotorrealista pré-cacheada para garantir UX instantânea.
@@ -62,6 +58,7 @@ const COMMON_EXERCISES: Array<{ name: string; muscle: string }> = [
 ];
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
@@ -70,7 +67,6 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Verifica quais ainda não estão cacheados
     const { data: cached } = await supabase
       .from("exercise_image_cache")
       .select("name_key")
@@ -84,7 +80,6 @@ serve(async (req) => {
     let success = 0;
     let failed = 0;
 
-    // Gera em série com pequena pausa para não esgotar rate limit
     for (const ex of todo) {
       try {
         const res = await fetch(
@@ -100,10 +95,9 @@ serve(async (req) => {
         );
         if (res.ok) success++;
         else failed++;
-      } catch (e) {
+      } catch {
         failed++;
       }
-      // ~1.5s entre chamadas
       await new Promise((r) => setTimeout(r, 1500));
     }
 
@@ -114,13 +108,13 @@ serve(async (req) => {
         generated: success,
         failed,
       }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      { headers: { ...corsHeaders, ...securityHeaders, "Content-Type": "application/json" } },
     );
   } catch (e) {
     console.error("prewarm-exercise-images error:", e);
     return new Response(JSON.stringify({ error: String(e) }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders, ...securityHeaders, "Content-Type": "application/json" },
     });
   }
 });
