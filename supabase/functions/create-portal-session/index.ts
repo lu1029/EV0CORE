@@ -1,14 +1,15 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { type StripeEnv, createStripeClient } from "../_shared/stripe.ts";
+import { getCorsHeaders, securityHeaders } from "../_shared/cors.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
 );
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -19,7 +20,7 @@ serve(async (req) => {
     if (authError || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders, ...securityHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -37,7 +38,7 @@ serve(async (req) => {
     if (!sub?.stripe_customer_id) {
       return new Response(JSON.stringify({ error: "No subscription found" }), {
         status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders, ...securityHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -47,13 +48,13 @@ serve(async (req) => {
     });
 
     return new Response(JSON.stringify({ url: portal.url }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders, ...securityHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
     console.error('create-portal-session error:', error);
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders, ...securityHeaders, "Content-Type": "application/json" },
     });
   }
 });

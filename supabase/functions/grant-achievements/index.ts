@@ -2,11 +2,7 @@
 // and inserts only achievements the user has actually earned. Prevents users
 // from awarding themselves arbitrary achievements via direct DB writes.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders, securityHeaders } from "../_shared/cors.ts";
 
 interface Stats {
   totalWorkouts: number;
@@ -42,29 +38,28 @@ const ACHIEVEMENT_DEFS: Array<{
 ];
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, ...securityHeaders, "Content-Type": "application/json" } });
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Verify the caller's identity using their JWT.
     const userClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
     });
     const { data: userData, error: userErr } = await userClient.auth.getUser();
     if (userErr || !userData.user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, ...securityHeaders, "Content-Type": "application/json" } });
     }
     const userId = userData.user.id;
 
-    // Use service role for authoritative reads + writes.
     const admin = createClient(supabaseUrl, serviceKey);
 
     const [unlockedRes, workoutsRes, exercisesRes, runsRes] = await Promise.all([
@@ -106,13 +101,13 @@ Deno.serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ unlocked: newRows.map((r) => r.name) }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders, ...securityHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
     console.error("grant-achievements error", err);
     return new Response(JSON.stringify({ error: "Internal error" }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders, ...securityHeaders, "Content-Type": "application/json" },
     });
   }
 });
