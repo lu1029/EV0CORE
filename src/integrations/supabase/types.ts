@@ -41,6 +41,154 @@ export type Database = {
         }
         Relationships: []
       }
+      club_members: {
+        Row: {
+          club_id: string
+          id: string
+          joined_at: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          club_id: string
+          id?: string
+          joined_at?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          club_id?: string
+          id?: string
+          joined_at?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_members_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      club_posts: {
+        Row: {
+          activity_data: Json | null
+          club_id: string
+          content: string
+          created_at: string
+          id: string
+          photo_url: string | null
+          user_id: string
+        }
+        Insert: {
+          activity_data?: Json | null
+          club_id: string
+          content?: string
+          created_at?: string
+          id?: string
+          photo_url?: string | null
+          user_id: string
+        }
+        Update: {
+          activity_data?: Json | null
+          club_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          photo_url?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_posts_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clubs: {
+        Row: {
+          category: string
+          cover_url: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_private: boolean
+          members_count: number
+          name: string
+          owner_id: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_private?: boolean
+          members_count?: number
+          name: string
+          owner_id: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_private?: boolean
+          members_count?: number
+          name?: string
+          owner_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      daily_checkins: {
+        Row: {
+          checkin_date: string
+          created_at: string
+          hit_calorie_goal: boolean
+          id: string
+          logged_meal: boolean
+          manual_checkin: boolean
+          ran: boolean
+          updated_at: string
+          user_id: string
+          worked_out: boolean
+        }
+        Insert: {
+          checkin_date?: string
+          created_at?: string
+          hit_calorie_goal?: boolean
+          id?: string
+          logged_meal?: boolean
+          manual_checkin?: boolean
+          ran?: boolean
+          updated_at?: string
+          user_id: string
+          worked_out?: boolean
+        }
+        Update: {
+          checkin_date?: string
+          created_at?: string
+          hit_calorie_goal?: boolean
+          id?: string
+          logged_meal?: boolean
+          manual_checkin?: boolean
+          ran?: boolean
+          updated_at?: string
+          user_id?: string
+          worked_out?: boolean
+        }
+        Relationships: []
+      }
       exercise_image_cache: {
         Row: {
           created_at: string
@@ -372,6 +520,35 @@ export type Database = {
           },
         ]
       }
+      post_saves: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_saves_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "feed_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           age: number
@@ -594,6 +771,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
+          id?: string
+        }
+        Relationships: []
+      }
       water_logs: {
         Row: {
           amount_ml: number
@@ -717,6 +915,10 @@ export type Database = {
     Functions: {
       has_active_subscription: {
         Args: { check_env?: string; user_uuid: string }
+        Returns: boolean
+      }
+      is_club_member: {
+        Args: { _club_id: string; _user_id: string }
         Returns: boolean
       }
       is_email_confirmed: { Args: never; Returns: boolean }
