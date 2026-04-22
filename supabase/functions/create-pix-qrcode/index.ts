@@ -1,10 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders, securityHeaders } from "../_shared/cors.ts";
+import { checkRateLimit, rateLimitResponse } from "../_shared/rateLimiter.ts";
 
 interface PixRequestBody {
   fullName: string;
@@ -42,6 +38,7 @@ function isValidCPF(cpf: string) {
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -51,7 +48,7 @@ Deno.serve(async (req) => {
     if (!apiKey) {
       return new Response(
         JSON.stringify({ error: "ABACATEPAY_API_KEY não configurada" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        { status: 500, headers: { ...corsHeaders, ...securityHeaders, "Content-Type": "application/json" } },
       );
     }
 
@@ -66,6 +63,14 @@ Deno.serve(async (req) => {
     if (jwt) {
       const { data } = await supabase.auth.getUser(jwt);
       userId = data.user?.id ?? null;
+    }
+
+    // Rate limit: 3 charges per 60 min per authenticated user
+    if (userId) {
+      const rl = await checkRateLimit(supabase, `pix:user:${userId}`, 3, 60);
+      if (!rl.allowed) {
+        return rateLimitResponse(60, 3, { ...corsHeaders, ...securityHeaders });
+      }
     }
 
     const body = (await req.json()) as PixRequestBody;
@@ -89,7 +94,7 @@ Deno.serve(async (req) => {
     if (Object.keys(errors).length > 0) {
       return new Response(JSON.stringify({ error: "validation", fields: errors }), {
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders, ...securityHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -125,13 +130,12 @@ Deno.serve(async (req) => {
           status: abacateRes.status,
           details: json,
         }),
-        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        { status: 502, headers: { ...corsHeaders, ...securityHeaders, "Content-Type": "application/json" } },
       );
     }
 
     const data = (json as any)?.data ?? json;
 
-    // Persist pending charge so the webhook can map abacate_id → user_id later
     if (userId) {
       const { error: insErr } = await supabase.from("pix_charges").insert({
         user_id: userId,
@@ -157,13 +161,13 @@ Deno.serve(async (req) => {
         expiresAt: data?.expiresAt,
         externalId,
       }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      { status: 200, headers: { ...corsHeaders, ...securityHeaders, "Content-Type": "application/json" } },
     );
   } catch (err) {
     console.error("create-pix-qrcode error", err);
     return new Response(JSON.stringify({ error: (err as Error).message }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders, ...securityHeaders, "Content-Type": "application/json" },
     });
   }
 });

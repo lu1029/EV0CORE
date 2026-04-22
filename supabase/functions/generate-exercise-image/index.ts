@@ -5,12 +5,8 @@
 // Salva no bucket público `exercise-images` para servir como CDN.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+import { getCorsHeaders, securityHeaders } from "../_shared/cors.ts";
+import { checkRateLimit, rateLimitResponse } from "../_shared/rateLimiter.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -150,6 +146,7 @@ async function generateAndStore(name: string, hint?: string): Promise<{ url: str
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
@@ -157,7 +154,7 @@ serve(async (req) => {
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders, ...securityHeaders, "Content-Type": "application/json" },
       });
     }
     const userClient = createClient(SUPABASE_URL, ANON_KEY, {
@@ -169,8 +166,13 @@ serve(async (req) => {
     if (authErr || !claims?.claims) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders, ...securityHeaders, "Content-Type": "application/json" },
       });
+    }
+    const userId = claims.claims.sub as string;
+    const rl = await checkRateLimit(admin, `exercise-img:user:${userId}`, 10, 60);
+    if (!rl.allowed) {
+      return rateLimitResponse(60, 10, { ...corsHeaders, ...securityHeaders });
     }
 
     const body = await req.json().catch(() => ({}));
@@ -179,7 +181,7 @@ serve(async (req) => {
     if (!name || name.length < 2 || name.length > 120) {
       return new Response(JSON.stringify({ error: "Invalid name" }), {
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders, ...securityHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -194,7 +196,7 @@ serve(async (req) => {
     if (cached?.image_url) {
       return new Response(
         JSON.stringify({ source: "cache", image_url: cached.image_url }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        { headers: { ...corsHeaders, ...securityHeaders, "Content-Type": "application/json" } },
       );
     }
 
@@ -208,7 +210,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ source: provider, image_url: url }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      { headers: { ...corsHeaders, ...securityHeaders, "Content-Type": "application/json" } },
     );
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Internal error";
@@ -216,18 +218,18 @@ serve(async (req) => {
     if (msg.includes("429")) {
       return new Response(JSON.stringify({ error: "Rate limited, try again later." }), {
         status: 429,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders, ...securityHeaders, "Content-Type": "application/json" },
       });
     }
     if (msg.includes("402")) {
       return new Response(JSON.stringify({ error: "AI credits exhausted." }), {
         status: 402,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders, ...securityHeaders, "Content-Type": "application/json" },
       });
     }
     return new Response(JSON.stringify({ error: msg }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders, ...securityHeaders, "Content-Type": "application/json" },
     });
   }
 });

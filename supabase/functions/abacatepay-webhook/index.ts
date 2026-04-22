@@ -24,8 +24,7 @@ Deno.serve(async (req) => {
 
   try {
     const expected = Deno.env.get("ABACATEPAY_WEBHOOK_SECRET");
-    const url = new URL(req.url);
-    const provided = url.searchParams.get("webhookSecret");
+    const provided = req.headers.get("X-Webhook-Secret");
     if (!expected || !provided || expected !== provided) {
       console.warn("abacatepay-webhook: invalid secret");
       return new Response(JSON.stringify({ error: "unauthorized" }), {
