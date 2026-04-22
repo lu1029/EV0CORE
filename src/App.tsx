@@ -17,6 +17,8 @@ import PremiumScreen from "@/components/PremiumScreen";
 import ProfileScreen from "@/components/ProfileScreen";
 import SearchScreen from "@/components/SearchScreen";
 import AIChatScreen from "@/components/AIChatScreen";
+import ComunidadeScreen from "@/components/ComunidadeScreen";
+import ClubesScreen from "@/components/ClubesScreen";
 import NotFound from "./pages/NotFound";
 import CheckoutReturn from "./pages/CheckoutReturn";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -64,6 +66,8 @@ const App = () => (
                   <Route path="/perfil" element={<ProfileScreen />} />
                   <Route path="/buscar" element={<SearchScreen />} />
                   <Route path="/ai" element={<AIChatScreen />} />
+                  <Route path="/comunidade" element={<ComunidadeScreen />} />
+                  <Route path="/clubes" element={<ClubesScreen />} />
                   <Route path="/assinatura" element={<Navigate to="/premium" replace />} />
                   <Route path="/configuracoes" element={<Configuracoes />} />
                   <Route path="/configuracoes/idioma" element={<LanguageSettings />} />
