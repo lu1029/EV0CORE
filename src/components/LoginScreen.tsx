@@ -27,6 +27,7 @@ const LoginScreen = () => {
     nextUri: string;
     errorMessage: string;
   } | null>(null);
+  const [forgotCooldown, setForgotCooldown] = useState(0);
 
   useEffect(() => {
     // Staggered entrance animations
@@ -83,6 +84,13 @@ const LoginScreen = () => {
           email, password,
           options: {
             data: { full_name: sanitizeText(name) },
+            emailRedirectTo: `${window.location.origin}/`,
+          },
+        });
+        const { error } = await supabase.auth.signUp({
+          email, password,
+          options: {
+            data: { full_name: sanitizeText(name).slice(0, 60) },
             emailRedirectTo: `${window.location.origin}/`,
           },
         });
