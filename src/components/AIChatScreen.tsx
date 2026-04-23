@@ -210,15 +210,21 @@ const AIChatScreen = () => {
           onSubmit={(e) => { e.preventDefault(); sendMessage(input); }}
           className="flex items-center gap-2"
         >
-          <input
-            ref={inputRef}
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Pergunte algo..."
-            className="flex-1 bg-secondary/60 rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none border border-border/50 focus:border-primary/50 transition-colors"
-            disabled={isLoading}
-          />
+          <div className="flex-1 flex flex-col gap-1">
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value.slice(0, 2000))}
+              maxLength={2000}
+              placeholder="Pergunte algo..."
+              className="w-full bg-secondary/60 rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none border border-border/50 focus:border-primary/50 transition-colors"
+              disabled={isLoading}
+            />
+            {input.length > 1800 && (
+              <p className="text-[10px] text-muted-foreground text-right pr-1">{input.length}/2000</p>
+            )}
+          </div>
           <Button
             type="submit"
             variant="hero"
