@@ -36,6 +36,47 @@ const LoginScreen = () => {
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
+  // Handle OAuth error returned by the broker (e.g. State verification failed)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const err = params.get("error");
+    const errCode = params.get("error_code") || params.get("code");
+    const errDesc = params.get("error_description") || params.get("message");
+    if (!err && !errDesc) return;
+
+    // Clean stale OAuth state so the next attempt starts fresh
+    try {
+      Object.keys(sessionStorage).forEach((k) => {
+        if (/oauth|state|pkce|verifier/i.test(k)) sessionStorage.removeItem(k);
+      });
+      Object.keys(localStorage).forEach((k) => {
+        if (/oauth-state|pkce|code-verifier/i.test(k)) localStorage.removeItem(k);
+      });
+    } catch {}
+
+    const isStateError =
+      /state/i.test(err || "") ||
+      /state/i.test(errDesc || "") ||
+      errCode === "invalid_request";
+
+    const friendly = isStateError
+      ? "A sessão de login expirou. Tente entrar novamente."
+      : errDesc || "Não foi possível concluir o login. Tente novamente.";
+
+    toast.error(friendly);
+    logSecurityEvent("login_failure", {
+      reason: "oauth_callback_error",
+      error: err,
+      error_code: errCode,
+      message: errDesc,
+    });
+
+    // Clean the URL so the error doesn't persist on refresh
+    const cleanUrl = window.location.pathname + window.location.hash;
+    window.history.replaceState({}, document.title, cleanUrl);
+  }, []);
+
   // Detect if the custom domain is reachable. If we're already on the
   // Lovable domain or localhost, no check is needed.
   useEffect(() => {
