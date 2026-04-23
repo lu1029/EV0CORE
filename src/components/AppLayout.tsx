@@ -4,7 +4,7 @@ import { useApp } from "@/contexts/AppContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import LoginScreen from "@/components/LoginScreen";
 import OnboardingScreen from "@/components/OnboardingScreen";
-import BottomNav from "@/components/BottomNav";
+import BottomNav from "@/components/SmartNavigationBar";
 import EvoAIFab from "@/components/EvoAIFab";
 import { Sun, Moon, Search, X } from "lucide-react";
 import evocoreLogo from "@/assets/evocore-logo.png";
