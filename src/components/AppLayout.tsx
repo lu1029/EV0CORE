@@ -6,6 +6,7 @@ import LoginScreen from "@/components/LoginScreen";
 import OnboardingScreen from "@/components/OnboardingScreen";
 import BottomNav from "@/components/SmartNavigationBar";
 import EvoAIFab from "@/components/EvoAIFab";
+import InstallPwaPrompt from "@/components/InstallPwaPrompt";
 import { Sun, Moon, Search, X } from "lucide-react";
 import evocoreLogo from "@/assets/evocore-logo.png";
 import { PageTransition } from "@/components/PageTransition";
@@ -67,6 +68,7 @@ const AppLayout = () => {
       </PageTransition>
       <EvoAIFab />
       <BottomNav />
+      <InstallPwaPrompt />
     </div>
   );
 };
