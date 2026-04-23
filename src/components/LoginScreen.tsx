@@ -27,6 +27,7 @@ const LoginScreen = () => {
     nextUri: string;
     errorMessage: string;
   } | null>(null);
+  const [forgotCooldown, setForgotCooldown] = useState(0);
 
   useEffect(() => {
     // Staggered entrance animations
@@ -82,7 +83,7 @@ const LoginScreen = () => {
         const { error } = await supabase.auth.signUp({
           email, password,
           options: {
-            data: { full_name: sanitizeText(name) },
+            data: { full_name: sanitizeText(name).slice(0, 60) },
             emailRedirectTo: `${window.location.origin}/`,
           },
         });
@@ -113,17 +114,26 @@ const LoginScreen = () => {
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (forgotCooldown > 0 || loading) return;
     if (!email) { toast.error("Digite seu e-mail"); return; }
     setLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-      if (error) throw error;
-      toast.success("Link de recuperação enviado para seu e-mail!");
+      try {
+        await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+      } catch {
+        // swallow — always show generic message
+      }
+      toast.success("Se este e-mail estiver cadastrado, você receberá um link em breve.");
       setIsForgotPassword(false);
-    } catch (error: any) {
-      toast.error(error.message || "Erro ao enviar link");
+      setForgotCooldown(60);
+      const interval = setInterval(() => {
+        setForgotCooldown(prev => {
+          if (prev <= 1) { clearInterval(interval); return 0; }
+          return prev - 1;
+        });
+      }, 1000);
     } finally {
       setLoading(false);
     }
@@ -176,8 +186,8 @@ const LoginScreen = () => {
           <Input type="email" placeholder="Seu e-mail" value={email} onChange={(e) => setEmail(e.target.value)}
             className="pl-10 h-12 bg-secondary/50 border-border/30 text-foreground placeholder:text-muted-foreground rounded-xl backdrop-blur-sm" />
         </div>
-        <Button type="submit" className="w-full h-12 rounded-xl text-base gradient-primary text-primary-foreground font-semibold" disabled={loading}>
-          {loading ? "Enviando..." : "Enviar link"}
+        <Button type="submit" className="w-full h-12 rounded-xl text-base gradient-primary text-primary-foreground font-semibold" disabled={loading || forgotCooldown > 0}>
+          {loading ? "Enviando..." : forgotCooldown > 0 ? `Aguarde ${forgotCooldown}s` : "Enviar link"}
         </Button>
       </form>
       <div className="text-center pt-4">
@@ -214,7 +224,7 @@ const LoginScreen = () => {
         {isSignUp && (
           <div className="relative animate-fade-in">
             <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input placeholder="Seu nome" value={name} onChange={(e) => setName(e.target.value)}
+            <Input placeholder="Seu nome" value={name} onChange={(e) => setName(e.target.value)} maxLength={60}
               className="pl-10 h-12 bg-secondary/50 border-border/30 text-foreground placeholder:text-muted-foreground rounded-xl backdrop-blur-sm" />
           </div>
         )}

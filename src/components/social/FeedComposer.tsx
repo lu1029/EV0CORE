@@ -1,10 +1,19 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { X, Camera, Loader2, Dumbbell, Footprints, Apple, TrendingUp, FileText } from "lucide-react";
 import { useFeed, type PostType } from "@/hooks/useFeed";
 import { supabase } from "@/integrations/supabase/client";
 import { useApp } from "@/contexts/AppContext";
 import { toast } from "sonner";
+
+const MAX_FEED_PHOTO_SIZE = 10 * 1024 * 1024;
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+const MIME_TO_EXT: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/gif": "gif",
+};
 
 interface Props { open: boolean; onClose: () => void; defaultType?: PostType; defaultActivity?: any; }
 
@@ -24,17 +33,27 @@ export default function FeedComposer({ open, onClose, defaultType = "journal", d
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const submissionTokenRef = useRef<string>(crypto.randomUUID());
 
   if (!open) return null;
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]; if (!f) return;
+    if (!ALLOWED_TYPES.includes(f.type)) {
+      toast.error("Formato não suportado. Use JPG, PNG, WEBP ou GIF.");
+      return;
+    }
+    if (f.size > MAX_FEED_PHOTO_SIZE) {
+      toast.error("Foto muito grande. Máximo 10MB.");
+      return;
+    }
     setPhotoFile(f);
     setPreview(URL.createObjectURL(f));
   };
 
   const submit = async () => {
     if (!user) return;
+    if (submitting) return;
     if (!caption.trim() && !photoFile) {
       toast.error("Adicione uma foto ou escreva algo");
       return;
@@ -43,15 +62,23 @@ export default function FeedComposer({ open, onClose, defaultType = "journal", d
     try {
       let photo_url: string | null = null;
       if (photoFile) {
-        const path = `${user.id}/${Date.now()}-${photoFile.name.replace(/[^a-z0-9.\-_]/gi, "_")}`;
+        const ext = MIME_TO_EXT[photoFile.type] || "jpg";
+        const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
         const { error: upErr } = await supabase.storage.from("feed-photos").upload(path, photoFile, { upsert: false });
         if (upErr) throw upErr;
         const { data: pub } = supabase.storage.from("feed-photos").getPublicUrl(path);
         photo_url = pub.publicUrl;
       }
-      await createPost({ post_type: type, caption: caption.trim(), photo_url, activity_data: defaultActivity ?? {} });
+      await createPost({
+        post_type: type,
+        caption: caption.trim(),
+        photo_url,
+        activity_data: defaultActivity ?? {},
+        submission_token: submissionTokenRef.current,
+      });
       toast.success("Publicado no feed!");
       setCaption(""); setPhotoFile(null); setPreview(null);
+      submissionTokenRef.current = crypto.randomUUID();
       onClose();
     } catch (e: any) {
       toast.error(e?.message ?? "Erro ao publicar");
@@ -91,13 +118,17 @@ export default function FeedComposer({ open, onClose, defaultType = "journal", d
             })}
           </div>
 
-          <textarea
-            value={caption}
-            onChange={e => setCaption(e.target.value)}
-            placeholder="O que você conquistou hoje?"
-            rows={5}
-            className="w-full bg-secondary/50 border border-border rounded-2xl p-4 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/40"
-          />
+          <div className="space-y-1">
+            <textarea
+              value={caption}
+              onChange={e => setCaption(e.target.value.slice(0, 2000))}
+              maxLength={2000}
+              placeholder="O que você conquistou hoje?"
+              rows={5}
+              className="w-full bg-secondary/50 border border-border rounded-2xl p-4 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/40"
+            />
+            <p className="text-[11px] text-muted-foreground text-right">{caption.length}/2000</p>
+          </div>
 
           {preview && (
             <div className="relative rounded-2xl overflow-hidden border border-border">
