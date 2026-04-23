@@ -83,13 +83,6 @@ const LoginScreen = () => {
         const { error } = await supabase.auth.signUp({
           email, password,
           options: {
-            data: { full_name: sanitizeText(name) },
-            emailRedirectTo: `${window.location.origin}/`,
-          },
-        });
-        const { error } = await supabase.auth.signUp({
-          email, password,
-          options: {
             data: { full_name: sanitizeText(name).slice(0, 60) },
             emailRedirectTo: `${window.location.origin}/`,
           },
