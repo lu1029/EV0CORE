@@ -12,6 +12,7 @@ import {
   Trophy,
   MoreHorizontal,
   X,
+  type LucideIcon,
 } from "lucide-react";
 
 /**
@@ -25,7 +26,7 @@ import {
 type Tab = {
   to: string;
   label: string;
-  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+  icon: LucideIcon;
 };
 
 const PRIMARY_TABS: Tab[] = [
