@@ -183,6 +183,14 @@ const LoginScreen = () => {
   const runOAuth = async (provider: "google" | "apple") => {
     setLoading(true);
     setRetryState(null);
+
+    // Clean any stale OAuth state from a previous/aborted attempt before starting
+    try {
+      Object.keys(sessionStorage).forEach((k) => {
+        if (/oauth|state|pkce|verifier/i.test(k)) sessionStorage.removeItem(k);
+      });
+    } catch {}
+
     const redirect_uri = typeof window !== "undefined" ? window.location.origin : "";
     console.info(`[OAuth:${provider}] iniciando`, { redirect_uri });
 
