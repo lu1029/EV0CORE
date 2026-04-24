@@ -1037,6 +1037,7 @@ export type Database = {
           location_type: string
           title: string
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           cover_url?: string | null
@@ -1050,6 +1051,7 @@ export type Database = {
           location_type: string
           title: string
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           cover_url?: string | null
@@ -1063,6 +1065,7 @@ export type Database = {
           location_type?: string
           title?: string
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
