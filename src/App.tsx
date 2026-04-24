@@ -33,6 +33,10 @@ import Configuracoes from "./pages/Configuracoes";
 import TreinoDetalhe from "./pages/TreinoDetalhe";
 import CorridaAtiva from "./pages/CorridaAtiva";
 import PixCheckout from "./pages/PixCheckout";
+import Workouts from "./pages/Workouts";
+import WorkoutDetail from "./pages/WorkoutDetail";
+import WorkoutSession from "./pages/WorkoutSession";
+import WorkoutSummary from "./pages/WorkoutSummary";
 
 const queryClient = new QueryClient();
 
@@ -76,6 +80,10 @@ const App = () => (
                   <Route path="/corrida/ativa" element={<CorridaAtiva />} />
                   <Route path="/corrida/resultado/:id" element={<RunResult />} />
                   <Route path="/pix" element={<PixCheckout />} />
+                  <Route path="/workouts" element={<Workouts />} />
+                  <Route path="/workout/:id" element={<WorkoutDetail />} />
+                  <Route path="/workout-session/:id" element={<WorkoutSession />} />
+                  <Route path="/workout-summary/:id" element={<WorkoutSummary />} />
                 </Route>
 
                 <Route path="*" element={<NotFound />} />
