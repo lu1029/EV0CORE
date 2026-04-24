@@ -28,11 +28,19 @@ export default function Workouts() {
 
   return (
     <div className="px-4 pt-4 pb-32 max-w-lg mx-auto animate-fade-in">
-      <header className="px-1 pb-4">
-        <p className="text-[13px] font-medium text-muted-foreground uppercase tracking-wide">Treinos</p>
-        <h1 className="text-[34px] font-bold tracking-tight text-foreground mt-1 leading-tight">
-          Escolha seu treino
-        </h1>
+      <header className="px-1 pb-4 flex items-end justify-between">
+        <div>
+          <p className="text-[13px] font-medium text-muted-foreground uppercase tracking-wide">Treinos</p>
+          <h1 className="text-[34px] font-bold tracking-tight text-foreground mt-1 leading-tight">
+            Escolha seu treino
+          </h1>
+        </div>
+        <button
+          onClick={() => navigate("/workout-builder")}
+          className="h-10 px-4 rounded-full bg-primary text-primary-foreground text-[13px] font-semibold active:opacity-80"
+        >
+          + Criar
+        </button>
       </header>
 
       {/* Tabs Casa/Academia */}
