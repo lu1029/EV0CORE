@@ -44,7 +44,7 @@ export default function WorkoutDetail() {
                 {data.goal}
               </span>
               {data.is_premium && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-500 flex items-center gap-1">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-primary/15 text-primary flex items-center gap-1">
                   <Lock className="w-3 h-3" /> Premium
                 </span>
               )}

@@ -31,7 +31,7 @@ type Tab = {
 
 const PRIMARY_TABS: Tab[] = [
   { to: "/home",     label: "Início",   icon: Home },
-  { to: "/treinos",  label: "Treino",   icon: Dumbbell },
+  { to: "/workouts", label: "Treino",   icon: Dumbbell },
   { to: "/nutricao", label: "Nutrição", icon: Apple },
   { to: "/perfil",   label: "Perfil",   icon: User },
 ];
