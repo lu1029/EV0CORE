@@ -247,20 +247,6 @@ const LoginScreen = () => {
     </div>
   ) : (
     <div className="space-y-4">
-      {customDomainDown && (
-        <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-left animate-fade-in">
-          <p className="text-xs font-semibold text-foreground">Conexão instável neste domínio</p>
-          <p className="text-[11px] text-muted-foreground mt-1 leading-snug">
-            Estamos com instabilidade em <span className="font-mono">ev0core.com</span>. Para entrar agora, use o domínio oficial:
-          </p>
-          <a
-            href="https://ev0core.lovable.app"
-            className="inline-block mt-2 text-xs font-semibold text-primary-foreground bg-primary px-3 py-1.5 rounded-lg active:scale-95 transition-transform"
-          >
-            Abrir ev0core.lovable.app →
-          </a>
-        </div>
-      )}
       <div className="text-center mb-4">
         <h2 className="text-2xl font-heading font-bold text-foreground">
           {isSignUp ? "Criar conta" : "Bem-vindo de volta"}
