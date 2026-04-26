@@ -61,13 +61,15 @@ serve(async (req) => {
         .map(normalize);
 
       if (items.length) {
-        const { error } = await supabase
+        const { data: upserted, error } = await supabase
           .from("exercise_library")
-          .upsert(items, { onConflict: "external_id" });
+          .upsert(items, { onConflict: "external_id", ignoreDuplicates: false })
+          .select("id");
         if (error) {
-          console.error("upsert error:", error);
+          console.error("upsert error:", JSON.stringify(error));
         } else {
-          imported += items.length;
+          imported += upserted?.length ?? 0;
+          console.log(`page ${i}: upserted ${upserted?.length ?? 0} items, cursor=${json.meta?.nextCursor}`);
         }
       }
 
