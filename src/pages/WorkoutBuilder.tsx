@@ -80,6 +80,7 @@ export default function WorkoutBuilderPage() {
           description: "Treino personalizado",
           goal, level, location_type: location,
           estimated_minutes: Math.max(15, picked.length * 8),
+          cover_url: picked.find((p) => p.ex.gif_url)?.ex.gif_url ?? null,
           is_premium: false,
           user_id: user.id,
         })
@@ -142,7 +143,7 @@ export default function WorkoutBuilderPage() {
                   {p.ex.gif_url && <img src={p.ex.gif_url} alt={p.ex.name} className="w-full h-full object-cover" loading="lazy" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[14px] font-semibold text-foreground truncate capitalize">{p.ex.name}</p>
+                  <p className="text-[14px] font-semibold text-foreground truncate">{translateExerciseName(p.ex.name)}</p>
                   <div className="flex gap-2 mt-1">
                     <NumInput value={p.sets} onChange={(v) => updateField(idx, "sets", v)} suffix="s" />
                     <input
