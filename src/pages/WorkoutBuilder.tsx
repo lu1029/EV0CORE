@@ -57,6 +57,11 @@ export default function WorkoutBuilderPage() {
     return library.filter((e) => location !== "casa" || isHomeFriendly(e.equipment));
   }, [library, location]);
 
+  useEffect(() => {
+    if (!showPicker || isLoading || loadingMore || !hasMore) return;
+    if (location === "casa" && filtered.length < 20) loadMore();
+  }, [showPicker, isLoading, loadingMore, hasMore, location, filtered.length, loadMore]);
+
   const addEx = (ex: LibraryExercise) => {
     setPicked((p) => [...p, { ex, sets: 3, reps: "10-12", rest_seconds: 60 }]);
     setShowPicker(false);
