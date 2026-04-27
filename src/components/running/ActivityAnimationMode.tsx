@@ -116,7 +116,26 @@ export const ActivityAnimationMode = ({
 
         const bounds = new g.maps.LatLngBounds();
         points.forEach((p) => bounds.extend(p));
+        boundsRef.current = bounds;
         map.fitBounds(bounds, 50);
+
+        // If user pans/zooms during playback, auto-unlock follow-cam
+        const onUserGesture = () => {
+          if (!followCamRef.current) return;
+          // Ignore programmatic camera moves (we set the flag while panning)
+          if (userInteractingRef.current) return;
+          followCamRef.current = false;
+          setFollowCam(false);
+        };
+        map.addListener("dragstart", onUserGesture);
+        map.addListener("zoom_changed", () => {
+          if (userInteractingRef.current) return;
+          // zoom_changed fires on programmatic too, so only react during playback when not flagged
+          if (followCamRef.current) {
+            followCamRef.current = false;
+            setFollowCam(false);
+          }
+        });
 
         // Faint base route (full path)
         new g.maps.Polyline({
@@ -188,6 +207,17 @@ export const ActivityAnimationMode = ({
     animate(timeMV, durationSeconds, { duration: DURATION, ease: "easeOut" });
     animate(elevMV, elevationGainM, { duration: DURATION, ease: "easeOut" });
 
+    // Zoom in for follow-cam if locked
+    if (followCamRef.current && mapRef.current) {
+      userInteractingRef.current = true;
+      mapRef.current.panTo(points[0]);
+      mapRef.current.setZoom(17);
+      // Release flag after the camera change settles
+      setTimeout(() => {
+        userInteractingRef.current = false;
+      }, 300);
+    }
+
     const total = points.length;
     const stepCount = Math.min(total, 120);
     const stepSize = Math.max(1, Math.floor(total / stepCount));
@@ -201,6 +231,15 @@ export const ActivityAnimationMode = ({
       glowRef.current?.setPath(slice);
       const head = points[Math.min(i, total) - 1];
       if (head && markerRef.current) markerRef.current.setPosition(head);
+      // Smooth follow-cam: panTo glides the camera
+      if (head && followCamRef.current && mapRef.current) {
+        userInteractingRef.current = true;
+        mapRef.current.panTo(head);
+        // Clear flag shortly after — pan animation is brief
+        window.setTimeout(() => {
+          userInteractingRef.current = false;
+        }, intervalMs + 50);
+      }
       setProgress(i / total);
 
       if (i >= total) {
