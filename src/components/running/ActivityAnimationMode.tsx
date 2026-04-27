@@ -329,6 +329,41 @@ export const ActivityAnimationMode = ({
     }, 400);
   };
 
+  const toggle3D = () => {
+    const next = !is3DRef.current;
+    is3DRef.current = next;
+    setIs3D(next);
+    if (!mapRef.current) return;
+    userInteractingRef.current = true;
+    if (next) {
+      mapRef.current.setTilt(67.5);
+      // Set initial heading from current marker forward
+      const pos = markerRef.current?.getPosition?.();
+      if (pos) {
+        // Find next nearby route point ahead of current to derive heading
+        const cur = { lat: pos.lat(), lng: pos.lng() };
+        // Use a point ~5 ahead in the path if possible
+        const idx = Math.max(
+          0,
+          Math.floor(progress * (points.length - 1)),
+        );
+        const ahead = points[Math.min(points.length - 1, idx + 5)] ?? points[points.length - 1];
+        if (ahead) mapRef.current.setHeading(bearingBetween(cur, ahead));
+        if (followCamRef.current) {
+          mapRef.current.panTo(pos);
+          mapRef.current.setZoom(18);
+        }
+      }
+    } else {
+      mapRef.current.setTilt(0);
+      mapRef.current.setHeading(0);
+      if (followCamRef.current) mapRef.current.setZoom(17);
+    }
+    setTimeout(() => {
+      userInteractingRef.current = false;
+    }, 400);
+  };
+
   if (points.length < 2) {
     return (
       <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
