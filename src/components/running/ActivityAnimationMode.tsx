@@ -105,7 +105,6 @@ export const ActivityAnimationMode = ({
   const [followCam, setFollowCam] = useState(true);
   const [is3D, setIs3D] = useState(false);
   const [speedState, setSpeedState] = useState(1);
-  const [progress, setProgress] = useState(0);
   const [progress, setProgress] = useState(0); // 0..1
 
   // Animated counters tied to progress
