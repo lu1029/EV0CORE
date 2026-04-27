@@ -333,19 +333,53 @@ export const PublishRunSheet = ({
               </div>
 
               {/* Caption */}
-              <div>
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-2">
-                  Legenda
-                </p>
-                <textarea
-                  value={caption}
-                  onChange={(e) => setCaption(e.target.value)}
-                  rows={3}
-                  maxLength={2000}
-                  placeholder={`Conta como foi a sua ${activityLabel.toLowerCase()}...`}
-                  className="w-full bg-secondary/40 border border-border rounded-2xl p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/40"
-                />
-              </div>
+              {(() => {
+                const CAPTION_MAX = 2000;
+                const CAPTION_WARN = 100; // start showing counter when ≤100 left
+                const trimmedLen = caption.trim().length;
+                const remaining = CAPTION_MAX - caption.length;
+                const tooLong = caption.length > CAPTION_MAX;
+                const showCounter = caption.length >= CAPTION_MAX - CAPTION_WARN || tooLong;
+                const counterColor = tooLong
+                  ? "text-destructive"
+                  : remaining <= 20
+                  ? "text-orange-400"
+                  : "text-muted-foreground";
+                return (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">
+                        Legenda
+                      </p>
+                      {showCounter && (
+                        <p className={`text-[10px] font-semibold ${counterColor}`}>
+                          {tooLong
+                            ? `${Math.abs(remaining)} a mais`
+                            : `${remaining} restantes`}
+                        </p>
+                      )}
+                    </div>
+                    <textarea
+                      value={caption}
+                      onChange={(e) => setCaption(e.target.value.slice(0, CAPTION_MAX))}
+                      rows={3}
+                      maxLength={CAPTION_MAX}
+                      placeholder={`Conta como foi a sua ${activityLabel.toLowerCase()}...`}
+                      aria-invalid={tooLong}
+                      className={`w-full bg-secondary/40 border rounded-2xl p-3 text-sm resize-none focus:outline-none focus:ring-2 ${
+                        tooLong
+                          ? "border-destructive focus:ring-destructive/40"
+                          : "border-border focus:ring-primary/40"
+                      }`}
+                    />
+                    {trimmedLen === 0 && (
+                      <p className="text-[10px] text-muted-foreground mt-1.5">
+                        Adicione uma legenda para publicar.
+                      </p>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* Activity stats summary chip */}
               <div className="flex flex-wrap gap-1.5">
@@ -357,25 +391,32 @@ export const PublishRunSheet = ({
               </div>
 
               {/* Publish button */}
-              <button
-                onClick={publish}
-                disabled={posting || done}
-                className="w-full h-12 rounded-2xl gradient-primary text-primary-foreground font-bold flex items-center justify-center gap-2 disabled:opacity-60 active:scale-[0.98] transition-transform"
-              >
-                {done ? (
-                  <>
-                    <Check className="w-4 h-4" /> Publicado
-                  </>
-                ) : posting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" /> Publicando...
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-4 h-4" /> Publicar no feed
-                  </>
-                )}
-              </button>
+              {(() => {
+                const CAPTION_MAX = 2000;
+                const trimmedLen = caption.trim().length;
+                const invalid = trimmedLen === 0 || caption.length > CAPTION_MAX;
+                return (
+                  <button
+                    onClick={publish}
+                    disabled={posting || done || invalid}
+                    className="w-full h-12 rounded-2xl gradient-primary text-primary-foreground font-bold flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed active:scale-[0.98] transition-transform"
+                  >
+                    {done ? (
+                      <>
+                        <Check className="w-4 h-4" /> Publicado
+                      </>
+                    ) : posting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" /> Publicando...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" /> Publicar no feed
+                      </>
+                    )}
+                  </button>
+                );
+              })()}
             </div>
           </motion.div>
         </>
