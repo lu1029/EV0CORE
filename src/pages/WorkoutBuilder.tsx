@@ -191,7 +191,8 @@ export default function WorkoutBuilderPage() {
             ) : filtered.length === 0 ? (
               <p className="text-center text-muted-foreground py-12">Nenhum exercício encontrado</p>
             ) : (
-              filtered.map((ex) => (
+              <>
+              {filtered.map((ex) => (
                 <button
                   key={ex.id}
                   onClick={() => addEx(ex)}
@@ -201,12 +202,25 @@ export default function WorkoutBuilderPage() {
                     {ex.gif_url && <img src={ex.gif_url} alt={ex.name} className="w-full h-full object-cover" loading="lazy" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[14px] font-semibold capitalize truncate">{ex.name}</p>
-                    <p className="text-[11px] text-muted-foreground capitalize">{ex.body_part} · {ex.equipment}</p>
+                    <p className="text-[14px] font-semibold truncate">{translateExerciseName(ex.name)}</p>
+                    <p className="text-[11px] text-muted-foreground truncate">
+                      {translateMuscle(ex.body_part)} · {translateEquipment(ex.equipment)}
+                    </p>
                   </div>
                   <Plus className="w-5 h-5 text-primary" />
                 </button>
-              ))
+              ))}
+              <div ref={sentinelRef} className="h-8" />
+              {loadingMore && (
+                <div className="flex items-center justify-center gap-2 py-4 text-muted-foreground">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span className="text-[12px]">Carregando mais exercícios…</span>
+                </div>
+              )}
+              {!hasMore && filtered.length > 0 && (
+                <p className="text-center text-[11px] text-muted-foreground py-4">{filtered.length} exercícios disponíveis</p>
+              )}
+              </>
             )}
           </div>
         </div>
