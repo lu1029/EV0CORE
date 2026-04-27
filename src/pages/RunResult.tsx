@@ -310,8 +310,5 @@ const RunResult = () => {
 };
 
 export default RunResult;
-    </div>
-  );
-};
 
 export default RunResult;
