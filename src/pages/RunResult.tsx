@@ -87,7 +87,16 @@ const RunResult = () => {
   const points = (run?.route_data as any)?.points ?? [];
   const hasRoute = Array.isArray(points) && points.length > 1;
 
-  const activityLabel = run ? t(`running.${ACTIVITY_LABELS[run.activity_type] ?? "activities_run"}`) : "";
+  const ACTIVITY_FALLBACKS: Record<string, string> = {
+    activities_run: "Corrida",
+    activities_walk: "Caminhada",
+    activities_bike: "Bike",
+    activities_treadmill: "Esteira",
+    activities_elliptical: "Elíptico",
+    activities_stairs: "Escada",
+  };
+  const activityKey = run ? (ACTIVITY_LABELS[run.activity_type] ?? "activities_run") : "activities_run";
+  const activityLabel = run ? t(`running.${activityKey}`, ACTIVITY_FALLBACKS[activityKey]) : "";
   const distanceKm = run ? Number(run.distance_km) : 0;
   const durationFormatted = run ? formatTime(run.duration_seconds) : "00:00";
   const paceFormatted = run ? formatPace(run.pace_min_km) : "--:--";
@@ -241,12 +250,12 @@ const RunResult = () => {
           </div>
           <div className="grid grid-cols-2 gap-y-5 gap-x-4">
             {[
-              { label: t("running.distance"), value: distanceKm.toFixed(2), unit: "km" },
-              { label: t("running.time"), value: durationFormatted, unit: "" },
-              { label: t("running.pace"), value: paceFormatted, unit: "/km" },
-              { label: t("running.calories"), value: `${calories}`, unit: "kcal" },
-              { label: t("running.avgSpeed"), value: Number(avgSpeed).toFixed(1), unit: "km/h" },
-              { label: "Elevação", value: `${Math.round(elevationGain)}`, unit: "m" },
+              { label: t("running.distance", "Distância"), value: distanceKm.toFixed(2), unit: "km" },
+              { label: t("running.time", "Tempo"), value: durationFormatted, unit: "" },
+              { label: t("running.pace", "Pace"), value: paceFormatted, unit: "/km" },
+              { label: t("running.calories", "Calorias"), value: `${calories}`, unit: "kcal" },
+              { label: t("running.avgSpeed", "Vel. média"), value: Number(avgSpeed).toFixed(1), unit: "km/h" },
+              { label: t("running.elevation", "Elevação"), value: `${Math.round(elevationGain)}`, unit: "m" },
             ].map((s) => (
               <div key={s.label}>
                 <p className="text-muted-foreground text-[10px] uppercase tracking-wider mb-0.5">{s.label}</p>
