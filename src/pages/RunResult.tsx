@@ -176,6 +176,14 @@ const RunResult = () => {
         <h2 className="text-foreground font-heading font-bold text-base">{activityLabel}</h2>
         <div className="flex items-center gap-1">
           <button
+            onClick={() => setPublishOpen(true)}
+            className="w-9 h-9 rounded-full flex items-center justify-center text-primary active:scale-95 transition-transform"
+            aria-label="Publicar no feed"
+            title="Publicar no feed"
+          >
+            <Send className="w-5 h-5" />
+          </button>
+          <button
             onClick={handleShare}
             disabled={sharing}
             className="w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground active:scale-95 transition-transform"
@@ -282,6 +290,26 @@ const RunResult = () => {
         photoUrl={photoUrl}
         points={points}
       />
+
+      {/* Publish-to-feed sheet */}
+      <PublishRunSheet
+        open={publishOpen}
+        onClose={() => setPublishOpen(false)}
+        shareCardRef={shareCardRef}
+        runId={run.id}
+        activityLabel={activityLabel}
+        distanceKm={distanceKm}
+        durationFormatted={durationFormatted}
+        paceFormatted={paceFormatted}
+        caloriesKcal={calories}
+        elevationGainM={elevationGain}
+        existingPhotoUrl={photoUrl}
+      />
+    </div>
+  );
+};
+
+export default RunResult;
     </div>
   );
 };
