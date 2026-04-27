@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, Trash2, Share2, Footprints, Loader2 } from "lucide-react";
+import { ArrowLeft, Trash2, Share2, Footprints, Loader2, Send } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import html2canvas from "html2canvas";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +11,7 @@ import { ActivityMapMode } from "@/components/running/ActivityMapMode";
 import { ActivityAnimationMode } from "@/components/running/ActivityAnimationMode";
 import { ActivityPhotoMode } from "@/components/running/ActivityPhotoMode";
 import { ShareCard } from "@/components/running/ShareCard";
+import { PublishRunSheet } from "@/components/running/PublishRunSheet";
 
 const formatTime = (s: number) => {
   const h = Math.floor(s / 3600);
@@ -42,6 +43,7 @@ const RunResult = () => {
   const [mode, setMode] = useState<ActivityMode>("map");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [sharing, setSharing] = useState(false);
+  const [publishOpen, setPublishOpen] = useState(false);
   const shareCardRef = useRef<HTMLDivElement>(null);
 
   // Load run + signed photo url
@@ -174,6 +176,14 @@ const RunResult = () => {
         <h2 className="text-foreground font-heading font-bold text-base">{activityLabel}</h2>
         <div className="flex items-center gap-1">
           <button
+            onClick={() => setPublishOpen(true)}
+            className="w-9 h-9 rounded-full flex items-center justify-center text-primary active:scale-95 transition-transform"
+            aria-label="Publicar no feed"
+            title="Publicar no feed"
+          >
+            <Send className="w-5 h-5" />
+          </button>
+          <button
             onClick={handleShare}
             disabled={sharing}
             className="w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground active:scale-95 transition-transform"
@@ -279,6 +289,21 @@ const RunResult = () => {
         date={dateString}
         photoUrl={photoUrl}
         points={points}
+      />
+
+      {/* Publish-to-feed sheet */}
+      <PublishRunSheet
+        open={publishOpen}
+        onClose={() => setPublishOpen(false)}
+        shareCardRef={shareCardRef}
+        runId={run.id}
+        activityLabel={activityLabel}
+        distanceKm={distanceKm}
+        durationFormatted={durationFormatted}
+        paceFormatted={paceFormatted}
+        caloriesKcal={calories}
+        elevationGainM={elevationGain}
+        existingPhotoUrl={photoUrl}
       />
     </div>
   );
