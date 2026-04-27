@@ -397,6 +397,22 @@ export const ActivityAnimationMode = ({
         </button>
         <button
           type="button"
+          onClick={toggle3D}
+          disabled={!ready}
+          aria-pressed={is3D}
+          aria-label={is3D ? "Desativar visão 3D" : "Ativar visão 3D"}
+          title={is3D ? "Visão 3D ativa" : "Visão 2D"}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-md border text-xs font-semibold shadow-lg active:scale-95 transition-all disabled:opacity-50 ${
+            is3D
+              ? "bg-white text-black border-white"
+              : "bg-black/60 border-white/10 text-white"
+          }`}
+        >
+          {is3D ? <Box className="w-3 h-3" /> : <Square className="w-3 h-3" />}
+          {is3D ? "3D" : "2D"}
+        </button>
+        <button
+          type="button"
           onClick={replay}
           disabled={!ready}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-white text-xs font-semibold shadow-lg active:scale-95 transition-transform disabled:opacity-50"
