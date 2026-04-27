@@ -274,6 +274,35 @@ export const PublishRunSheet = ({
                 </div>
               )}
 
+              {/* Visibility */}
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-2">
+                  Quem pode ver
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  {([
+                    { v: "public", icon: Globe2, label: "Público", hint: "Todos no app" },
+                    { v: "followers", icon: Users, label: "Seguidores", hint: "Só quem te segue" },
+                    { v: "private", icon: Lock, label: "Somente eu", hint: "Privado" },
+                  ] as const).map(({ v, icon: Icon, label, hint }) => (
+                    <button
+                      key={v}
+                      onClick={() => setVisibility(v)}
+                      className={`flex flex-col items-center gap-1 p-2.5 rounded-xl border-2 transition-all active:scale-95 ${
+                        visibility === v
+                          ? "border-primary bg-primary/10"
+                          : "border-border bg-secondary/40"
+                      }`}
+                      aria-pressed={visibility === v}
+                    >
+                      <Icon className="w-4 h-4 text-foreground" />
+                      <span className="text-[11px] font-semibold leading-tight">{label}</span>
+                      <span className="text-[9px] text-muted-foreground leading-tight text-center">{hint}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Caption */}
               <div>
                 <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-2">
