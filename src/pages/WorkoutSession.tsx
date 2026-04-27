@@ -6,6 +6,7 @@ import { useApp } from "@/contexts/AppContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useExerciseGif } from "@/hooks/useExerciseGif";
 
 interface SetState { reps: number; weight: number; done: boolean; }
 
@@ -258,7 +259,10 @@ export default function WorkoutSession() {
 }
 
 const ExerciseHero = ({ ex }: { ex: TemplateExercise }) => {
-  if (!ex.exercise.gif_url) {
+  const { gifUrl } = useExerciseGif(ex.exercise.name, ex.exercise.gif_url ?? undefined, ex.exercise.target ?? ex.exercise.body_part ?? undefined);
+  const finalUrl = gifUrl || ex.exercise.gif_url;
+
+  if (!finalUrl) {
     return (
       <div className="aspect-square rounded-3xl bg-secondary flex items-center justify-center">
         <ImageOff className="w-10 h-10 text-muted-foreground" />
@@ -267,7 +271,7 @@ const ExerciseHero = ({ ex }: { ex: TemplateExercise }) => {
   }
   return (
     <div className="aspect-square rounded-3xl overflow-hidden bg-secondary">
-      <img src={ex.exercise.gif_url} alt={ex.exercise.name} className="w-full h-full object-cover" />
+      <img src={finalUrl} alt={ex.exercise.name} className="w-full h-full object-cover" />
     </div>
   );
 };
