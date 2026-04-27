@@ -21,6 +21,23 @@ const darkMapStyles = [
   { featureType: "water", elementType: "geometry", stylers: [{ color: "#070d18" }] },
 ];
 
+/** Compass bearing in degrees from point a to point b (0=N, 90=E). */
+function bearingBetween(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const toDeg = (r: number) => (r * 180) / Math.PI;
+  const φ1 = toRad(a.lat), φ2 = toRad(b.lat);
+  const Δλ = toRad(b.lng - a.lng);
+  const y = Math.sin(Δλ) * Math.cos(φ2);
+  const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+  return (toDeg(Math.atan2(y, x)) + 360) % 360;
+}
+
+/** Smallest signed delta to rotate from `from` to `to` (-180..180). */
+function shortestAngleDelta(from: number, to: number): number {
+  let d = ((to - from + 540) % 360) - 180;
+  return d;
+}
+
 let mapsPromise: Promise<void> | null = null;
 function loadGoogleMaps(apiKey: string): Promise<void> {
   if ((window as any).google?.maps) return Promise.resolve();
