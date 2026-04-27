@@ -90,15 +90,20 @@ export const ActivityAnimationMode = ({
   const polylineRef = useRef<any>(null);
   const glowRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
-  const animTimerRef = useRef<number | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const lastFrameRef = useRef<number | null>(null);
+  const tRef = useRef(0); // logical playback cursor 0..1
+  const playingRef = useRef(false);
+  const speedRef = useRef(1);
+  const prevHeadingRef = useRef<number | null>(null);
   const boundsRef = useRef<any>(null);
   const followCamRef = useRef(true);
   const userInteractingRef = useRef(false);
+  const is3DRef = useRef(false);
   const [ready, setReady] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [followCam, setFollowCam] = useState(true);
   const [is3D, setIs3D] = useState(false);
-  const is3DRef = useRef(false);
   const [progress, setProgress] = useState(0); // 0..1
 
   // Animated counters tied to progress
