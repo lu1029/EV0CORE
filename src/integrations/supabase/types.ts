@@ -307,6 +307,7 @@ export type Database = {
           submission_token: string | null
           updated_at: string
           user_id: string
+          visibility: Database["public"]["Enums"]["post_visibility"]
         }
         Insert: {
           activity_data?: Json | null
@@ -320,6 +321,7 @@ export type Database = {
           submission_token?: string | null
           updated_at?: string
           user_id: string
+          visibility?: Database["public"]["Enums"]["post_visibility"]
         }
         Update: {
           activity_data?: Json | null
@@ -333,6 +335,7 @@ export type Database = {
           submission_token?: string | null
           updated_at?: string
           user_id?: string
+          visibility?: Database["public"]["Enums"]["post_visibility"]
         }
         Relationships: []
       }
@@ -1168,7 +1171,7 @@ export type Database = {
       show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
-      [_ in never]: never
+      post_visibility: "public" | "followers" | "private"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1295,6 +1298,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      post_visibility: ["public", "followers", "private"],
+    },
   },
 } as const

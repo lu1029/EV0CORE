@@ -4,6 +4,7 @@ import { useApp } from "@/contexts/AppContext";
 import { sanitizeText } from "@/lib/sanitize";
 
 export type PostType = "workout" | "run" | "nutrition" | "progress" | "journal";
+export type PostVisibility = "public" | "followers" | "private";
 
 export interface FeedPost {
   id: string;
@@ -15,6 +16,7 @@ export interface FeedPost {
   likes_count: number;
   comments_count: number;
   created_at: string;
+  visibility?: PostVisibility;
   author?: { name: string; avatar_url: string | null };
   liked_by_me?: boolean;
 }
@@ -102,7 +104,7 @@ export function useFeed() {
     };
   }, [load]);
 
-  const createPost = useCallback(async (input: { post_type: PostType; caption?: string; photo_url?: string | null; activity_data?: any; submission_token?: string }) => {
+  const createPost = useCallback(async (input: { post_type: PostType; caption?: string; photo_url?: string | null; activity_data?: any; submission_token?: string; visibility?: PostVisibility }) => {
     if (!user) throw new Error("not_authenticated");
     const safeCaption = sanitizeText(input.caption ?? "").slice(0, 2000);
     const { data, error } = await supabase
@@ -114,6 +116,7 @@ export function useFeed() {
         photo_url: input.photo_url ?? null,
         activity_data: input.activity_data ?? {},
         submission_token: input.submission_token ?? null,
+        visibility: input.visibility ?? "public",
       })
       .select()
       .single();
