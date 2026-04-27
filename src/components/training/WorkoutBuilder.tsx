@@ -349,6 +349,15 @@ const WorkoutBuilder: React.FC<WorkoutBuilderProps> = ({
                         <Plus className="w-5 h-5 text-primary shrink-0" />
                       </button>
                     ))}
+                    <div ref={sentinelRef} className="h-6" />
+                    {libLoadingMore && (
+                      <p className="text-center text-muted-foreground py-4 text-[13px]">Carregando mais…</p>
+                    )}
+                    {!libHasMore && libraryExercises.length > 0 && (
+                      <p className="text-center text-muted-foreground/60 py-4 text-[12px]">
+                        {libraryExercises.length} exercícios
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
