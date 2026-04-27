@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
-import { Play, RotateCcw, Lock, LockOpen } from "lucide-react";
+import { Play, RotateCcw, Lock, LockOpen, Box, Square } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { LatLng } from "@/lib/routePolyline";
 import { ElevationChart } from "./ElevationChart";
@@ -20,6 +20,23 @@ const darkMapStyles = [
   { featureType: "transit", stylers: [{ visibility: "off" }] },
   { featureType: "water", elementType: "geometry", stylers: [{ color: "#070d18" }] },
 ];
+
+/** Compass bearing in degrees from point a to point b (0=N, 90=E). */
+function bearingBetween(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const toDeg = (r: number) => (r * 180) / Math.PI;
+  const φ1 = toRad(a.lat), φ2 = toRad(b.lat);
+  const Δλ = toRad(b.lng - a.lng);
+  const y = Math.sin(Δλ) * Math.cos(φ2);
+  const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+  return (toDeg(Math.atan2(y, x)) + 360) % 360;
+}
+
+/** Smallest signed delta to rotate from `from` to `to` (-180..180). */
+function shortestAngleDelta(from: number, to: number): number {
+  let d = ((to - from + 540) % 360) - 180;
+  return d;
+}
 
 let mapsPromise: Promise<void> | null = null;
 function loadGoogleMaps(apiKey: string): Promise<void> {
@@ -80,6 +97,8 @@ export const ActivityAnimationMode = ({
   const [ready, setReady] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [followCam, setFollowCam] = useState(true);
+  const [is3D, setIs3D] = useState(false);
+  const is3DRef = useRef(false);
   const [progress, setProgress] = useState(0); // 0..1
 
   // Animated counters tied to progress
@@ -208,12 +227,19 @@ export const ActivityAnimationMode = ({
     animate(timeMV, durationSeconds, { duration: DURATION, ease: "easeOut" });
     animate(elevMV, elevationGainM, { duration: DURATION, ease: "easeOut" });
 
-    // Zoom in for follow-cam if locked
+    // Zoom in for follow-cam if locked + apply 3D tilt
     if (followCamRef.current && mapRef.current) {
       userInteractingRef.current = true;
       mapRef.current.panTo(points[0]);
-      mapRef.current.setZoom(17);
-      // Release flag after the camera change settles
+      mapRef.current.setZoom(is3DRef.current ? 18 : 17);
+      mapRef.current.setTilt(is3DRef.current ? 67.5 : 0);
+      // Initial heading: from start toward an early point
+      if (is3DRef.current) {
+        const lookAhead = points[Math.min(5, points.length - 1)];
+        if (lookAhead) mapRef.current.setHeading(bearingBetween(points[0], lookAhead));
+      } else {
+        mapRef.current.setHeading(0);
+      }
       setTimeout(() => {
         userInteractingRef.current = false;
       }, 300);
@@ -224,8 +250,10 @@ export const ActivityAnimationMode = ({
     const stepSize = Math.max(1, Math.floor(total / stepCount));
     const intervalMs = (DURATION * 1000) / stepCount;
     let i = 0;
+    let prevHeading: number | null = null;
 
     animTimerRef.current = window.setInterval(() => {
+      const prevI = i;
       i = Math.min(i + stepSize, total);
       const slice = points.slice(0, i);
       polylineRef.current?.setPath(slice);
@@ -236,7 +264,21 @@ export const ActivityAnimationMode = ({
       if (head && followCamRef.current && mapRef.current) {
         userInteractingRef.current = true;
         mapRef.current.panTo(head);
-        // Clear flag shortly after — pan animation is brief
+        // 3D mode: rotate camera bearing to match direction of travel (smoothed)
+        if (is3DRef.current) {
+          // Use a small look-ahead window for stable bearing
+          const aheadIdx = Math.min(total - 1, i + Math.max(2, stepSize));
+          const from = points[Math.max(0, prevI - 1)];
+          const to = points[aheadIdx];
+          if (from && to && (from.lat !== to.lat || from.lng !== to.lng)) {
+            const target = bearingBetween(from, to);
+            // Smooth toward target by 35% of the shortest delta to avoid jitter
+            const base = prevHeading ?? mapRef.current.getHeading?.() ?? target;
+            const smoothed = (base + shortestAngleDelta(base, target) * 0.35 + 360) % 360;
+            mapRef.current.setHeading(smoothed);
+            prevHeading = smoothed;
+          }
+        }
         window.setTimeout(() => {
           userInteractingRef.current = false;
         }, intervalMs + 50);
@@ -287,6 +329,41 @@ export const ActivityAnimationMode = ({
     }, 400);
   };
 
+  const toggle3D = () => {
+    const next = !is3DRef.current;
+    is3DRef.current = next;
+    setIs3D(next);
+    if (!mapRef.current) return;
+    userInteractingRef.current = true;
+    if (next) {
+      mapRef.current.setTilt(67.5);
+      // Set initial heading from current marker forward
+      const pos = markerRef.current?.getPosition?.();
+      if (pos) {
+        // Find next nearby route point ahead of current to derive heading
+        const cur = { lat: pos.lat(), lng: pos.lng() };
+        // Use a point ~5 ahead in the path if possible
+        const idx = Math.max(
+          0,
+          Math.floor(progress * (points.length - 1)),
+        );
+        const ahead = points[Math.min(points.length - 1, idx + 5)] ?? points[points.length - 1];
+        if (ahead) mapRef.current.setHeading(bearingBetween(cur, ahead));
+        if (followCamRef.current) {
+          mapRef.current.panTo(pos);
+          mapRef.current.setZoom(18);
+        }
+      }
+    } else {
+      mapRef.current.setTilt(0);
+      mapRef.current.setHeading(0);
+      if (followCamRef.current) mapRef.current.setZoom(17);
+    }
+    setTimeout(() => {
+      userInteractingRef.current = false;
+    }, 400);
+  };
+
   if (points.length < 2) {
     return (
       <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
@@ -317,6 +394,22 @@ export const ActivityAnimationMode = ({
         >
           {followCam ? <Lock className="w-3 h-3" /> : <LockOpen className="w-3 h-3" />}
           {followCam ? "Seguindo" : "Livre"}
+        </button>
+        <button
+          type="button"
+          onClick={toggle3D}
+          disabled={!ready}
+          aria-pressed={is3D}
+          aria-label={is3D ? "Desativar visão 3D" : "Ativar visão 3D"}
+          title={is3D ? "Visão 3D ativa" : "Visão 2D"}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-md border text-xs font-semibold shadow-lg active:scale-95 transition-all disabled:opacity-50 ${
+            is3D
+              ? "bg-white text-black border-white"
+              : "bg-black/60 border-white/10 text-white"
+          }`}
+        >
+          {is3D ? <Box className="w-3 h-3" /> : <Square className="w-3 h-3" />}
+          {is3D ? "3D" : "2D"}
         </button>
         <button
           type="button"
