@@ -64,6 +64,22 @@ const WorkoutBuilder: React.FC<WorkoutBuilderProps> = ({
   });
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
+  useEffect(() => {
+    if (!showLibrary) return;
+    const el = sentinelRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && libHasMore && !libLoading && !libLoadingMore) {
+          libLoadMore();
+        }
+      },
+      { rootMargin: "300px" },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [showLibrary, libHasMore, libLoading, libLoadingMore, libLoadMore, libraryExercises.length]);
+
   if (!isPremium) {
     return (
       <div className="pb-32 max-w-lg mx-auto px-5 pt-6">
