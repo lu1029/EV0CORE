@@ -212,6 +212,7 @@ export const PublishRunSheet = ({
       });
 
       setDone(true);
+      try { localStorage.removeItem(draftKey); } catch { /* ignore */ }
       toast.success("Publicado no feed!");
       setTimeout(() => onClose(), 900);
     } catch (e: any) {
