@@ -41,9 +41,15 @@ function loadGoogleMaps(apiKey: string): Promise<void> {
 
 interface Props {
   points: LatLng[];
+  /** Padding (px) for fitBounds — useful when content overlays the map (top header / bottom sheet). */
+  fitPadding?: number | { top: number; right: number; bottom: number; left: number };
+  /** Show the 2D/3D toggle. Default true. */
+  showModeToggle?: boolean;
+  /** Position of the 2D/3D toggle. Default "top-right". */
+  togglePosition?: "top-right" | "bottom-right";
 }
 
-export const ActivityMapMode = ({ points }: Props) => {
+export const ActivityMapMode = ({ points, fitPadding = 60, showModeToggle = true, togglePosition = "top-right" }: Props) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const animatedRef = useRef(false);
@@ -78,23 +84,23 @@ export const ActivityMapMode = ({ points }: Props) => {
 
         const bounds = new g.maps.LatLngBounds();
         points.forEach((p) => bounds.extend(p));
-        map.fitBounds(bounds, 60);
+        map.fitBounds(bounds, fitPadding as any);
 
-        // Outer glow polyline (wider, semi-transparent orange) — Strava style
+        // Outer glow polyline — indigo brand glow
         const glow = new g.maps.Polyline({
           path: [],
           map,
-          strokeColor: "#ff5a1f",
+          strokeColor: "#6366f1",
           strokeOpacity: 0.35,
-          strokeWeight: 12,
+          strokeWeight: 14,
           zIndex: 1,
         });
 
-        // Main bright orange polyline
+        // Main bright indigo polyline
         const polyline = new g.maps.Polyline({
           path: [],
           map,
-          strokeColor: "#ff6a00",
+          strokeColor: "#818cf8",
           strokeOpacity: 1,
           strokeWeight: 5,
           zIndex: 2,
@@ -190,30 +196,36 @@ export const ActivityMapMode = ({ points }: Props) => {
       <div ref={containerRef} className="w-full h-full" />
 
       {/* 2D / 3D toggle */}
-      <div className="absolute top-3 right-3 z-10 flex items-center gap-1 rounded-full bg-black/60 backdrop-blur-md border border-white/10 p-1 shadow-lg">
-        <button
-          type="button"
-          onClick={() => setIs3D(false)}
-          className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-all active:scale-95 ${
-            !is3D ? "bg-white text-black" : "text-white/80"
+      {showModeToggle && (
+        <div
+          className={`absolute z-10 flex items-center gap-1 rounded-full bg-black/60 backdrop-blur-md border border-white/10 p-1 shadow-lg ${
+            togglePosition === "bottom-right" ? "bottom-3 right-3" : "top-3 right-3"
           }`}
-          aria-pressed={!is3D}
         >
-          <Square className="w-3 h-3" />
-          2D
-        </button>
-        <button
-          type="button"
-          onClick={() => setIs3D(true)}
-          className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-all active:scale-95 ${
-            is3D ? "bg-white text-black" : "text-white/80"
-          }`}
-          aria-pressed={is3D}
-        >
-          <Box className="w-3 h-3" />
-          3D
-        </button>
-      </div>
+          <button
+            type="button"
+            onClick={() => setIs3D(false)}
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-all active:scale-95 ${
+              !is3D ? "bg-white text-black" : "text-white/80"
+            }`}
+            aria-pressed={!is3D}
+          >
+            <Square className="w-3 h-3" />
+            2D
+          </button>
+          <button
+            type="button"
+            onClick={() => setIs3D(true)}
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-all active:scale-95 ${
+              is3D ? "bg-white text-black" : "text-white/80"
+            }`}
+            aria-pressed={is3D}
+          >
+            <Box className="w-3 h-3" />
+            3D
+          </button>
+        </div>
+      )}
     </div>
   );
 };

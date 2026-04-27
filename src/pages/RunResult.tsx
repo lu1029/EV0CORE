@@ -1,17 +1,18 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, Trash2, Share2, Footprints, Loader2, Send } from "lucide-react";
+import { ArrowLeft, Trash2, Share2, Loader2, Send, Layers } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import html2canvas from "html2canvas";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ActivityModeTabs, type ActivityMode } from "@/components/running/ActivityModeTabs";
 import { ActivityMapMode } from "@/components/running/ActivityMapMode";
 import { ActivityAnimationMode } from "@/components/running/ActivityAnimationMode";
 import { ActivityPhotoMode } from "@/components/running/ActivityPhotoMode";
 import { ShareCard } from "@/components/running/ShareCard";
 import { PublishRunSheet } from "@/components/running/PublishRunSheet";
+import { RunStatsSheet } from "@/components/running/RunStatsSheet";
+import type { ActivityMode } from "@/components/running/ActivityModeTabs";
 
 const formatTime = (s: number) => {
   const h = Math.floor(s / 3600);
@@ -44,6 +45,7 @@ const RunResult = () => {
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [sharing, setSharing] = useState(false);
   const [publishOpen, setPublishOpen] = useState(false);
+  const [modeMenuOpen, setModeMenuOpen] = useState(false);
   const shareCardRef = useRef<HTMLDivElement>(null);
 
   // Load run + signed photo url
@@ -115,7 +117,6 @@ const RunResult = () => {
     if (!run || sharing) return;
     setSharing(true);
     try {
-      // Wait one frame for the hidden card to render
       await new Promise((r) => requestAnimationFrame(() => r(null)));
       if (!shareCardRef.current) throw new Error("Card not ready");
 
@@ -130,12 +131,10 @@ const RunResult = () => {
       );
       const file = new File([blob], `evocore-${run.id}.png`, { type: "image/png" });
 
-      // Try native share with file
       const nav = navigator as any;
       if (nav.share && nav.canShare && nav.canShare({ files: [file] })) {
         await nav.share({ files: [file], title: "EvoCore", text: `${distanceKm.toFixed(2)} km · ${activityLabel}` });
       } else {
-        // Fallback: download
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
@@ -156,71 +155,52 @@ const RunResult = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-6 h-6 text-primary animate-spin" />
       </div>
     );
   }
   if (!run) return null;
 
+  const COLLAPSED_SHEET_HEIGHT = 230;
+  const BOTTOM_NAV_OFFSET = 0; // sheet sits above the bottom-nav (handled by AppLayout pb)
+
+  const primaryStats = [
+    { label: t("running.distance", "Distância"), value: distanceKm.toFixed(2), unit: "km" },
+    { label: t("running.time", "Tempo"), value: durationFormatted },
+    { label: t("running.pace", "Pace"), value: paceFormatted, unit: "/km" },
+  ];
+  const detailStats = [
+    { label: t("running.calories", "Calorias"), value: `${calories}`, unit: "kcal" },
+    { label: t("running.avgSpeed", "Vel. média"), value: Number(avgSpeed).toFixed(1), unit: "km/h" },
+    { label: t("running.elevation", "Elevação"), value: `${Math.round(elevationGain)}`, unit: "m" },
+    { label: t("running.distance", "Distância"), value: distanceKm.toFixed(2), unit: "km" },
+    { label: t("running.time", "Tempo"), value: durationFormatted },
+    { label: t("running.pace", "Pace"), value: paceFormatted, unit: "/km" },
+  ];
+
   return (
-    <div className="min-h-screen bg-background pb-24 animate-fade-in">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-2">
-        <button
-          onClick={() => navigate("/corrida")}
-          className="flex items-center gap-1 text-muted-foreground text-sm active:scale-95 transition-transform"
-        >
-          <ArrowLeft className="w-4 h-4" /> {t("common.back")}
-        </button>
-        <h2 className="text-foreground font-heading font-bold text-base">{activityLabel}</h2>
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => setPublishOpen(true)}
-            className="w-9 h-9 rounded-full flex items-center justify-center text-primary active:scale-95 transition-transform"
-            aria-label="Publicar no feed"
-            title="Publicar no feed"
-          >
-            <Send className="w-5 h-5" />
-          </button>
-          <button
-            onClick={handleShare}
-            disabled={sharing}
-            className="w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground active:scale-95 transition-transform"
-            aria-label="Compartilhar"
-          >
-            {sharing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Share2 className="w-5 h-5" />}
-          </button>
-          <button
-            onClick={handleDelete}
-            disabled={deleting}
-            className="w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground active:scale-95 transition-transform"
-            aria-label="Excluir"
-          >
-            {deleting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
-          </button>
-        </div>
-      </div>
-
-      {/* Mode tabs */}
-      <ActivityModeTabs mode={mode} onChange={setMode} hasPhoto={!!photoUrl} />
-
-      {/* Mode viewport */}
-      <div className="relative w-full h-80 mt-3 bg-secondary overflow-hidden">
+    <div className="fixed inset-0 bg-background overflow-hidden">
+      {/* Fullscreen background: Map / Animation / Photo */}
+      <div className="absolute inset-0">
         <AnimatePresence mode="wait">
           <motion.div
             key={mode}
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.02 }}
-            transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
             className="absolute inset-0"
           >
             {mode === "map" && (
               hasRoute ? (
-                <ActivityMapMode points={points} />
+                <ActivityMapMode
+                  points={points}
+                  fitPadding={{ top: 120, right: 40, bottom: 280, left: 40 }}
+                  showModeToggle={false}
+                />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
+                <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm bg-secondary">
                   {t("running.routeUnavailable")}
                 </div>
               )
@@ -244,39 +224,88 @@ const RunResult = () => {
             )}
           </motion.div>
         </AnimatePresence>
+
+        {/* Top fade for header readability */}
+        <div className="pointer-events-none absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-background/80 via-background/40 to-transparent" />
       </div>
 
-      {/* Stats card */}
-      <div className="px-4 mt-6">
-        <div className="glass-card rounded-2xl p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center">
-              <Footprints className="w-4 h-4 text-primary-foreground" />
-            </div>
-            <div>
-              <p className="text-foreground font-heading font-bold text-sm">{activityLabel}</p>
-              <p className="text-muted-foreground text-xs">{dateString}</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-y-5 gap-x-4">
-            {[
-              { label: t("running.distance", "Distância"), value: distanceKm.toFixed(2), unit: "km" },
-              { label: t("running.time", "Tempo"), value: durationFormatted, unit: "" },
-              { label: t("running.pace", "Pace"), value: paceFormatted, unit: "/km" },
-              { label: t("running.calories", "Calorias"), value: `${calories}`, unit: "kcal" },
-              { label: t("running.avgSpeed", "Vel. média"), value: Number(avgSpeed).toFixed(1), unit: "km/h" },
-              { label: t("running.elevation", "Elevação"), value: `${Math.round(elevationGain)}`, unit: "m" },
-            ].map((s) => (
-              <div key={s.label}>
-                <p className="text-muted-foreground text-[10px] uppercase tracking-wider mb-0.5">{s.label}</p>
-                <p className="text-2xl font-heading font-bold text-foreground">
-                  {s.value} {s.unit && <span className="text-sm font-normal text-muted-foreground">{s.unit}</span>}
-                </p>
+      {/* Floating header (transparent) */}
+      <div className="absolute top-0 inset-x-0 z-20 flex items-center justify-between px-3 pt-3 pb-2 safe-top">
+        <button
+          onClick={() => navigate("/corrida")}
+          className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white active:scale-95 transition-transform"
+          aria-label={t("common.back")}
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+
+        <div className="flex items-center gap-2">
+          {/* Mode switcher (map / animation / photo) */}
+          <div className="relative">
+            <button
+              onClick={() => setModeMenuOpen((v) => !v)}
+              className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white active:scale-95 transition-transform"
+              aria-label="Trocar visualização"
+            >
+              <Layers className="w-5 h-5" />
+            </button>
+            {modeMenuOpen && (
+              <div className="absolute right-0 mt-2 w-44 rounded-2xl bg-background/95 backdrop-blur-2xl border border-white/10 shadow-2xl p-1 overflow-hidden">
+                {[
+                  { key: "map" as ActivityMode, label: "Mapa" },
+                  { key: "animation" as ActivityMode, label: "Animação" },
+                  ...(photoUrl ? [{ key: "photo" as ActivityMode, label: "Foto" }] : [{ key: "photo" as ActivityMode, label: "Adicionar foto" }]),
+                ].map((opt) => (
+                  <button
+                    key={opt.key}
+                    onClick={() => { setMode(opt.key); setModeMenuOpen(false); }}
+                    className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition-colors ${
+                      mode === opt.key ? "bg-primary/20 text-primary" : "text-foreground hover:bg-white/5"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
               </div>
-            ))}
+            )}
           </div>
+
+          <button
+            onClick={() => setPublishOpen(true)}
+            className="w-10 h-10 rounded-full bg-primary/90 backdrop-blur-md border border-white/10 flex items-center justify-center text-primary-foreground active:scale-95 transition-transform shadow-lg shadow-primary/30"
+            aria-label="Publicar no feed"
+            title="Publicar no feed"
+          >
+            <Send className="w-4 h-4" />
+          </button>
+          <button
+            onClick={handleShare}
+            disabled={sharing}
+            className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white active:scale-95 transition-transform"
+            aria-label="Compartilhar"
+          >
+            {sharing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Share2 className="w-5 h-5" />}
+          </button>
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white active:scale-95 transition-transform"
+            aria-label="Excluir"
+          >
+            {deleting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
+          </button>
         </div>
       </div>
+
+      {/* Strava-style draggable stats sheet */}
+      <RunStatsSheet
+        activityLabel={activityLabel}
+        dateString={dateString}
+        primaryStats={primaryStats}
+        detailStats={detailStats}
+        collapsedHeight={COLLAPSED_SHEET_HEIGHT}
+        bottomOffset={BOTTOM_NAV_OFFSET}
+      />
 
       {/* Hidden share card (rendered offscreen for html2canvas) */}
       <ShareCard
