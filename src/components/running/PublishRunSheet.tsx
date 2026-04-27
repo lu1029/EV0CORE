@@ -145,6 +145,7 @@ export const PublishRunSheet = ({
           calories: caloriesKcal,
           elevation_m: Math.round(elevationGainM),
         },
+        visibility,
       });
 
       setDone(true);
