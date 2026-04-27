@@ -3,6 +3,7 @@ import { ChevronLeft, Clock, Dumbbell, Target, Lock, Play, ImageOff } from "luci
 import { useWorkoutTemplate } from "@/hooks/useWorkoutTemplates";
 import { useApp } from "@/contexts/AppContext";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useExerciseGif } from "@/hooks/useExerciseGif";
 
 export default function WorkoutDetail() {
   const { id } = useParams();
@@ -118,7 +119,10 @@ const Stat = ({ icon: Icon, value, unit, label, border }: any) => (
 );
 
 const ExerciseGif = ({ url, name }: { url: string | null; name: string }) => {
-  if (!url) {
+  const { gifUrl } = useExerciseGif(name, url ?? undefined);
+  const finalUrl = gifUrl || url;
+
+  if (!finalUrl) {
     return (
       <div className="w-16 h-16 rounded-xl bg-secondary flex items-center justify-center shrink-0">
         <ImageOff className="w-5 h-5 text-muted-foreground" />
@@ -127,11 +131,10 @@ const ExerciseGif = ({ url, name }: { url: string | null; name: string }) => {
   }
   return (
     <img
-      src={url}
+      src={finalUrl}
       alt={name}
       loading="lazy"
       className="w-16 h-16 rounded-xl object-cover bg-secondary shrink-0"
-      onError={(e) => { (e.currentTarget.style.display = "none"); }}
     />
   );
 };

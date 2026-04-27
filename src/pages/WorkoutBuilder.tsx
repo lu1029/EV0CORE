@@ -1,14 +1,14 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Plus, Search, Trash2, X } from "lucide-react";
+import { ChevronLeft, Loader2, Plus, Search, Trash2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useApp } from "@/contexts/AppContext";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useQuery } from "@tanstack/react-query";
+import { useExerciseLibrary, type LibraryExercise } from "@/hooks/useExerciseLibrary";
+import { isHomeFriendly, translateEquipment, translateExerciseName, translateMuscle } from "@/lib/exerciseTranslations";
 
-interface LibEx { id: string; name: string; body_part: string | null; equipment: string | null; gif_url: string | null; }
-interface PickedEx { ex: LibEx; sets: number; reps: string; rest_seconds: number; }
+interface PickedEx { ex: LibraryExercise; sets: number; reps: string; rest_seconds: number; }
 
 const GOALS = ["hipertrofia", "emagrecimento", "forca", "condicionamento"] as const;
 const LEVELS = ["iniciante", "intermediario", "avancado"] as const;
@@ -26,28 +26,43 @@ export default function WorkoutBuilderPage() {
   const [search, setSearch] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const { data: library = [], isLoading } = useQuery({
-    queryKey: ["exercise-library-all"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("exercise_library")
-        .select("id,name,body_part,equipment,gif_url")
-        .not("gif_url", "is", null)
-        .order("name");
-      return (data ?? []) as LibEx[];
-    },
+  const {
+    items: library,
+    loading: isLoading,
+    loadingMore,
+    hasMore,
+    loadMore,
+  } = useExerciseLibrary({
+    search: search.trim() || undefined,
+    pageSize: 60,
+    enabled: showPicker,
   });
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!showPicker) return;
+    const el = sentinelRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && hasMore && !isLoading && !loadingMore) loadMore();
+      },
+      { rootMargin: "350px" },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [showPicker, hasMore, isLoading, loadingMore, loadMore, library.length]);
 
   const filtered = useMemo(() => {
-    const q = search.toLowerCase().trim();
-    return library.filter((e) => {
-      if (location === "casa" && e.equipment && !["body weight", "band", "resistance band"].includes(e.equipment)) return false;
-      if (!q) return true;
-      return e.name.toLowerCase().includes(q) || e.body_part?.toLowerCase().includes(q);
-    });
-  }, [library, search, location]);
+    return library.filter((e) => location !== "casa" || isHomeFriendly(e.equipment));
+  }, [library, location]);
 
-  const addEx = (ex: LibEx) => {
+  useEffect(() => {
+    if (!showPicker || isLoading || loadingMore || !hasMore) return;
+    if (location === "casa" && filtered.length < 20) loadMore();
+  }, [showPicker, isLoading, loadingMore, hasMore, location, filtered.length, loadMore]);
+
+  const addEx = (ex: LibraryExercise) => {
     setPicked((p) => [...p, { ex, sets: 3, reps: "10-12", rest_seconds: 60 }]);
     setShowPicker(false);
     setSearch("");
@@ -70,6 +85,7 @@ export default function WorkoutBuilderPage() {
           description: "Treino personalizado",
           goal, level, location_type: location,
           estimated_minutes: Math.max(15, picked.length * 8),
+          cover_url: picked.find((p) => p.ex.gif_url)?.ex.gif_url ?? null,
           is_premium: false,
           user_id: user.id,
         })
@@ -132,7 +148,7 @@ export default function WorkoutBuilderPage() {
                   {p.ex.gif_url && <img src={p.ex.gif_url} alt={p.ex.name} className="w-full h-full object-cover" loading="lazy" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[14px] font-semibold text-foreground truncate capitalize">{p.ex.name}</p>
+                  <p className="text-[14px] font-semibold text-foreground truncate">{translateExerciseName(p.ex.name)}</p>
                   <div className="flex gap-2 mt-1">
                     <NumInput value={p.sets} onChange={(v) => updateField(idx, "sets", v)} suffix="s" />
                     <input
@@ -180,7 +196,8 @@ export default function WorkoutBuilderPage() {
             ) : filtered.length === 0 ? (
               <p className="text-center text-muted-foreground py-12">Nenhum exercício encontrado</p>
             ) : (
-              filtered.map((ex) => (
+              <>
+              {filtered.map((ex) => (
                 <button
                   key={ex.id}
                   onClick={() => addEx(ex)}
@@ -190,12 +207,25 @@ export default function WorkoutBuilderPage() {
                     {ex.gif_url && <img src={ex.gif_url} alt={ex.name} className="w-full h-full object-cover" loading="lazy" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[14px] font-semibold capitalize truncate">{ex.name}</p>
-                    <p className="text-[11px] text-muted-foreground capitalize">{ex.body_part} · {ex.equipment}</p>
+                    <p className="text-[14px] font-semibold truncate">{translateExerciseName(ex.name)}</p>
+                    <p className="text-[11px] text-muted-foreground truncate">
+                      {translateMuscle(ex.body_part)} · {translateEquipment(ex.equipment)}
+                    </p>
                   </div>
                   <Plus className="w-5 h-5 text-primary" />
                 </button>
-              ))
+              ))}
+              <div ref={sentinelRef} className="h-8" />
+              {loadingMore && (
+                <div className="flex items-center justify-center gap-2 py-4 text-muted-foreground">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span className="text-[12px]">Carregando mais exercícios…</span>
+                </div>
+              )}
+              {!hasMore && filtered.length > 0 && (
+                <p className="text-center text-[11px] text-muted-foreground py-4">{filtered.length} exercícios disponíveis</p>
+              )}
+              </>
             )}
           </div>
         </div>

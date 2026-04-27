@@ -101,7 +101,16 @@ export default function Workouts() {
                 onClick={() => navigate(`/workout/${t.id}`)}
                 className="w-full text-left rounded-2xl bg-card border border-border overflow-hidden active:scale-[0.99] transition-transform"
               >
-                <div className="relative h-28 bg-gradient-to-br from-primary/20 via-primary/5 to-transparent flex items-end p-4">
+                <div className="relative h-28 bg-gradient-to-br from-primary/20 via-primary/5 to-transparent flex items-end p-4 overflow-hidden">
+                  {t.cover_url && (
+                    <img
+                      src={t.cover_url}
+                      alt={t.title}
+                      loading="lazy"
+                      className="absolute inset-0 w-full h-full object-cover opacity-80"
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/15 to-transparent" />
                   {locked && (
                     <div className="absolute inset-0 backdrop-blur-md bg-background/40 flex items-center justify-center">
                       <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-foreground/90 text-background text-[12px] font-semibold">
@@ -109,7 +118,7 @@ export default function Workouts() {
                       </div>
                     </div>
                   )}
-                  <div className="flex gap-1.5">
+                  <div className="relative flex gap-1.5">
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-foreground/10 text-foreground backdrop-blur-md">
                       {t.location_type === "casa" ? "Casa" : "Academia"}
                     </span>

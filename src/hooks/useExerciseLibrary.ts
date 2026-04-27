@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface LibraryExercise {
+  id: string;
   external_id: string;
   name: string;
   body_part: string | null;
@@ -31,7 +32,8 @@ function normalizeRow(r: any): LibraryExercise {
     return [];
   };
   return {
-    external_id: r.id,
+    id: r.id,
+    external_id: r.external_id ?? r.id,
     name: r.name,
     body_part: r.body_part,
     target: r.target,
@@ -58,7 +60,7 @@ export function useExerciseLibrary({
   const reqIdRef = useRef(0);
 
   const buildQuery = useCallback(() => {
-    let q = supabase.from("exercises").select("*", { count: "exact" });
+    let q = supabase.from("exercise_library").select("*", { count: "exact" }).not("gif_url", "is", null);
     if (bodyPart) q = q.eq("body_part", bodyPart);
     if (target) q = q.eq("target", target);
     if (search) q = q.ilike("name", `%${search}%`);
