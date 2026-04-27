@@ -463,10 +463,12 @@ export const ActivityAnimationMode = ({
           type="button"
           onClick={replay}
           disabled={!ready}
+          aria-label="Reiniciar animação"
+          title="Reiniciar"
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-white text-xs font-semibold shadow-lg active:scale-95 transition-transform disabled:opacity-50"
         >
-          {playing ? <Play className="w-3 h-3" /> : <RotateCcw className="w-3 h-3" />}
-          {playing ? "Reproduzindo" : "Replay"}
+          <RotateCcw className="w-3 h-3" />
+          Reiniciar
         </button>
       </div>
 
