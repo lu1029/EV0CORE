@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { motion, useMotionValue, useTransform, animate } from "framer-motion";
+import { motion, useMotionValue, useTransform } from "framer-motion";
 import { Play, Pause, RotateCcw, Lock, LockOpen, Box, Square, SkipBack } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { LatLng } from "@/lib/routePolyline";
@@ -104,6 +104,8 @@ export const ActivityAnimationMode = ({
   const [playing, setPlaying] = useState(false);
   const [followCam, setFollowCam] = useState(true);
   const [is3D, setIs3D] = useState(false);
+  const [speedState, setSpeedState] = useState(1);
+  const [progress, setProgress] = useState(0);
   const [progress, setProgress] = useState(0); // 0..1
 
   // Animated counters tied to progress
