@@ -167,6 +167,31 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       }
     );
 
+    // THEN check existing session (covers page reload with valid session).
+    // The listener above will also fire INITIAL_SESSION, but this guarantees
+    // we exit the loading state even if no event arrives.
+    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+      if (!mounted) return;
+      setSession(initialSession);
+      setUser(initialSession?.user ?? null);
+      setIsLoggedIn(!!initialSession?.user);
+
+      if (initialSession?.user) {
+        setUserProfile((prev) => ({
+          ...prev,
+          email: initialSession.user.email ?? prev.email,
+          name: initialSession.user.user_metadata?.full_name ?? initialSession.user.user_metadata?.name ?? prev.name,
+        }));
+        loadProfile(
+          initialSession.user.id,
+          initialSession.user.email ?? "",
+          initialSession.user.user_metadata
+        ).finally(() => { if (mounted) setLoading(false); });
+      } else {
+        setLoading(false);
+      }
+    });
+
     return () => {
       mounted = false;
       subscription.unsubscribe();
