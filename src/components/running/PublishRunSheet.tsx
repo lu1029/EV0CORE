@@ -47,17 +47,51 @@ export const PublishRunSheet = ({
   const [done, setDone] = useState(false);
   const [visibility, setVisibility] = useState<PostVisibility>("public");
 
-  // Reset when re-opening
+  const draftKey = `evocore:publishDraft:${runId}`;
+
+  // Reset when re-opening (and restore any saved draft for this run)
   useEffect(() => {
     if (open) {
       setChoice(existingPhotoUrl ? "photo" : "map");
-      setCaption("");
       setPhotoFile(null);
       setPhotoPreview(existingPhotoUrl);
       setDone(false);
-      setVisibility("public");
+
+      let restoredCaption = "";
+      let restoredVisibility: PostVisibility = "public";
+      try {
+        const raw = localStorage.getItem(draftKey);
+        if (raw) {
+          const parsed = JSON.parse(raw) as { caption?: string; visibility?: PostVisibility };
+          if (typeof parsed.caption === "string") restoredCaption = parsed.caption.slice(0, 2000);
+          if (parsed.visibility === "public" || parsed.visibility === "followers" || parsed.visibility === "private") {
+            restoredVisibility = parsed.visibility;
+          }
+        }
+      } catch {
+        /* ignore corrupted draft */
+      }
+      setCaption(restoredCaption);
+      setVisibility(restoredVisibility);
     }
-  }, [open, existingPhotoUrl]);
+  }, [open, existingPhotoUrl, draftKey]);
+
+  // Auto-save draft (caption + visibility) whenever they change while sheet is open
+  useEffect(() => {
+    if (!open) return;
+    const t = setTimeout(() => {
+      try {
+        if (caption.trim().length === 0) {
+          localStorage.removeItem(draftKey);
+        } else {
+          localStorage.setItem(draftKey, JSON.stringify({ caption, visibility }));
+        }
+      } catch {
+        /* storage full / unavailable — ignore */
+      }
+    }, 300);
+    return () => clearTimeout(t);
+  }, [caption, visibility, open, draftKey]);
 
   // Cleanup object URLs
   useEffect(() => {
@@ -178,6 +212,7 @@ export const PublishRunSheet = ({
       });
 
       setDone(true);
+      try { localStorage.removeItem(draftKey); } catch { /* ignore */ }
       toast.success("Publicado no feed!");
       setTimeout(() => onClose(), 900);
     } catch (e: any) {
