@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Camera, Map as MapIcon, ImageOff, Loader2, Check, Send } from "lucide-react";
+import { X, Camera, Map as MapIcon, ImageOff, Loader2, Check, Send, Globe2, Users, Lock } from "lucide-react";
 import html2canvas from "html2canvas";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useFeed } from "@/hooks/useFeed";
+import { useFeed, type PostVisibility } from "@/hooks/useFeed";
 
 type MediaChoice = "map" | "photo" | "none";
 
