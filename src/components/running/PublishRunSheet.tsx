@@ -45,6 +45,7 @@ export const PublishRunSheet = ({
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [posting, setPosting] = useState(false);
   const [done, setDone] = useState(false);
+  const [visibility, setVisibility] = useState<PostVisibility>("public");
 
   // Reset when re-opening
   useEffect(() => {
@@ -54,6 +55,7 @@ export const PublishRunSheet = ({
       setPhotoFile(null);
       setPhotoPreview(existingPhotoUrl);
       setDone(false);
+      setVisibility("public");
     }
   }, [open, existingPhotoUrl]);
 
