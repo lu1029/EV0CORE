@@ -264,6 +264,28 @@ export const ActivityAnimationMode = ({
     setTimeout(() => startPlayback(), 100);
   };
 
+  const toggleFollowCam = () => {
+    const next = !followCamRef.current;
+    followCamRef.current = next;
+    setFollowCam(next);
+    if (!mapRef.current) return;
+    userInteractingRef.current = true;
+    if (next) {
+      // Re-engage follow: zoom back into the marker's current position
+      const pos = markerRef.current?.getPosition?.();
+      if (pos) {
+        mapRef.current.panTo(pos);
+        mapRef.current.setZoom(17);
+      }
+    } else {
+      // Unlocked: show the whole route again
+      if (boundsRef.current) mapRef.current.fitBounds(boundsRef.current, 50);
+    }
+    setTimeout(() => {
+      userInteractingRef.current = false;
+    }, 400);
+  };
+
   if (points.length < 2) {
     return (
       <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
