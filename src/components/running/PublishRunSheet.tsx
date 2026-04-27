@@ -391,25 +391,32 @@ export const PublishRunSheet = ({
               </div>
 
               {/* Publish button */}
-              <button
-                onClick={publish}
-                disabled={posting || done}
-                className="w-full h-12 rounded-2xl gradient-primary text-primary-foreground font-bold flex items-center justify-center gap-2 disabled:opacity-60 active:scale-[0.98] transition-transform"
-              >
-                {done ? (
-                  <>
-                    <Check className="w-4 h-4" /> Publicado
-                  </>
-                ) : posting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" /> Publicando...
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-4 h-4" /> Publicar no feed
-                  </>
-                )}
-              </button>
+              {(() => {
+                const CAPTION_MAX = 2000;
+                const trimmedLen = caption.trim().length;
+                const invalid = trimmedLen === 0 || caption.length > CAPTION_MAX;
+                return (
+                  <button
+                    onClick={publish}
+                    disabled={posting || done || invalid}
+                    className="w-full h-12 rounded-2xl gradient-primary text-primary-foreground font-bold flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed active:scale-[0.98] transition-transform"
+                  >
+                    {done ? (
+                      <>
+                        <Check className="w-4 h-4" /> Publicado
+                      </>
+                    ) : posting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" /> Publicando...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" /> Publicar no feed
+                      </>
+                    )}
+                  </button>
+                );
+              })()}
             </div>
           </motion.div>
         </>
