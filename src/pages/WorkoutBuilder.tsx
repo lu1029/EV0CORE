@@ -1,14 +1,14 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Plus, Search, Trash2, X } from "lucide-react";
+import { ChevronLeft, Loader2, Plus, Search, Trash2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useApp } from "@/contexts/AppContext";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useQuery } from "@tanstack/react-query";
+import { useExerciseLibrary, type LibraryExercise } from "@/hooks/useExerciseLibrary";
+import { isHomeFriendly, translateEquipment, translateExerciseName, translateMuscle } from "@/lib/exerciseTranslations";
 
-interface LibEx { id: string; name: string; body_part: string | null; equipment: string | null; gif_url: string | null; }
-interface PickedEx { ex: LibEx; sets: number; reps: string; rest_seconds: number; }
+interface PickedEx { ex: LibraryExercise; sets: number; reps: string; rest_seconds: number; }
 
 const GOALS = ["hipertrofia", "emagrecimento", "forca", "condicionamento"] as const;
 const LEVELS = ["iniciante", "intermediario", "avancado"] as const;
@@ -26,28 +26,38 @@ export default function WorkoutBuilderPage() {
   const [search, setSearch] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const { data: library = [], isLoading } = useQuery({
-    queryKey: ["exercise-library-all"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("exercise_library")
-        .select("id,name,body_part,equipment,gif_url")
-        .not("gif_url", "is", null)
-        .order("name");
-      return (data ?? []) as LibEx[];
-    },
+  const {
+    items: library,
+    loading: isLoading,
+    loadingMore,
+    hasMore,
+    loadMore,
+  } = useExerciseLibrary({
+    search: search.trim() || undefined,
+    pageSize: 60,
+    enabled: showPicker,
   });
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!showPicker) return;
+    const el = sentinelRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && hasMore && !isLoading && !loadingMore) loadMore();
+      },
+      { rootMargin: "350px" },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [showPicker, hasMore, isLoading, loadingMore, loadMore, library.length]);
 
   const filtered = useMemo(() => {
-    const q = search.toLowerCase().trim();
-    return library.filter((e) => {
-      if (location === "casa" && e.equipment && !["body weight", "band", "resistance band"].includes(e.equipment)) return false;
-      if (!q) return true;
-      return e.name.toLowerCase().includes(q) || e.body_part?.toLowerCase().includes(q);
-    });
-  }, [library, search, location]);
+    return library.filter((e) => location !== "casa" || isHomeFriendly(e.equipment));
+  }, [library, location]);
 
-  const addEx = (ex: LibEx) => {
+  const addEx = (ex: LibraryExercise) => {
     setPicked((p) => [...p, { ex, sets: 3, reps: "10-12", rest_seconds: 60 }]);
     setShowPicker(false);
     setSearch("");
