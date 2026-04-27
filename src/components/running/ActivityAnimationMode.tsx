@@ -473,7 +473,7 @@ export const ActivityAnimationMode = ({
       </div>
 
       {/* Mini elevation chart synced with playback (only shown if altitude data exists) */}
-      <div className="absolute bottom-[92px] left-3 right-3 z-10 px-2 py-1.5 rounded-lg bg-black/55 backdrop-blur-md border border-white/10">
+      <div className="absolute bottom-[140px] left-3 right-3 z-10 px-2 py-1.5 rounded-lg bg-black/55 backdrop-blur-md border border-white/10">
         <div className="flex items-center justify-between mb-0.5">
           <span className="text-[9px] uppercase tracking-wider text-white/60">Elevação</span>
           <span className="text-[9px] text-white/50">{Math.round(elevationGainM)} m total</span>
@@ -481,12 +481,56 @@ export const ActivityAnimationMode = ({
         <ElevationChart points={points as any} progress={progress} className="h-10 w-full" />
       </div>
 
-      {/* Bottom progress bar (just above stats) */}
-      <div className="absolute bottom-[84px] left-3 right-3 z-10 h-1 rounded-full bg-white/10 overflow-hidden">
+      {/* Progress bar */}
+      <div className="absolute bottom-[132px] left-3 right-3 z-10 h-1 rounded-full bg-white/10 overflow-hidden">
         <div
-          className="h-full bg-gradient-to-r from-[#ff5a1f] to-[#ff8a00] transition-[width] duration-100 ease-linear"
+          className="h-full bg-gradient-to-r from-[#ff5a1f] to-[#ff8a00]"
           style={{ width: `${progress * 100}%` }}
         />
+      </div>
+
+      {/* Transport controls: pause/play, seek back, speed */}
+      <div className="absolute bottom-[88px] left-3 right-3 z-10 flex items-center justify-between gap-2 px-2 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 shadow-lg">
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => seekBy(-0.05)}
+            disabled={!ready}
+            aria-label="Voltar trecho"
+            title="Voltar trecho"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-white/90 hover:bg-white/10 active:scale-95 transition-all disabled:opacity-40"
+          >
+            <SkipBack className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={togglePlay}
+            disabled={!ready}
+            aria-label={playing ? "Pausar" : "Reproduzir"}
+            title={playing ? "Pausar" : "Reproduzir"}
+            className="w-9 h-9 rounded-full flex items-center justify-center bg-[#ff6a00] text-white shadow-md active:scale-95 transition-all disabled:opacity-40"
+          >
+            {playing ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
+          </button>
+        </div>
+
+        <div className="flex items-center gap-1 rounded-full bg-white/5 p-0.5">
+          {[0.75, 1, 1.25].map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setSpeed(s)}
+              aria-pressed={speedState === s}
+              className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all active:scale-95 ${
+                speedState === s
+                  ? "bg-white text-black"
+                  : "text-white/70 hover:text-white"
+              }`}
+            >
+              {s === 1 ? "1x" : `${s}x`}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Bottom stats overlay (live counters) */}
