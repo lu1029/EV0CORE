@@ -1,17 +1,7 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useApp } from "@/contexts/AppContext";
 import { sanitizeText } from "@/lib/sanitize";
-
-// Lightweight cross-instance event bus so every mounted useFeed() refreshes
-// when a post is created/updated from anywhere in the app.
-const FEED_EVENT = "evocore:feed:changed";
-type FeedEventDetail = { post?: FeedPost };
-function emitFeedChanged(detail: FeedEventDetail = {}) {
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new CustomEvent(FEED_EVENT, { detail }));
-  }
-}
 
 export type PostType = "workout" | "run" | "nutrition" | "progress" | "journal";
 
@@ -27,6 +17,16 @@ export interface FeedPost {
   created_at: string;
   author?: { name: string; avatar_url: string | null };
   liked_by_me?: boolean;
+}
+
+// Lightweight cross-instance event bus so every mounted useFeed() refreshes
+// when a post is created/updated from anywhere in the app.
+const FEED_EVENT = "evocore:feed:changed";
+type FeedEventDetail = { post?: FeedPost };
+function emitFeedChanged(detail: FeedEventDetail = {}) {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent(FEED_EVENT, { detail }));
+  }
 }
 
 /** Global feed reader + writer */
