@@ -215,102 +215,144 @@ export const ActivityAnimationMode = ({
 
     return () => {
       cancelled = true;
-      if (animTimerRef.current) window.clearInterval(animTimerRef.current);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [points]);
 
-  const startPlayback = () => {
-    if (!ready || playing) return;
-    if (animTimerRef.current) window.clearInterval(animTimerRef.current);
-    setPlaying(true);
-    setProgress(0);
+  // Apply the current logical cursor (tRef: 0..1) to map + counters in one shot.
+  const applyFrame = (t: number) => {
+    const total = points.length;
+    if (total < 2) return;
+    const clamped = Math.max(0, Math.min(1, t));
 
-    // Animate counters in parallel (~5s)
-    const DURATION = 5;
-    animate(distMV, distanceKm, { duration: DURATION, ease: "easeOut" });
-    animate(timeMV, durationSeconds, { duration: DURATION, ease: "easeOut" });
-    animate(elevMV, elevationGainM, { duration: DURATION, ease: "easeOut" });
+    // Polyline slice
+    const lastIdx = Math.max(1, Math.floor(clamped * (total - 1)) + 1);
+    const slice = points.slice(0, lastIdx);
+    polylineRef.current?.setPath(slice);
+    glowRef.current?.setPath(slice);
 
-    // Zoom in for follow-cam if locked + apply 3D tilt
-    if (followCamRef.current && mapRef.current) {
+    // Marker
+    const head = points[lastIdx - 1];
+    if (head && markerRef.current) markerRef.current.setPosition(head);
+
+    // Counters — driven directly by cursor → always synced with progress
+    distMV.set(distanceKm * clamped);
+    timeMV.set(durationSeconds * clamped);
+    elevMV.set(elevationGainM * clamped);
+
+    // Follow-cam (pan + optional bearing)
+    if (head && followCamRef.current && mapRef.current) {
       userInteractingRef.current = true;
-      mapRef.current.panTo(points[0]);
-      mapRef.current.setZoom(is3DRef.current ? 18 : 17);
-      mapRef.current.setTilt(is3DRef.current ? 67.5 : 0);
-      // Initial heading: from start toward an early point
+      mapRef.current.panTo(head);
       if (is3DRef.current) {
-        const lookAhead = points[Math.min(5, points.length - 1)];
-        if (lookAhead) mapRef.current.setHeading(bearingBetween(points[0], lookAhead));
-      } else {
-        mapRef.current.setHeading(0);
+        const aheadIdx = Math.min(total - 1, lastIdx + 4);
+        const from = points[Math.max(0, lastIdx - 2)];
+        const to = points[aheadIdx];
+        if (from && to && (from.lat !== to.lat || from.lng !== to.lng)) {
+          const target = bearingBetween(from, to);
+          const base = prevHeadingRef.current ?? mapRef.current.getHeading?.() ?? target;
+          const smoothed = (base + shortestAngleDelta(base, target) * 0.35 + 360) % 360;
+          mapRef.current.setHeading(smoothed);
+          prevHeadingRef.current = smoothed;
+        }
       }
-      setTimeout(() => {
+      window.setTimeout(() => {
         userInteractingRef.current = false;
-      }, 300);
+      }, 80);
     }
 
-    const total = points.length;
-    const stepCount = Math.min(total, 120);
-    const stepSize = Math.max(1, Math.floor(total / stepCount));
-    const intervalMs = (DURATION * 1000) / stepCount;
-    let i = 0;
-    let prevHeading: number | null = null;
+    setProgress(clamped);
+  };
 
-    animTimerRef.current = window.setInterval(() => {
-      const prevI = i;
-      i = Math.min(i + stepSize, total);
-      const slice = points.slice(0, i);
-      polylineRef.current?.setPath(slice);
-      glowRef.current?.setPath(slice);
-      const head = points[Math.min(i, total) - 1];
-      if (head && markerRef.current) markerRef.current.setPosition(head);
-      // Smooth follow-cam: panTo glides the camera
-      if (head && followCamRef.current && mapRef.current) {
-        userInteractingRef.current = true;
-        mapRef.current.panTo(head);
-        // 3D mode: rotate camera bearing to match direction of travel (smoothed)
-        if (is3DRef.current) {
-          // Use a small look-ahead window for stable bearing
-          const aheadIdx = Math.min(total - 1, i + Math.max(2, stepSize));
-          const from = points[Math.max(0, prevI - 1)];
-          const to = points[aheadIdx];
-          if (from && to && (from.lat !== to.lat || from.lng !== to.lng)) {
-            const target = bearingBetween(from, to);
-            // Smooth toward target by 35% of the shortest delta to avoid jitter
-            const base = prevHeading ?? mapRef.current.getHeading?.() ?? target;
-            const smoothed = (base + shortestAngleDelta(base, target) * 0.35 + 360) % 360;
-            mapRef.current.setHeading(smoothed);
-            prevHeading = smoothed;
-          }
-        }
-        window.setTimeout(() => {
-          userInteractingRef.current = false;
-        }, intervalMs + 50);
-      }
-      setProgress(i / total);
+  // RAF loop — advances tRef while playingRef is true.
+  const DURATION_MS = 5000; // base playback duration at 1x
 
-      if (i >= total) {
-        if (animTimerRef.current) window.clearInterval(animTimerRef.current);
-        animTimerRef.current = null;
-        setPlaying(false);
-      }
-    }, intervalMs) as unknown as number;
+  const tick = (now: number) => {
+    if (!playingRef.current) {
+      lastFrameRef.current = null;
+      rafRef.current = null;
+      return;
+    }
+    const last = lastFrameRef.current ?? now;
+    const dt = now - last;
+    lastFrameRef.current = now;
+
+    tRef.current = Math.min(1, tRef.current + (dt * speedRef.current) / DURATION_MS);
+    applyFrame(tRef.current);
+
+    if (tRef.current >= 1) {
+      playingRef.current = false;
+      lastFrameRef.current = null;
+      rafRef.current = null;
+      setPlaying(false);
+      return;
+    }
+    rafRef.current = requestAnimationFrame(tick);
+  };
+
+  const ensureCameraSetup = () => {
+    if (!followCamRef.current || !mapRef.current) return;
+    userInteractingRef.current = true;
+    mapRef.current.setZoom(is3DRef.current ? 18 : 17);
+    mapRef.current.setTilt(is3DRef.current ? 67.5 : 0);
+    if (!is3DRef.current) mapRef.current.setHeading(0);
+    setTimeout(() => {
+      userInteractingRef.current = false;
+    }, 250);
+  };
+
+  const startPlayback = () => {
+    if (!ready) return;
+    if (tRef.current >= 1) tRef.current = 0; // restart if finished
+    ensureCameraSetup();
+    playingRef.current = true;
+    setPlaying(true);
+    lastFrameRef.current = null;
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(tick);
+  };
+
+  const pausePlayback = () => {
+    playingRef.current = false;
+    setPlaying(false);
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = null;
+    lastFrameRef.current = null;
+  };
+
+  const togglePlay = () => {
+    if (playingRef.current) pausePlayback();
+    else startPlayback();
   };
 
   const replay = () => {
     if (!ready) return;
-    if (animTimerRef.current) window.clearInterval(animTimerRef.current);
-    distMV.set(0);
-    timeMV.set(0);
-    elevMV.set(0);
+    pausePlayback();
+    tRef.current = 0;
+    prevHeadingRef.current = null;
     polylineRef.current?.setPath([]);
     glowRef.current?.setPath([]);
     markerRef.current?.setPosition(points[0]);
+    distMV.set(0);
+    timeMV.set(0);
+    elevMV.set(0);
     setProgress(0);
-    setPlaying(false);
-    setTimeout(() => startPlayback(), 100);
+    setTimeout(() => startPlayback(), 80);
   };
+
+  /** Seek by delta (positive = forward, negative = back). Range -1..1. */
+  const seekBy = (delta: number) => {
+    if (!ready) return;
+    tRef.current = Math.max(0, Math.min(1, tRef.current + delta));
+    applyFrame(tRef.current);
+  };
+
+  const setSpeed = (s: number) => {
+    speedRef.current = s;
+    setSpeedState(s);
+  };
+
 
   const toggleFollowCam = () => {
     const next = !followCamRef.current;
