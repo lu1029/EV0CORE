@@ -206,7 +206,15 @@ const RunResult = () => {
                 </div>
               )
             )}
-            {mode === "animation" && <ActivityAnimationMode points={points} />}
+            {mode === "animation" && (
+              <ActivityAnimationMode
+                points={points}
+                distanceKm={distanceKm}
+                durationSeconds={run.duration_seconds}
+                paceMinKm={run.pace_min_km}
+                elevationGainM={elevationGain}
+              />
+            )}
             {mode === "photo" && (
               <ActivityPhotoMode
                 runId={run.id}

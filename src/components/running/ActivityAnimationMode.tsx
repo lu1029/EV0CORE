@@ -1,68 +1,289 @@
-import { useMemo } from "react";
-import { motion } from "framer-motion";
-import { buildPolyline, type LatLng } from "@/lib/routePolyline";
+import { useEffect, useRef, useState } from "react";
+import { motion, useMotionValue, useTransform, animate } from "framer-motion";
+import { Play, RotateCcw } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import type { LatLng } from "@/lib/routePolyline";
+
+// Strava-inspired dark map style
+const darkMapStyles = [
+  { elementType: "geometry", stylers: [{ color: "#0b1220" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#0b1220" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#5b6478" }] },
+  { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+  { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#1a2236" }] },
+  { featureType: "poi", stylers: [{ visibility: "off" }] },
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#0f1a2a" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#1a2236" }] },
+  { featureType: "road", elementType: "labels", stylers: [{ visibility: "off" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#222c44" }] },
+  { featureType: "transit", stylers: [{ visibility: "off" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#070d18" }] },
+];
+
+let mapsPromise: Promise<void> | null = null;
+function loadGoogleMaps(apiKey: string): Promise<void> {
+  if ((window as any).google?.maps) return Promise.resolve();
+  if (mapsPromise) return mapsPromise;
+  mapsPromise = new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=geometry`;
+    s.async = true;
+    s.defer = true;
+    s.onload = () => resolve();
+    s.onerror = () => {
+      mapsPromise = null;
+      reject(new Error("Failed to load Google Maps"));
+    };
+    document.head.appendChild(s);
+  });
+  return mapsPromise;
+}
 
 interface Props {
   points: LatLng[];
+  distanceKm?: number;
+  durationSeconds?: number;
+  paceMinKm?: number | null;
+  elevationGainM?: number;
 }
 
-export const ActivityAnimationMode = ({ points }: Props) => {
-  const poly = useMemo(() => buildPolyline(points, { padding: 32, targetSize: 600 }), [points]);
+const formatTime = (s: number) => {
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return `${m.toString().padStart(2, "0")}:${sec.toString().padStart(2, "0")}`;
+};
+
+const formatPace = (paceMinKm: number) => {
+  if (!paceMinKm || paceMinKm <= 0) return "--:--";
+  const m = Math.floor(paceMinKm);
+  const s = Math.round((paceMinKm - m) * 60);
+  return `${m}:${s.toString().padStart(2, "0")}`;
+};
+
+export const ActivityAnimationMode = ({
+  points,
+  distanceKm = 0,
+  durationSeconds = 0,
+  paceMinKm = null,
+  elevationGainM = 0,
+}: Props) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<any>(null);
+  const polylineRef = useRef<any>(null);
+  const glowRef = useRef<any>(null);
+  const markerRef = useRef<any>(null);
+  const animTimerRef = useRef<number | null>(null);
+  const [ready, setReady] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const [progress, setProgress] = useState(0); // 0..1
+
+  // Animated counters tied to progress
+  const distMV = useMotionValue(0);
+  const timeMV = useMotionValue(0);
+  const elevMV = useMotionValue(0);
+  const distDisplay = useTransform(distMV, (v) => v.toFixed(2));
+  const timeDisplay = useTransform(timeMV, (v) => formatTime(v));
+  const elevDisplay = useTransform(elevMV, (v) => Math.round(v).toString());
+
+  // Init map + draw faint base path
+  useEffect(() => {
+    if (!containerRef.current || points.length < 2) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const { data } = await supabase.functions.invoke("get-maps-key");
+        if (!data?.key || cancelled) return;
+        await loadGoogleMaps(data.key);
+        if (cancelled || !containerRef.current) return;
+        const g = (window as any).google;
+        if (!g?.maps) return;
+
+        const map = new g.maps.Map(containerRef.current, {
+          disableDefaultUI: true,
+          styles: darkMapStyles,
+          gestureHandling: "greedy",
+          zoomControl: false,
+          backgroundColor: "#0b1220",
+          tilt: 0,
+          mapTypeId: g.maps.MapTypeId.ROADMAP,
+        });
+        mapRef.current = map;
+
+        const bounds = new g.maps.LatLngBounds();
+        points.forEach((p) => bounds.extend(p));
+        map.fitBounds(bounds, 50);
+
+        // Faint base route (full path)
+        new g.maps.Polyline({
+          path: points,
+          map,
+          strokeColor: "#ff5a1f",
+          strokeOpacity: 0.18,
+          strokeWeight: 4,
+          zIndex: 1,
+        });
+
+        // Animated glow + main polylines
+        glowRef.current = new g.maps.Polyline({
+          path: [],
+          map,
+          strokeColor: "#ff5a1f",
+          strokeOpacity: 0.45,
+          strokeWeight: 12,
+          zIndex: 2,
+        });
+        polylineRef.current = new g.maps.Polyline({
+          path: [],
+          map,
+          strokeColor: "#ff6a00",
+          strokeOpacity: 1,
+          strokeWeight: 5,
+          zIndex: 3,
+        });
+
+        // Runner marker (orange dot with white halo)
+        markerRef.current = new g.maps.Marker({
+          position: points[0],
+          map,
+          icon: {
+            path: g.maps.SymbolPath.CIRCLE,
+            scale: 7,
+            fillColor: "#ff6a00",
+            fillOpacity: 1,
+            strokeColor: "#ffffff",
+            strokeWeight: 3,
+          },
+          zIndex: 4,
+        });
+
+        setReady(true);
+        // Auto-play once ready
+        setTimeout(() => startPlayback(), 400);
+      } catch (e) {
+        console.error("Animation mode error:", e);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      if (animTimerRef.current) window.clearInterval(animTimerRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [points]);
+
+  const startPlayback = () => {
+    if (!ready || playing) return;
+    if (animTimerRef.current) window.clearInterval(animTimerRef.current);
+    setPlaying(true);
+    setProgress(0);
+
+    // Animate counters in parallel (~5s)
+    const DURATION = 5;
+    animate(distMV, distanceKm, { duration: DURATION, ease: "easeOut" });
+    animate(timeMV, durationSeconds, { duration: DURATION, ease: "easeOut" });
+    animate(elevMV, elevationGainM, { duration: DURATION, ease: "easeOut" });
+
+    const total = points.length;
+    const stepCount = Math.min(total, 120);
+    const stepSize = Math.max(1, Math.floor(total / stepCount));
+    const intervalMs = (DURATION * 1000) / stepCount;
+    let i = 0;
+
+    animTimerRef.current = window.setInterval(() => {
+      i = Math.min(i + stepSize, total);
+      const slice = points.slice(0, i);
+      polylineRef.current?.setPath(slice);
+      glowRef.current?.setPath(slice);
+      const head = points[Math.min(i, total) - 1];
+      if (head && markerRef.current) markerRef.current.setPosition(head);
+      setProgress(i / total);
+
+      if (i >= total) {
+        if (animTimerRef.current) window.clearInterval(animTimerRef.current);
+        animTimerRef.current = null;
+        setPlaying(false);
+      }
+    }, intervalMs) as unknown as number;
+  };
+
+  const replay = () => {
+    if (!ready) return;
+    if (animTimerRef.current) window.clearInterval(animTimerRef.current);
+    distMV.set(0);
+    timeMV.set(0);
+    elevMV.set(0);
+    polylineRef.current?.setPath([]);
+    glowRef.current?.setPath([]);
+    markerRef.current?.setPosition(points[0]);
+    setProgress(0);
+    setPlaying(false);
+    setTimeout(() => startPlayback(), 100);
+  };
+
+  if (points.length < 2) {
+    return (
+      <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
+        Rota não disponível
+      </div>
+    );
+  }
 
   return (
-    <div className="relative w-full h-full overflow-hidden">
-      {/* Mesh gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[hsl(263,70%,15%)] via-[hsl(220,70%,12%)] to-[hsl(142,40%,12%)]" />
-      <div className="absolute -top-20 -left-20 w-80 h-80 rounded-full bg-primary/30 blur-3xl animate-pulse" />
-      <div
-        className="absolute -bottom-20 -right-20 w-96 h-96 rounded-full bg-accent/30 blur-3xl animate-pulse"
-        style={{ animationDelay: "1.2s" }}
-      />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 rounded-full bg-[hsl(263,70%,50%)]/20 blur-3xl" />
+    <div className="relative w-full h-full overflow-hidden bg-[#0b1220]">
+      {/* Map fills the area */}
+      <div ref={containerRef} className="absolute inset-0" />
 
-      {/* SVG polyline */}
-      {poly ? (
-        <div className="relative w-full h-full flex items-center justify-center p-6">
-          <svg
-            viewBox={`0 0 ${poly.width} ${poly.height}`}
-            className="max-w-full max-h-full"
-            style={{ filter: "drop-shadow(0 0 12px hsl(142, 71%, 50%))" }}
-          >
-            <defs>
-              <linearGradient id="route-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="hsl(142, 71%, 55%)" />
-                <stop offset="50%" stopColor="hsl(180, 70%, 55%)" />
-                <stop offset="100%" stopColor="hsl(263, 70%, 60%)" />
-              </linearGradient>
-            </defs>
-            {/* Faint base path */}
-            <path
-              d={poly.d}
-              stroke="hsl(142, 71%, 45% / 0.15)"
-              strokeWidth="6"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            {/* Animated draw */}
-            <motion.path
-              d={poly.d}
-              stroke="url(#route-gradient)"
-              strokeWidth="4"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              initial={{ pathLength: 0, opacity: 0 }}
-              animate={{ pathLength: 1, opacity: 1 }}
-              transition={{ duration: 2.5, ease: [0.32, 0.72, 0, 1] }}
-            />
-          </svg>
+      {/* Top-right replay button */}
+      <button
+        type="button"
+        onClick={replay}
+        disabled={!ready}
+        className="absolute top-3 right-3 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-white text-xs font-semibold shadow-lg active:scale-95 transition-transform disabled:opacity-50"
+      >
+        {playing ? <Play className="w-3 h-3" /> : <RotateCcw className="w-3 h-3" />}
+        {playing ? "Reproduzindo" : "Replay"}
+      </button>
+
+      {/* Bottom progress bar */}
+      <div className="absolute bottom-[88px] left-3 right-3 z-10 h-1 rounded-full bg-white/10 overflow-hidden">
+        <div
+          className="h-full bg-gradient-to-r from-[#ff5a1f] to-[#ff8a00] transition-[width] duration-100 ease-linear"
+          style={{ width: `${progress * 100}%` }}
+        />
+      </div>
+
+      {/* Bottom stats overlay (live counters) */}
+      <div className="absolute bottom-0 left-0 right-0 z-10 px-4 pb-3 pt-4 bg-gradient-to-t from-black/85 via-black/60 to-transparent">
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <p className="text-[9px] uppercase tracking-wider text-white/60 mb-0.5">Distância</p>
+            <p className="text-white font-heading font-bold text-lg leading-none">
+              <motion.span>{distDisplay}</motion.span>
+              <span className="text-xs font-normal text-white/70 ml-1">km</span>
+            </p>
+          </div>
+          <div>
+            <p className="text-[9px] uppercase tracking-wider text-white/60 mb-0.5">Tempo</p>
+            <p className="text-white font-heading font-bold text-lg leading-none">
+              <motion.span>{timeDisplay}</motion.span>
+            </p>
+          </div>
+          <div>
+            <p className="text-[9px] uppercase tracking-wider text-white/60 mb-0.5">Elevação</p>
+            <p className="text-white font-heading font-bold text-lg leading-none">
+              <motion.span>{elevDisplay}</motion.span>
+              <span className="text-xs font-normal text-white/70 ml-1">m</span>
+            </p>
+          </div>
         </div>
-      ) : (
-        <div className="relative w-full h-full flex items-center justify-center text-muted-foreground text-sm">
-          Rota não disponível
+        <div className="mt-2 flex items-center justify-between">
+          <p className="text-[10px] text-white/50">Pace médio</p>
+          <p className="text-white text-xs font-semibold">
+            {formatPace(paceMinKm ?? 0)} <span className="text-white/60 font-normal">/km</span>
+          </p>
         </div>
-      )}
+      </div>
     </div>
   );
 };
