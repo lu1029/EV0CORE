@@ -333,12 +333,12 @@ const WorkoutBuilder: React.FC<WorkoutBuilderProps> = ({
                   <div className="space-y-2 mt-2">
                     {libraryExercises.map((libEx) => (
                       <button
-                        key={libEx.external_id}
+                        key={libEx.id}
                         onClick={() => addExercise(libEx)}
                         className="w-full flex items-center gap-3 p-3 rounded-2xl bg-card border border-white/[0.06] text-left active:opacity-70"
                       >
                         {libEx.gif_url && (
-                          <img src={libEx.gif_url} alt="" className="w-12 h-12 rounded-lg object-cover bg-black" />
+                          <img src={libEx.gif_url} alt="" className="w-12 h-12 rounded-lg object-cover bg-secondary" loading="lazy" />
                         )}
                         <div className="flex-1 min-w-0">
                           <p className="text-[14px] font-semibold truncate">{translateExerciseName(libEx.name)}</p>
