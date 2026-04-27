@@ -73,6 +73,35 @@ export function useFeed() {
 
   useEffect(() => { load(); }, [load]);
 
+  // Refetch when another instance of useFeed announces a change,
+  // and when the tab regains focus / becomes visible.
+  useEffect(() => {
+    const onChanged = (e: Event) => {
+      const detail = (e as CustomEvent<FeedEventDetail>).detail;
+      const incoming = detail?.post;
+      if (incoming) {
+        // Optimistically merge the new post into local state right away.
+        setPosts(prev => {
+          if (prev.some(p => p.id === incoming.id)) return prev;
+          return [incoming, ...prev];
+        });
+      }
+      // Always reconcile with server in the background.
+      load();
+    };
+    const onVisible = () => {
+      if (document.visibilityState === "visible") load();
+    };
+    window.addEventListener(FEED_EVENT, onChanged as EventListener);
+    window.addEventListener("focus", onVisible);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.removeEventListener(FEED_EVENT, onChanged as EventListener);
+      window.removeEventListener("focus", onVisible);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [load]);
+
   const createPost = useCallback(async (input: { post_type: PostType; caption?: string; photo_url?: string | null; activity_data?: any; submission_token?: string }) => {
     if (!user) throw new Error("not_authenticated");
     const safeCaption = sanitizeText(input.caption ?? "").slice(0, 2000);
@@ -89,9 +118,31 @@ export function useFeed() {
       .select()
       .single();
     if (error) throw error;
-    await load();
-    return data;
-  }, [user, load]);
+
+    // Hydrate author info for instant render
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("user_id, name, avatar_url")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    const newPost: FeedPost = {
+      ...(data as any),
+      author: {
+        name: (profileData as any)?.name || "Atleta",
+        avatar_url: (profileData as any)?.avatar_url ?? null,
+      },
+      liked_by_me: false,
+    };
+
+    // Optimistic local prepend (this instance)
+    setPosts(prev => (prev.some(p => p.id === newPost.id) ? prev : [newPost, ...prev]));
+
+    // Notify all other useFeed() instances so the feed screen updates without reload
+    emitFeedChanged({ post: newPost });
+
+    return newPost;
+  }, [user]);
 
   const toggleLike = useCallback(async (postId: string) => {
     if (!user) return;
