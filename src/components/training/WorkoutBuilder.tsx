@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, Plus, Trash2, GripVertical, Check, Search, X } from "lucide-react";
 import { useApp } from "@/contexts/AppContext";
@@ -52,10 +52,33 @@ const WorkoutBuilder: React.FC<WorkoutBuilderProps> = ({
   const [search, setSearch] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const { items: libraryExercises, loading: libLoading } = useExerciseLibrary({
+  const {
+    items: libraryExercises,
+    loading: libLoading,
+    loadingMore: libLoadingMore,
+    hasMore: libHasMore,
+    loadMore: libLoadMore,
+  } = useExerciseLibrary({
     search: search || undefined,
-    pageSize: 30,
+    pageSize: 50,
   });
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!showLibrary) return;
+    const el = sentinelRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && libHasMore && !libLoading && !libLoadingMore) {
+          libLoadMore();
+        }
+      },
+      { rootMargin: "300px" },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [showLibrary, libHasMore, libLoading, libLoadingMore, libLoadMore, libraryExercises.length]);
 
   if (!isPremium) {
     return (
@@ -326,6 +349,15 @@ const WorkoutBuilder: React.FC<WorkoutBuilderProps> = ({
                         <Plus className="w-5 h-5 text-primary shrink-0" />
                       </button>
                     ))}
+                    <div ref={sentinelRef} className="h-6" />
+                    {libLoadingMore && (
+                      <p className="text-center text-muted-foreground py-4 text-[13px]">Carregando mais…</p>
+                    )}
+                    {!libHasMore && libraryExercises.length > 0 && (
+                      <p className="text-center text-muted-foreground/60 py-4 text-[12px]">
+                        {libraryExercises.length} exercícios
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
