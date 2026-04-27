@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
-import { Play, RotateCcw, Lock, LockOpen, Box, Square } from "lucide-react";
+import { Play, Pause, RotateCcw, Lock, LockOpen, Box, Square, SkipBack } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { LatLng } from "@/lib/routePolyline";
 import { ElevationChart } from "./ElevationChart";
