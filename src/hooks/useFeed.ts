@@ -4,6 +4,7 @@ import { useApp } from "@/contexts/AppContext";
 import { sanitizeText } from "@/lib/sanitize";
 
 export type PostType = "workout" | "run" | "nutrition" | "progress" | "journal";
+export type PostVisibility = "public" | "followers" | "private";
 
 export interface FeedPost {
   id: string;
@@ -15,6 +16,7 @@ export interface FeedPost {
   likes_count: number;
   comments_count: number;
   created_at: string;
+  visibility?: PostVisibility;
   author?: { name: string; avatar_url: string | null };
   liked_by_me?: boolean;
 }
