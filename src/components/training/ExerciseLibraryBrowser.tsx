@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { X, Search, Home, Dumbbell, Sparkles, Loader2 } from "lucide-react";
 import { useExerciseLibrary, type LibraryExercise } from "@/hooks/useExerciseLibrary";
 import { useExerciseGif } from "@/hooks/useExerciseGif";
@@ -182,11 +182,26 @@ const ExerciseLibraryBrowser = () => {
   const [location, setLocation] = useState<LocationFilter>("all");
   const [selected, setSelected] = useState<LibraryExercise | null>(null);
 
-  const { items, loading, error } = useExerciseLibrary({
+  const { items, loading, loadingMore, error, hasMore, loadMore } = useExerciseLibrary({
     bodyPart: group,
     search: search.trim() || undefined,
-    limit: 40,
+    pageSize: 40,
   });
+
+  // Sentinela do scroll infinito
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) loadMore();
+      },
+      { rootMargin: "400px" },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [loadMore]);
 
   // Filtra casa/academia no client (a API não suporta esse filtro nativamente)
   const filteredItems = useMemo(() => {
@@ -300,7 +315,7 @@ const ExerciseLibraryBrowser = () => {
                 key={ex.external_id}
                 onClick={() => setSelected(ex)}
                 className="text-left active:scale-[0.97] transition-transform animate-fade-in"
-                style={{ animationDelay: `${Math.min(i * 30, 300)}ms` }}
+                style={{ animationDelay: `${Math.min(i * 10, 200)}ms` }}
               >
                 <GifThumb ex={ex} />
                 <p className="text-[14px] font-semibold text-foreground mt-2 leading-tight line-clamp-2">
@@ -312,6 +327,22 @@ const ExerciseLibraryBrowser = () => {
               </button>
             ))}
           </div>
+
+          {/* Sentinela do scroll infinito */}
+          <div ref={sentinelRef} className="h-10" />
+
+          {loadingMore && (
+            <div className="flex items-center justify-center py-6 gap-2">
+              <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+              <p className="text-[12px] text-muted-foreground">Carregando mais…</p>
+            </div>
+          )}
+
+          {!hasMore && !loadingMore && (
+            <p className="text-center text-[11px] text-muted-foreground py-6">
+              Você viu todos os exercícios desse grupo.
+            </p>
+          )}
         </div>
       )}
 
