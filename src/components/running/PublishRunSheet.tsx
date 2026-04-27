@@ -84,15 +84,44 @@ export const PublishRunSheet = ({
   };
 
   const captureMapSnapshot = async (): Promise<Blob> => {
-    if (!shareCardRef.current) throw new Error("Card não disponível");
-    const canvas = await html2canvas(shareCardRef.current, {
+    const node = shareCardRef.current;
+    if (!node) throw new Error("Card não disponível");
+
+    // Wait one frame so any pending layout/images settle before capture
+    await new Promise((r) => requestAnimationFrame(() => r(null)));
+
+    // Native size of the ShareCard (matches the 1080x1920 inline styles)
+    const CARD_W = 1080;
+    const CARD_H = 1920;
+    // Higher scale = sharper output. Cap to avoid massive blobs on low-end devices.
+    const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
+    const scale = Math.min(2, Math.max(1.5, dpr));
+
+    const canvas = await html2canvas(node, {
       useCORS: true,
       allowTaint: false,
-      backgroundColor: null,
-      scale: 1.2,
+      backgroundColor: "#0b1220", // solid fallback to avoid transparent edges
+      scale,
+      // Force full card capture regardless of viewport / offscreen position
+      width: CARD_W,
+      height: CARD_H,
+      windowWidth: CARD_W,
+      windowHeight: CARD_H,
+      x: 0,
+      y: 0,
+      scrollX: 0,
+      scrollY: 0,
+      imageTimeout: 15000,
+      logging: false,
+      removeContainer: true,
     });
+
     return await new Promise<Blob>((resolve, reject) =>
-      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("blob failed"))), "image/jpeg", 0.92)
+      canvas.toBlob(
+        (b) => (b ? resolve(b) : reject(new Error("blob failed"))),
+        "image/jpeg",
+        0.95,
+      ),
     );
   };
 
