@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, Plus, Trash2, GripVertical, Check, Search, X } from "lucide-react";
 import { useApp } from "@/contexts/AppContext";
@@ -52,10 +52,17 @@ const WorkoutBuilder: React.FC<WorkoutBuilderProps> = ({
   const [search, setSearch] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const { items: libraryExercises, loading: libLoading } = useExerciseLibrary({
+  const {
+    items: libraryExercises,
+    loading: libLoading,
+    loadingMore: libLoadingMore,
+    hasMore: libHasMore,
+    loadMore: libLoadMore,
+  } = useExerciseLibrary({
     search: search || undefined,
-    pageSize: 30,
+    pageSize: 50,
   });
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   if (!isPremium) {
     return (
