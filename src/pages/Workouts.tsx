@@ -130,7 +130,7 @@ export default function Workouts() {
                 <div className="p-4">
                   <h3 className="text-[17px] font-bold text-foreground leading-tight">{t.title}</h3>
                   {t.description && (
-                    <p className="text-[13px] text-muted-foreground mt-1 line-clamp-2">{t.description}</p>
+                    <p className="text-[13px] text-muted-foreground mt-1 line-clamp-3 leading-snug">{t.description}</p>
                   )}
                   <div className="flex items-center gap-3 mt-3 text-[12px] text-muted-foreground">
                     <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{t.estimated_minutes} min</span>
