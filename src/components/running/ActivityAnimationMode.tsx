@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { motion, useMotionValue, useTransform, animate } from "framer-motion";
-import { Play, RotateCcw, Lock, LockOpen, Box, Square } from "lucide-react";
+import { motion, useMotionValue, useTransform } from "framer-motion";
+import { Play, Pause, RotateCcw, Lock, LockOpen, Box, Square, SkipBack } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { LatLng } from "@/lib/routePolyline";
 import { ElevationChart } from "./ElevationChart";
@@ -90,15 +90,21 @@ export const ActivityAnimationMode = ({
   const polylineRef = useRef<any>(null);
   const glowRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
-  const animTimerRef = useRef<number | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const lastFrameRef = useRef<number | null>(null);
+  const tRef = useRef(0); // logical playback cursor 0..1
+  const playingRef = useRef(false);
+  const speedRef = useRef(1);
+  const prevHeadingRef = useRef<number | null>(null);
   const boundsRef = useRef<any>(null);
   const followCamRef = useRef(true);
   const userInteractingRef = useRef(false);
+  const is3DRef = useRef(false);
   const [ready, setReady] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [followCam, setFollowCam] = useState(true);
   const [is3D, setIs3D] = useState(false);
-  const is3DRef = useRef(false);
+  const [speedState, setSpeedState] = useState(1);
   const [progress, setProgress] = useState(0); // 0..1
 
   // Animated counters tied to progress
@@ -210,102 +216,144 @@ export const ActivityAnimationMode = ({
 
     return () => {
       cancelled = true;
-      if (animTimerRef.current) window.clearInterval(animTimerRef.current);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [points]);
 
-  const startPlayback = () => {
-    if (!ready || playing) return;
-    if (animTimerRef.current) window.clearInterval(animTimerRef.current);
-    setPlaying(true);
-    setProgress(0);
+  // Apply the current logical cursor (tRef: 0..1) to map + counters in one shot.
+  const applyFrame = (t: number) => {
+    const total = points.length;
+    if (total < 2) return;
+    const clamped = Math.max(0, Math.min(1, t));
 
-    // Animate counters in parallel (~5s)
-    const DURATION = 5;
-    animate(distMV, distanceKm, { duration: DURATION, ease: "easeOut" });
-    animate(timeMV, durationSeconds, { duration: DURATION, ease: "easeOut" });
-    animate(elevMV, elevationGainM, { duration: DURATION, ease: "easeOut" });
+    // Polyline slice
+    const lastIdx = Math.max(1, Math.floor(clamped * (total - 1)) + 1);
+    const slice = points.slice(0, lastIdx);
+    polylineRef.current?.setPath(slice);
+    glowRef.current?.setPath(slice);
 
-    // Zoom in for follow-cam if locked + apply 3D tilt
-    if (followCamRef.current && mapRef.current) {
+    // Marker
+    const head = points[lastIdx - 1];
+    if (head && markerRef.current) markerRef.current.setPosition(head);
+
+    // Counters — driven directly by cursor → always synced with progress
+    distMV.set(distanceKm * clamped);
+    timeMV.set(durationSeconds * clamped);
+    elevMV.set(elevationGainM * clamped);
+
+    // Follow-cam (pan + optional bearing)
+    if (head && followCamRef.current && mapRef.current) {
       userInteractingRef.current = true;
-      mapRef.current.panTo(points[0]);
-      mapRef.current.setZoom(is3DRef.current ? 18 : 17);
-      mapRef.current.setTilt(is3DRef.current ? 67.5 : 0);
-      // Initial heading: from start toward an early point
+      mapRef.current.panTo(head);
       if (is3DRef.current) {
-        const lookAhead = points[Math.min(5, points.length - 1)];
-        if (lookAhead) mapRef.current.setHeading(bearingBetween(points[0], lookAhead));
-      } else {
-        mapRef.current.setHeading(0);
+        const aheadIdx = Math.min(total - 1, lastIdx + 4);
+        const from = points[Math.max(0, lastIdx - 2)];
+        const to = points[aheadIdx];
+        if (from && to && (from.lat !== to.lat || from.lng !== to.lng)) {
+          const target = bearingBetween(from, to);
+          const base = prevHeadingRef.current ?? mapRef.current.getHeading?.() ?? target;
+          const smoothed = (base + shortestAngleDelta(base, target) * 0.35 + 360) % 360;
+          mapRef.current.setHeading(smoothed);
+          prevHeadingRef.current = smoothed;
+        }
       }
-      setTimeout(() => {
+      window.setTimeout(() => {
         userInteractingRef.current = false;
-      }, 300);
+      }, 80);
     }
 
-    const total = points.length;
-    const stepCount = Math.min(total, 120);
-    const stepSize = Math.max(1, Math.floor(total / stepCount));
-    const intervalMs = (DURATION * 1000) / stepCount;
-    let i = 0;
-    let prevHeading: number | null = null;
+    setProgress(clamped);
+  };
 
-    animTimerRef.current = window.setInterval(() => {
-      const prevI = i;
-      i = Math.min(i + stepSize, total);
-      const slice = points.slice(0, i);
-      polylineRef.current?.setPath(slice);
-      glowRef.current?.setPath(slice);
-      const head = points[Math.min(i, total) - 1];
-      if (head && markerRef.current) markerRef.current.setPosition(head);
-      // Smooth follow-cam: panTo glides the camera
-      if (head && followCamRef.current && mapRef.current) {
-        userInteractingRef.current = true;
-        mapRef.current.panTo(head);
-        // 3D mode: rotate camera bearing to match direction of travel (smoothed)
-        if (is3DRef.current) {
-          // Use a small look-ahead window for stable bearing
-          const aheadIdx = Math.min(total - 1, i + Math.max(2, stepSize));
-          const from = points[Math.max(0, prevI - 1)];
-          const to = points[aheadIdx];
-          if (from && to && (from.lat !== to.lat || from.lng !== to.lng)) {
-            const target = bearingBetween(from, to);
-            // Smooth toward target by 35% of the shortest delta to avoid jitter
-            const base = prevHeading ?? mapRef.current.getHeading?.() ?? target;
-            const smoothed = (base + shortestAngleDelta(base, target) * 0.35 + 360) % 360;
-            mapRef.current.setHeading(smoothed);
-            prevHeading = smoothed;
-          }
-        }
-        window.setTimeout(() => {
-          userInteractingRef.current = false;
-        }, intervalMs + 50);
-      }
-      setProgress(i / total);
+  // RAF loop — advances tRef while playingRef is true.
+  const DURATION_MS = 5000; // base playback duration at 1x
 
-      if (i >= total) {
-        if (animTimerRef.current) window.clearInterval(animTimerRef.current);
-        animTimerRef.current = null;
-        setPlaying(false);
-      }
-    }, intervalMs) as unknown as number;
+  const tick = (now: number) => {
+    if (!playingRef.current) {
+      lastFrameRef.current = null;
+      rafRef.current = null;
+      return;
+    }
+    const last = lastFrameRef.current ?? now;
+    const dt = now - last;
+    lastFrameRef.current = now;
+
+    tRef.current = Math.min(1, tRef.current + (dt * speedRef.current) / DURATION_MS);
+    applyFrame(tRef.current);
+
+    if (tRef.current >= 1) {
+      playingRef.current = false;
+      lastFrameRef.current = null;
+      rafRef.current = null;
+      setPlaying(false);
+      return;
+    }
+    rafRef.current = requestAnimationFrame(tick);
+  };
+
+  const ensureCameraSetup = () => {
+    if (!followCamRef.current || !mapRef.current) return;
+    userInteractingRef.current = true;
+    mapRef.current.setZoom(is3DRef.current ? 18 : 17);
+    mapRef.current.setTilt(is3DRef.current ? 67.5 : 0);
+    if (!is3DRef.current) mapRef.current.setHeading(0);
+    setTimeout(() => {
+      userInteractingRef.current = false;
+    }, 250);
+  };
+
+  const startPlayback = () => {
+    if (!ready) return;
+    if (tRef.current >= 1) tRef.current = 0; // restart if finished
+    ensureCameraSetup();
+    playingRef.current = true;
+    setPlaying(true);
+    lastFrameRef.current = null;
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(tick);
+  };
+
+  const pausePlayback = () => {
+    playingRef.current = false;
+    setPlaying(false);
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = null;
+    lastFrameRef.current = null;
+  };
+
+  const togglePlay = () => {
+    if (playingRef.current) pausePlayback();
+    else startPlayback();
   };
 
   const replay = () => {
     if (!ready) return;
-    if (animTimerRef.current) window.clearInterval(animTimerRef.current);
-    distMV.set(0);
-    timeMV.set(0);
-    elevMV.set(0);
+    pausePlayback();
+    tRef.current = 0;
+    prevHeadingRef.current = null;
     polylineRef.current?.setPath([]);
     glowRef.current?.setPath([]);
     markerRef.current?.setPosition(points[0]);
+    distMV.set(0);
+    timeMV.set(0);
+    elevMV.set(0);
     setProgress(0);
-    setPlaying(false);
-    setTimeout(() => startPlayback(), 100);
+    setTimeout(() => startPlayback(), 80);
   };
+
+  /** Seek by delta (positive = forward, negative = back). Range -1..1. */
+  const seekBy = (delta: number) => {
+    if (!ready) return;
+    tRef.current = Math.max(0, Math.min(1, tRef.current + delta));
+    applyFrame(tRef.current);
+  };
+
+  const setSpeed = (s: number) => {
+    speedRef.current = s;
+    setSpeedState(s);
+  };
+
 
   const toggleFollowCam = () => {
     const next = !followCamRef.current;
@@ -415,15 +463,17 @@ export const ActivityAnimationMode = ({
           type="button"
           onClick={replay}
           disabled={!ready}
+          aria-label="Reiniciar animação"
+          title="Reiniciar"
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-white text-xs font-semibold shadow-lg active:scale-95 transition-transform disabled:opacity-50"
         >
-          {playing ? <Play className="w-3 h-3" /> : <RotateCcw className="w-3 h-3" />}
-          {playing ? "Reproduzindo" : "Replay"}
+          <RotateCcw className="w-3 h-3" />
+          Reiniciar
         </button>
       </div>
 
       {/* Mini elevation chart synced with playback (only shown if altitude data exists) */}
-      <div className="absolute bottom-[92px] left-3 right-3 z-10 px-2 py-1.5 rounded-lg bg-black/55 backdrop-blur-md border border-white/10">
+      <div className="absolute bottom-[140px] left-3 right-3 z-10 px-2 py-1.5 rounded-lg bg-black/55 backdrop-blur-md border border-white/10">
         <div className="flex items-center justify-between mb-0.5">
           <span className="text-[9px] uppercase tracking-wider text-white/60">Elevação</span>
           <span className="text-[9px] text-white/50">{Math.round(elevationGainM)} m total</span>
@@ -431,12 +481,56 @@ export const ActivityAnimationMode = ({
         <ElevationChart points={points as any} progress={progress} className="h-10 w-full" />
       </div>
 
-      {/* Bottom progress bar (just above stats) */}
-      <div className="absolute bottom-[84px] left-3 right-3 z-10 h-1 rounded-full bg-white/10 overflow-hidden">
+      {/* Progress bar */}
+      <div className="absolute bottom-[132px] left-3 right-3 z-10 h-1 rounded-full bg-white/10 overflow-hidden">
         <div
-          className="h-full bg-gradient-to-r from-[#ff5a1f] to-[#ff8a00] transition-[width] duration-100 ease-linear"
+          className="h-full bg-gradient-to-r from-[#ff5a1f] to-[#ff8a00]"
           style={{ width: `${progress * 100}%` }}
         />
+      </div>
+
+      {/* Transport controls: pause/play, seek back, speed */}
+      <div className="absolute bottom-[88px] left-3 right-3 z-10 flex items-center justify-between gap-2 px-2 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 shadow-lg">
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => seekBy(-0.05)}
+            disabled={!ready}
+            aria-label="Voltar trecho"
+            title="Voltar trecho"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-white/90 hover:bg-white/10 active:scale-95 transition-all disabled:opacity-40"
+          >
+            <SkipBack className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={togglePlay}
+            disabled={!ready}
+            aria-label={playing ? "Pausar" : "Reproduzir"}
+            title={playing ? "Pausar" : "Reproduzir"}
+            className="w-9 h-9 rounded-full flex items-center justify-center bg-[#ff6a00] text-white shadow-md active:scale-95 transition-all disabled:opacity-40"
+          >
+            {playing ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
+          </button>
+        </div>
+
+        <div className="flex items-center gap-1 rounded-full bg-white/5 p-0.5">
+          {[0.75, 1, 1.25].map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setSpeed(s)}
+              aria-pressed={speedState === s}
+              className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all active:scale-95 ${
+                speedState === s
+                  ? "bg-white text-black"
+                  : "text-white/70 hover:text-white"
+              }`}
+            >
+              {s === 1 ? "1x" : `${s}x`}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Bottom stats overlay (live counters) */}
