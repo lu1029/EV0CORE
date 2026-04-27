@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
-import { Play, RotateCcw } from "lucide-react";
+import { Play, RotateCcw, Lock, LockOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { LatLng } from "@/lib/routePolyline";
 
@@ -73,8 +73,12 @@ export const ActivityAnimationMode = ({
   const glowRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
   const animTimerRef = useRef<number | null>(null);
+  const boundsRef = useRef<any>(null);
+  const followCamRef = useRef(true);
+  const userInteractingRef = useRef(false);
   const [ready, setReady] = useState(false);
   const [playing, setPlaying] = useState(false);
+  const [followCam, setFollowCam] = useState(true);
   const [progress, setProgress] = useState(0); // 0..1
 
   // Animated counters tied to progress
