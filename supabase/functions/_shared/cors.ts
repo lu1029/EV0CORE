@@ -2,11 +2,13 @@ const ALLOWED_ORIGINS = [
   "https://ev0core.com",
   "https://www.ev0core.com",
   "https://ev0core.lovable.app",
+  "https://d0db6e43-e6e3-4a96-8f0d-fb34425ac250.lovableproject.com",
 ];
 
 // Also allow Lovable preview/sandbox subdomains (e.g. id-preview--<id>.lovable.app, <id>.sandbox.lovable.dev)
 const ALLOWED_ORIGIN_PATTERNS: RegExp[] = [
   /^https:\/\/[a-z0-9-]+\.lovable\.app$/i,
+  /^https:\/\/[a-z0-9-]+\.lovableproject\.com$/i,
   /^https:\/\/[a-z0-9-]+\.sandbox\.lovable\.dev$/i,
   /^https:\/\/[a-z0-9-]+\.lovable\.dev$/i,
   /^capacitor:\/\/localhost$/i,
