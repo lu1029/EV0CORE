@@ -3,6 +3,7 @@ import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { Play, RotateCcw, Lock, LockOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { LatLng } from "@/lib/routePolyline";
+import { ElevationChart } from "./ElevationChart";
 
 // Strava-inspired dark map style
 const darkMapStyles = [
@@ -328,8 +329,17 @@ export const ActivityAnimationMode = ({
         </button>
       </div>
 
-      {/* Bottom progress bar */}
-      <div className="absolute bottom-[88px] left-3 right-3 z-10 h-1 rounded-full bg-white/10 overflow-hidden">
+      {/* Mini elevation chart synced with playback (only shown if altitude data exists) */}
+      <div className="absolute bottom-[92px] left-3 right-3 z-10 px-2 py-1.5 rounded-lg bg-black/55 backdrop-blur-md border border-white/10">
+        <div className="flex items-center justify-between mb-0.5">
+          <span className="text-[9px] uppercase tracking-wider text-white/60">Elevação</span>
+          <span className="text-[9px] text-white/50">{Math.round(elevationGainM)} m total</span>
+        </div>
+        <ElevationChart points={points as any} progress={progress} className="h-10 w-full" />
+      </div>
+
+      {/* Bottom progress bar (just above stats) */}
+      <div className="absolute bottom-[84px] left-3 right-3 z-10 h-1 rounded-full bg-white/10 overflow-hidden">
         <div
           className="h-full bg-gradient-to-r from-[#ff5a1f] to-[#ff8a00] transition-[width] duration-100 ease-linear"
           style={{ width: `${progress * 100}%` }}
