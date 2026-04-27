@@ -131,7 +131,8 @@
     "routeUnavailable": "Rota não disponível",
     "loadError": "Não foi possível carregar a corrida",
     "deleteConfirm": "Excluir esta corrida?",
-    "deleted": "Corrida excluída"
+    "deleted": "Corrida excluída",
+    "elevation": "Elevação"
   },
   "settings": {
     "language": "Idioma",

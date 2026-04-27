@@ -36,6 +36,8 @@ i18n
     supportedLngs: SUPPORTED_LANGUAGES as unknown as string[],
     nonExplicitSupportedLngs: true,
     interpolation: { escapeValue: false },
+    react: { useSuspense: false },
+    returnEmptyString: false,
     detection: {
       order: ["localStorage", "navigator"],
       caches: ["localStorage"],

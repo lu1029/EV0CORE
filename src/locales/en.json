@@ -131,7 +131,8 @@
     "routeUnavailable": "Route unavailable",
     "loadError": "Could not load this run",
     "deleteConfirm": "Delete this run?",
-    "deleted": "Run deleted"
+    "deleted": "Run deleted",
+    "elevation": "Elevation"
   },
   "settings": {
     "language": "Language",
