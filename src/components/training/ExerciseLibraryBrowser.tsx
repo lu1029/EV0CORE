@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { X, Search, Home, Dumbbell, Sparkles, Loader2 } from "lucide-react";
 import { useExerciseLibrary, type LibraryExercise } from "@/hooks/useExerciseLibrary";
 import { useExerciseGif } from "@/hooks/useExerciseGif";
@@ -182,11 +182,26 @@ const ExerciseLibraryBrowser = () => {
   const [location, setLocation] = useState<LocationFilter>("all");
   const [selected, setSelected] = useState<LibraryExercise | null>(null);
 
-  const { items, loading, error } = useExerciseLibrary({
+  const { items, loading, loadingMore, error, hasMore, loadMore } = useExerciseLibrary({
     bodyPart: group,
     search: search.trim() || undefined,
-    limit: 40,
+    pageSize: 40,
   });
+
+  // Sentinela do scroll infinito
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) loadMore();
+      },
+      { rootMargin: "400px" },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [loadMore]);
 
   // Filtra casa/academia no client (a API não suporta esse filtro nativamente)
   const filteredItems = useMemo(() => {

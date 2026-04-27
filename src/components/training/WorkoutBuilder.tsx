@@ -54,7 +54,7 @@ const WorkoutBuilder: React.FC<WorkoutBuilderProps> = ({
 
   const { items: libraryExercises, loading: libLoading } = useExerciseLibrary({
     search: search || undefined,
-    limit: 30,
+    pageSize: 30,
   });
 
   if (!isPremium) {
