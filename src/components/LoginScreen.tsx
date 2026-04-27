@@ -184,12 +184,9 @@ const LoginScreen = () => {
     setLoading(true);
     setRetryState(null);
 
-    // Clean any stale OAuth state from a previous/aborted attempt before starting
-    try {
-      Object.keys(sessionStorage).forEach((k) => {
-        if (/oauth|state|pkce|verifier/i.test(k)) sessionStorage.removeItem(k);
-      });
-    } catch {}
+    // Do NOT pre-clean storage here — the lovable OAuth client writes its
+    // PKCE verifier to sessionStorage right before redirect, and any blanket
+    // cleanup race-conditions with that. Only clean on explicit error.
 
     const redirect_uri = typeof window !== "undefined" ? window.location.origin : "";
     console.info(`[OAuth:${provider}] iniciando`, { redirect_uri });
