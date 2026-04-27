@@ -258,6 +258,42 @@ export type Database = {
         }
         Relationships: []
       }
+      exercises: {
+        Row: {
+          body_part: string | null
+          created_at: string
+          equipment: string | null
+          gif_url: string | null
+          id: string
+          instructions: Json | null
+          name: string
+          secondary_muscles: Json | null
+          target: string | null
+        }
+        Insert: {
+          body_part?: string | null
+          created_at?: string
+          equipment?: string | null
+          gif_url?: string | null
+          id: string
+          instructions?: Json | null
+          name: string
+          secondary_muscles?: Json | null
+          target?: string | null
+        }
+        Update: {
+          body_part?: string | null
+          created_at?: string
+          equipment?: string | null
+          gif_url?: string | null
+          id?: string
+          instructions?: Json | null
+          name?: string
+          secondary_muscles?: Json | null
+          target?: string | null
+        }
+        Relationships: []
+      }
       feed_posts: {
         Row: {
           activity_data: Json | null
@@ -1128,6 +1164,8 @@ export type Database = {
         Returns: boolean
       }
       is_email_confirmed: { Args: never; Returns: boolean }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       [_ in never]: never
