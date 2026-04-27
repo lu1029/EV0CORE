@@ -315,7 +315,7 @@ const ExerciseLibraryBrowser = () => {
                 key={ex.external_id}
                 onClick={() => setSelected(ex)}
                 className="text-left active:scale-[0.97] transition-transform animate-fade-in"
-                style={{ animationDelay: `${Math.min(i * 30, 300)}ms` }}
+                style={{ animationDelay: `${Math.min(i * 10, 200)}ms` }}
               >
                 <GifThumb ex={ex} />
                 <p className="text-[14px] font-semibold text-foreground mt-2 leading-tight line-clamp-2">
@@ -327,6 +327,22 @@ const ExerciseLibraryBrowser = () => {
               </button>
             ))}
           </div>
+
+          {/* Sentinela do scroll infinito */}
+          <div ref={sentinelRef} className="h-10" />
+
+          {loadingMore && (
+            <div className="flex items-center justify-center py-6 gap-2">
+              <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+              <p className="text-[12px] text-muted-foreground">Carregando mais…</p>
+            </div>
+          )}
+
+          {!hasMore && !loadingMore && (
+            <p className="text-center text-[11px] text-muted-foreground py-6">
+              Você viu todos os exercícios desse grupo.
+            </p>
+          )}
         </div>
       )}
 
