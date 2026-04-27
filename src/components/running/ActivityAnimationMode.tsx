@@ -299,16 +299,34 @@ export const ActivityAnimationMode = ({
       {/* Map fills the area */}
       <div ref={containerRef} className="absolute inset-0" />
 
-      {/* Top-right replay button */}
-      <button
-        type="button"
-        onClick={replay}
-        disabled={!ready}
-        className="absolute top-3 right-3 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-white text-xs font-semibold shadow-lg active:scale-95 transition-transform disabled:opacity-50"
-      >
-        {playing ? <Play className="w-3 h-3" /> : <RotateCcw className="w-3 h-3" />}
-        {playing ? "Reproduzindo" : "Replay"}
-      </button>
+      {/* Top-right controls */}
+      <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={toggleFollowCam}
+          disabled={!ready}
+          aria-pressed={followCam}
+          aria-label={followCam ? "Destravar câmera" : "Travar câmera no marcador"}
+          title={followCam ? "Câmera travada — segue o marcador" : "Câmera livre"}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-md border text-xs font-semibold shadow-lg active:scale-95 transition-all disabled:opacity-50 ${
+            followCam
+              ? "bg-[#ff6a00] border-[#ff8a00] text-white"
+              : "bg-black/60 border-white/10 text-white"
+          }`}
+        >
+          {followCam ? <Lock className="w-3 h-3" /> : <LockOpen className="w-3 h-3" />}
+          {followCam ? "Seguindo" : "Livre"}
+        </button>
+        <button
+          type="button"
+          onClick={replay}
+          disabled={!ready}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-white text-xs font-semibold shadow-lg active:scale-95 transition-transform disabled:opacity-50"
+        >
+          {playing ? <Play className="w-3 h-3" /> : <RotateCcw className="w-3 h-3" />}
+          {playing ? "Reproduzindo" : "Replay"}
+        </button>
+      </div>
 
       {/* Bottom progress bar */}
       <div className="absolute bottom-[88px] left-3 right-3 z-10 h-1 rounded-full bg-white/10 overflow-hidden">
