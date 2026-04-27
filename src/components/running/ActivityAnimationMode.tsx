@@ -227,12 +227,19 @@ export const ActivityAnimationMode = ({
     animate(timeMV, durationSeconds, { duration: DURATION, ease: "easeOut" });
     animate(elevMV, elevationGainM, { duration: DURATION, ease: "easeOut" });
 
-    // Zoom in for follow-cam if locked
+    // Zoom in for follow-cam if locked + apply 3D tilt
     if (followCamRef.current && mapRef.current) {
       userInteractingRef.current = true;
       mapRef.current.panTo(points[0]);
-      mapRef.current.setZoom(17);
-      // Release flag after the camera change settles
+      mapRef.current.setZoom(is3DRef.current ? 18 : 17);
+      mapRef.current.setTilt(is3DRef.current ? 67.5 : 0);
+      // Initial heading: from start toward an early point
+      if (is3DRef.current) {
+        const lookAhead = points[Math.min(5, points.length - 1)];
+        if (lookAhead) mapRef.current.setHeading(bearingBetween(points[0], lookAhead));
+      } else {
+        mapRef.current.setHeading(0);
+      }
       setTimeout(() => {
         userInteractingRef.current = false;
       }, 300);
@@ -243,8 +250,10 @@ export const ActivityAnimationMode = ({
     const stepSize = Math.max(1, Math.floor(total / stepCount));
     const intervalMs = (DURATION * 1000) / stepCount;
     let i = 0;
+    let prevHeading: number | null = null;
 
     animTimerRef.current = window.setInterval(() => {
+      const prevI = i;
       i = Math.min(i + stepSize, total);
       const slice = points.slice(0, i);
       polylineRef.current?.setPath(slice);
@@ -255,7 +264,21 @@ export const ActivityAnimationMode = ({
       if (head && followCamRef.current && mapRef.current) {
         userInteractingRef.current = true;
         mapRef.current.panTo(head);
-        // Clear flag shortly after — pan animation is brief
+        // 3D mode: rotate camera bearing to match direction of travel (smoothed)
+        if (is3DRef.current) {
+          // Use a small look-ahead window for stable bearing
+          const aheadIdx = Math.min(total - 1, i + Math.max(2, stepSize));
+          const from = points[Math.max(0, prevI - 1)];
+          const to = points[aheadIdx];
+          if (from && to && (from.lat !== to.lat || from.lng !== to.lng)) {
+            const target = bearingBetween(from, to);
+            // Smooth toward target by 35% of the shortest delta to avoid jitter
+            const base = prevHeading ?? mapRef.current.getHeading?.() ?? target;
+            const smoothed = (base + shortestAngleDelta(base, target) * 0.35 + 360) % 360;
+            mapRef.current.setHeading(smoothed);
+            prevHeading = smoothed;
+          }
+        }
         window.setTimeout(() => {
           userInteractingRef.current = false;
         }, intervalMs + 50);
