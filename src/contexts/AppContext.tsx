@@ -117,40 +117,26 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       }
     };
 
-    // Get initial session first, then listen for changes
-    supabase.auth.getSession().then(async ({ data: { session: initialSession } }) => {
-      if (!mounted) return;
-      // Block unconfirmed email users (except OAuth providers which don't require confirmation)
-      const provider = initialSession?.user?.app_metadata?.provider;
-      const needsConfirm = initialSession?.user && !initialSession.user.email_confirmed_at && provider === "email";
-      if (needsConfirm) {
-        await supabase.auth.signOut();
-        setLoading(false);
-        return;
-      }
-      setSession(initialSession);
-      setUser(initialSession?.user ?? null);
-      setIsLoggedIn(!!initialSession?.user);
-
-      if (initialSession?.user) {
-        setUserProfile((prev) => ({
-          ...prev,
-          email: initialSession.user.email ?? prev.email,
-          name: initialSession.user.user_metadata?.full_name ?? initialSession.user.user_metadata?.name ?? prev.name,
-        }));
-        loadProfile(
-          initialSession.user.id,
-          initialSession.user.email ?? "",
-          initialSession.user.user_metadata
-        ).finally(() => { if (mounted) setLoading(false); });
-      } else {
-        setLoading(false);
-      }
-    });
-
+    // CRITICAL: Register the listener FIRST, then call getSession.
+    // Otherwise OAuth callbacks (Google) can fire SIGNED_IN before the
+    // listener is registered, and the user gets bounced back to login.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, newSession) => {
         if (!mounted) return;
+
+        // Block unconfirmed email users on sign-in (OAuth providers are auto-confirmed)
+        const provider = newSession?.user?.app_metadata?.provider;
+        const needsConfirm =
+          event === "SIGNED_IN" &&
+          newSession?.user &&
+          !newSession.user.email_confirmed_at &&
+          provider === "email";
+        if (needsConfirm) {
+          // Defer signOut so we don't block the auth state machine
+          setTimeout(() => { supabase.auth.signOut(); }, 0);
+          return;
+        }
+
         setSession(newSession);
         setUser(newSession?.user ?? null);
         setIsLoggedIn(!!newSession?.user);
