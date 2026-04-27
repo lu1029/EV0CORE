@@ -45,13 +45,13 @@ const LoginScreen = () => {
     const errDesc = params.get("error_description") || params.get("message");
     if (!err && !errDesc) return;
 
-    // Clean stale OAuth state so the next attempt starts fresh
+    // Only clean stale OAuth state when the broker actually reported an error.
+    // Be precise — do NOT touch supabase auth tokens or unrelated keys.
     try {
       Object.keys(sessionStorage).forEach((k) => {
-        if (/oauth|state|pkce|verifier/i.test(k)) sessionStorage.removeItem(k);
-      });
-      Object.keys(localStorage).forEach((k) => {
-        if (/oauth-state|pkce|code-verifier/i.test(k)) localStorage.removeItem(k);
+        if (/^lovable-oauth/i.test(k) || /pkce-verifier|oauth-state/i.test(k)) {
+          sessionStorage.removeItem(k);
+        }
       });
     } catch {}
 
@@ -184,12 +184,9 @@ const LoginScreen = () => {
     setLoading(true);
     setRetryState(null);
 
-    // Clean any stale OAuth state from a previous/aborted attempt before starting
-    try {
-      Object.keys(sessionStorage).forEach((k) => {
-        if (/oauth|state|pkce|verifier/i.test(k)) sessionStorage.removeItem(k);
-      });
-    } catch {}
+    // Do NOT pre-clean storage here — the lovable OAuth client writes its
+    // PKCE verifier to sessionStorage right before redirect, and any blanket
+    // cleanup race-conditions with that. Only clean on explicit error.
 
     const redirect_uri = typeof window !== "undefined" ? window.location.origin : "";
     console.info(`[OAuth:${provider}] iniciando`, { redirect_uri });
