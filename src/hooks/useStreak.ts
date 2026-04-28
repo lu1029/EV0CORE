@@ -12,26 +12,37 @@ export function useStreak() {
   const loadStreak = useCallback(async () => {
     if (!user) { setLoading(false); return; }
     try {
-      // Get last 30 days of completed workouts
+      // Get last 30 days of completed workouts AND runs
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const sinceISO = thirtyDaysAgo.toISOString();
 
-      const { data, error } = await supabase
-        .from("workouts")
-        .select("completed_at")
-        .eq("user_id", user.id)
-        .eq("completed", true)
-        .gte("completed_at", thirtyDaysAgo.toISOString())
-        .order("completed_at", { ascending: false });
+      const [workoutsRes, runsRes] = await Promise.all([
+        supabase
+          .from("workouts")
+          .select("completed_at")
+          .eq("user_id", user.id)
+          .eq("completed", true)
+          .gte("completed_at", sinceISO)
+          .order("completed_at", { ascending: false }),
+        supabase
+          .from("runs")
+          .select("started_at")
+          .eq("user_id", user.id)
+          .gte("started_at", sinceISO)
+          .order("started_at", { ascending: false }),
+      ]);
 
-      if (error) throw error;
+      if (workoutsRes.error) throw workoutsRes.error;
+      if (runsRes.error) throw runsRes.error;
 
-      // Get unique dates
+      // Get unique dates across both sources (treino + corrida)
       const uniqueDates = new Set<string>();
-      (data || []).forEach(w => {
-        if (w.completed_at) {
-          uniqueDates.add(new Date(w.completed_at).toISOString().slice(0, 10));
-        }
+      (workoutsRes.data || []).forEach((w: any) => {
+        if (w.completed_at) uniqueDates.add(new Date(w.completed_at).toISOString().slice(0, 10));
+      });
+      (runsRes.data || []).forEach((r: any) => {
+        if (r.started_at) uniqueDates.add(new Date(r.started_at).toISOString().slice(0, 10));
       });
 
       const today = new Date().toISOString().slice(0, 10);
