@@ -31,7 +31,7 @@ serve(async (req) => {
       }
     }
 
-    const { priceId, quantity, customerEmail, userId: bodyUserId, returnUrl, environment } = await req.json();
+    const { priceId, quantity, customerEmail, userId: bodyUserId, returnUrl, environment, uiMode, cancelUrl } = await req.json();
     if (!priceId || typeof priceId !== 'string' || !/^[a-zA-Z0-9_-]+$/.test(priceId)) {
       return new Response(JSON.stringify({ error: "Invalid priceId" }), {
         status: 400,
@@ -54,21 +54,33 @@ serve(async (req) => {
 
     const effectiveUserId = userId || bodyUserId;
 
-    const session = await stripe.checkout.sessions.create({
+    const useHosted = uiMode === "hosted";
+    const origin = req.headers.get("origin") || "";
+
+    const sessionParams: any = {
       line_items: [{ price: stripePrice.id, quantity: quantity || 1 }],
       mode: isRecurring ? "subscription" : "payment",
-      ui_mode: "embedded",
-      return_url: returnUrl || `${req.headers.get("origin")}/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
       ...(customerEmail && { customer_email: customerEmail }),
       ...(effectiveUserId && {
         metadata: { userId: effectiveUserId },
         ...(isRecurring && { subscription_data: { metadata: { userId: effectiveUserId } } }),
       }),
-    });
+    };
 
-    return new Response(JSON.stringify({ clientSecret: session.client_secret }), {
-      headers: { ...corsHeaders, ...securityHeaders, "Content-Type": "application/json" },
-    });
+    if (useHosted) {
+      sessionParams.success_url = returnUrl || `${origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`;
+      sessionParams.cancel_url = cancelUrl || `${origin}/premium`;
+    } else {
+      sessionParams.ui_mode = "embedded";
+      sessionParams.return_url = returnUrl || `${origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`;
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
+
+    return new Response(
+      JSON.stringify({ clientSecret: session.client_secret, url: session.url, sessionId: session.id }),
+      { headers: { ...corsHeaders, ...securityHeaders, "Content-Type": "application/json" } },
+    );
   } catch (error) {
     console.error('create-checkout error:', error);
     return new Response(JSON.stringify({ error: "Internal server error" }), {
