@@ -494,48 +494,66 @@ const RunningScreen = () => {
     );
   }
 
-  // ─── ACTIVE RUN ───
+  // ─── ACTIVE RUN — fullscreen immersive map ───
   if (phase === "running") {
     return (
-      <div className="min-h-screen bg-background flex flex-col">
-        <div className="w-full h-[45vh] relative">{renderMap(true)}
-          <div className="absolute top-4 left-4 glass rounded-lg px-3 py-1.5">
-            <div className="flex items-center gap-1 text-xs text-foreground"><Navigation className="w-3 h-3 text-primary" /> GPS ativo</div>
+      <div className="fixed inset-0 bg-[#0b1220] overflow-hidden">
+        {/* Fullscreen map background */}
+        <div className="absolute inset-0">{renderMap(false)}</div>
+
+        {/* Top status bar (floating) */}
+        <div className="absolute top-0 inset-x-0 z-10 flex items-center justify-between px-4 pt-4 safe-top">
+          <div className="rounded-full bg-black/55 backdrop-blur-md border border-white/10 px-3 py-1.5 flex items-center gap-1.5">
+            <Navigation className="w-3 h-3 text-primary" />
+            <span className="text-[11px] text-white font-semibold">GPS ativo</span>
           </div>
-          <div className="absolute top-4 right-4 glass rounded-lg px-3 py-1.5">
-            <span className="text-xs text-foreground">{selectedActivity}</span>
+          <div className="rounded-full bg-black/55 backdrop-blur-md border border-white/10 px-3 py-1.5">
+            <span className="text-[11px] text-white font-semibold">{selectedActivity}</span>
           </div>
+          <button
+            onClick={recenterMap}
+            className="w-9 h-9 rounded-full bg-black/55 backdrop-blur-md border border-white/10 flex items-center justify-center active:scale-95 transition-transform"
+            aria-label="Recentralizar"
+          >
+            <LocateFixed className="w-4 h-4 text-primary" />
+          </button>
         </div>
-        <div className="flex-1 bg-card border-t border-border rounded-t-3xl -mt-4 relative z-10 px-6 pt-6 pb-8 flex flex-col items-center justify-between">
-          <div className="text-center mb-4">
-            <p className="text-6xl font-heading font-bold text-foreground tracking-tight">{distanceKm.toFixed(2)}</p>
-            <p className="text-muted-foreground text-sm">quilômetros</p>
-          </div>
-          <div className="grid grid-cols-3 gap-6 w-full max-w-sm mb-6">
-            <div className="text-center">
-              <Timer className="w-4 h-4 mx-auto mb-1 text-primary" />
-              <p className="text-xl font-bold text-foreground">{formatTime(elapsedSeconds)}</p>
-              <p className="text-[10px] text-muted-foreground">Tempo</p>
+
+        {/* Bottom stats + controls overlay (glass) */}
+        <div className="absolute bottom-0 inset-x-0 z-10 px-4 pb-6">
+          <div className="rounded-3xl bg-background/85 backdrop-blur-2xl border border-white/10 shadow-[0_-8px_30px_rgba(0,0,0,0.5)] px-6 pt-5 pb-5">
+            <div className="text-center mb-4">
+              <p className="text-5xl font-heading font-bold text-foreground tracking-tight tabular leading-none">
+                {distanceKm.toFixed(2)}
+              </p>
+              <p className="text-muted-foreground text-xs mt-1 uppercase tracking-wider">quilômetros</p>
             </div>
-            <div className="text-center">
-              <Zap className="w-4 h-4 mx-auto mb-1 text-primary" />
-              <p className="text-xl font-bold text-foreground">{pace}</p>
-              <p className="text-[10px] text-muted-foreground">Pace /km</p>
+            <div className="grid grid-cols-3 gap-4 w-full mb-5">
+              <div className="text-center">
+                <Timer className="w-3.5 h-3.5 mx-auto mb-1 text-primary" />
+                <p className="text-lg font-bold text-foreground tabular leading-none">{formatTime(elapsedSeconds)}</p>
+                <p className="text-[9px] text-muted-foreground uppercase tracking-wider mt-1">Tempo</p>
+              </div>
+              <div className="text-center">
+                <Zap className="w-3.5 h-3.5 mx-auto mb-1 text-primary" />
+                <p className="text-lg font-bold text-foreground tabular leading-none">{pace}</p>
+                <p className="text-[9px] text-muted-foreground uppercase tracking-wider mt-1">Pace /km</p>
+              </div>
+              <div className="text-center">
+                <Flame className="w-3.5 h-3.5 mx-auto mb-1 text-primary" />
+                <p className="text-lg font-bold text-foreground tabular leading-none">{calories}</p>
+                <p className="text-[9px] text-muted-foreground uppercase tracking-wider mt-1">Calorias</p>
+              </div>
             </div>
-            <div className="text-center">
-              <Flame className="w-4 h-4 mx-auto mb-1 text-primary" />
-              <p className="text-xl font-bold text-foreground">{calories}</p>
-              <p className="text-[10px] text-muted-foreground">Calorias</p>
+            <div className="flex items-center justify-center gap-5">
+              <button onClick={togglePause} className="w-14 h-14 rounded-full bg-secondary border border-border flex items-center justify-center active:scale-95 transition-transform">
+                {isPaused ? <Play className="w-6 h-6 text-foreground ml-0.5" /> : <Pause className="w-6 h-6 text-foreground" />}
+              </button>
+              <button onClick={stopRun} className="w-18 h-18 w-[72px] h-[72px] rounded-full bg-destructive flex items-center justify-center active:scale-95 transition-transform shadow-lg shadow-destructive/40">
+                <Square className="w-7 h-7 text-destructive-foreground" />
+              </button>
+              <div className="w-14 h-14" />
             </div>
-          </div>
-          <div className="flex items-center gap-5">
-            <button onClick={togglePause} className="w-16 h-16 rounded-full bg-secondary border border-border flex items-center justify-center active:scale-95 transition-transform">
-              {isPaused ? <Play className="w-7 h-7 text-foreground ml-0.5" /> : <Pause className="w-7 h-7 text-foreground" />}
-            </button>
-            <button onClick={stopRun} className="w-20 h-20 rounded-full bg-destructive flex items-center justify-center active:scale-95 transition-transform shadow-lg">
-              <Square className="w-8 h-8 text-destructive-foreground" />
-            </button>
-            <div className="w-16 h-16" />
           </div>
         </div>
       </div>
