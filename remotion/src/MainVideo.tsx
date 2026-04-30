@@ -231,12 +231,13 @@ const RunScreen: React.FC = () => {
         <circle cx={routePts[0][0]} cy={routePts[0][1]} r={18} fill={COLORS.accent} stroke="#fff" strokeWidth={6} />
         {/* moving runner dot */}
         {(() => {
-          // approximate position along the path
           const tIdx = (routePts.length - 1) * draw;
-          const i = Math.min(routePts.length - 2, Math.floor(tIdx));
-          const f = tIdx - i;
-          const [x1, y1] = routePts[i]; const [x2, y2] = routePts[i + 1];
-          const x = x1 + (x2 - x1) * f, y = y1 + (y2 - y1) * f;
+          const i = Math.max(0, Math.min(routePts.length - 2, Math.floor(tIdx)));
+          const f = Math.max(0, Math.min(1, tIdx - i));
+          const a = routePts[i] ?? routePts[0];
+          const b = routePts[i + 1] ?? a;
+          const x = a[0] + (b[0] - a[0]) * f;
+          const y = a[1] + (b[1] - a[1]) * f;
           return <circle cx={x} cy={y} r={22} fill={COLORS.primary} stroke="#fff" strokeWidth={6} />;
         })()}
       </svg>
