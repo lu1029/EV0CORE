@@ -27,15 +27,19 @@ interface Segment {
   pace: string;
 }
 
+// EvoCore dark map style — deep navy, indigo accents
 const darkMapStyles = [
-  { elementType: "geometry", stylers: [{ color: "#1a1a2e" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#1a1a2e" }] },
-  { elementType: "labels.text.fill", stylers: [{ color: "#6b7280" }] },
-  { featureType: "road", elementType: "geometry", stylers: [{ color: "#2d2d44" }] },
-  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#1a1a2e" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#0e4429" }] },
-  { featureType: "poi", elementType: "geometry", stylers: [{ color: "#1a1a2e" }] },
-  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#1a2e1a" }] },
+  { elementType: "geometry", stylers: [{ color: "#0b1220" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#0b1220" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#5b6478" }] },
+  { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+  { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#1a2236" }] },
+  { featureType: "poi", stylers: [{ visibility: "off" }] },
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#0f1a2a" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#1a2236" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#222c44" }] },
+  { featureType: "transit", stylers: [{ visibility: "off" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#070d18" }] },
 ];
 
 let mapsPromise: Promise<void> | null = null;
