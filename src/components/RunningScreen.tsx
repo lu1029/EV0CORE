@@ -27,15 +27,19 @@ interface Segment {
   pace: string;
 }
 
+// EvoCore dark map style — deep navy, indigo accents
 const darkMapStyles = [
-  { elementType: "geometry", stylers: [{ color: "#1a1a2e" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#1a1a2e" }] },
-  { elementType: "labels.text.fill", stylers: [{ color: "#6b7280" }] },
-  { featureType: "road", elementType: "geometry", stylers: [{ color: "#2d2d44" }] },
-  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#1a1a2e" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#0e4429" }] },
-  { featureType: "poi", elementType: "geometry", stylers: [{ color: "#1a1a2e" }] },
-  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#1a2e1a" }] },
+  { elementType: "geometry", stylers: [{ color: "#0b1220" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#0b1220" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#5b6478" }] },
+  { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+  { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#1a2236" }] },
+  { featureType: "poi", stylers: [{ visibility: "off" }] },
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#0f1a2a" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#1a2236" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#222c44" }] },
+  { featureType: "transit", stylers: [{ visibility: "off" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#070d18" }] },
 ];
 
 let mapsPromise: Promise<void> | null = null;
@@ -102,6 +106,8 @@ const RunningScreen = () => {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const mapRef = useRef<any>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
+  const livePolylineRef = useRef<any>(null);
+  const liveMarkerRef = useRef<any>(null);
   const lastSegmentDistRef = useRef(0);
   const lastSegmentTimeRef = useRef(0);
   const lastSegmentIdxRef = useRef(0);
@@ -148,15 +154,33 @@ const RunningScreen = () => {
     const g = (window as any).google;
     if (!g?.maps) return;
     const map = new g.maps.Map(mapContainerRef.current, {
-      center: currentPosition, zoom: phase === "running" ? 16 : 14,
+      center: currentPosition, zoom: phase === "running" ? 17 : 14,
       disableDefaultUI: true, styles: darkMapStyles, zoomControl: false, gestureHandling: "greedy",
+      backgroundColor: "#0b1220",
     });
-    new g.maps.Marker({
+    liveMarkerRef.current = new g.maps.Marker({
       position: currentPosition, map,
-      icon: { path: g.maps.SymbolPath.CIRCLE, scale: 8, fillColor: "hsl(142, 71%, 45%)", fillOpacity: 1, strokeColor: "#fff", strokeWeight: 2 },
+      icon: { path: g.maps.SymbolPath.CIRCLE, scale: 9, fillColor: "#818cf8", fillOpacity: 1, strokeColor: "#fff", strokeWeight: 3 },
+      zIndex: 4,
+    });
+    // Live route polyline (indigo) — drawn while running
+    livePolylineRef.current = new g.maps.Polyline({
+      path: routePath,
+      map,
+      strokeColor: "#818cf8",
+      strokeOpacity: 1,
+      strokeWeight: 5,
+      zIndex: 3,
     });
     mapRef.current = map;
   }, [mapLoadState, currentPosition, phase]);
+
+  // Keep live polyline / marker in sync with state
+  useEffect(() => {
+    if (!livePolylineRef.current || !liveMarkerRef.current) return;
+    livePolylineRef.current.setPath(routePath);
+    if (currentPosition) liveMarkerRef.current.setPosition(currentPosition);
+  }, [routePath, currentPosition]);
 
   const recenterMap = useCallback(() => {
     if (mapRef.current && currentPosition) mapRef.current.panTo(currentPosition);
@@ -203,6 +227,8 @@ const RunningScreen = () => {
     lastSegmentDistRef.current = 0; lastSegmentTimeRef.current = 0; lastSegmentIdxRef.current = 0;
     lastRawPointRef.current = null;
     mapRef.current = null;
+    livePolylineRef.current = null;
+    liveMarkerRef.current = null;
     timerRef.current = setInterval(() => setElapsedSeconds((s) => s + 1), 1000);
 
     const activityKey = activityKeyMap[selectedActivity] ?? "run";
@@ -244,6 +270,8 @@ const RunningScreen = () => {
     if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current);
     if (timerRef.current) clearInterval(timerRef.current);
     mapRef.current = null;
+    livePolylineRef.current = null;
+    liveMarkerRef.current = null;
     setPhase("summary");
   }, []);
 
@@ -257,6 +285,8 @@ const RunningScreen = () => {
 
   const discardRun = () => {
     mapRef.current = null;
+    livePolylineRef.current = null;
+    liveMarkerRef.current = null;
     summaryMapInstanceRef.current = null;
     setPhase("idle"); setRoutePath([]); setDistanceKm(0); setElapsedSeconds(0); setCalories(0); setSegments([]);
     setSaved(false); setSaving(false); setSavedRunId(null); setSummaryPhotoUrl(null); setSummaryMode("map");
@@ -304,7 +334,7 @@ const RunningScreen = () => {
     });
     new g.maps.Polyline({
       path: routePath, map,
-      strokeColor: "hsl(142, 71%, 45%)", strokeOpacity: 0.95, strokeWeight: 5,
+      strokeColor: "#818cf8", strokeOpacity: 1, strokeWeight: 5,
     });
     new g.maps.Marker({
       position: routePath[0], map,
@@ -464,48 +494,66 @@ const RunningScreen = () => {
     );
   }
 
-  // ─── ACTIVE RUN ───
+  // ─── ACTIVE RUN — fullscreen immersive map ───
   if (phase === "running") {
     return (
-      <div className="min-h-screen bg-background flex flex-col">
-        <div className="w-full h-[45vh] relative">{renderMap(true)}
-          <div className="absolute top-4 left-4 glass rounded-lg px-3 py-1.5">
-            <div className="flex items-center gap-1 text-xs text-foreground"><Navigation className="w-3 h-3 text-primary" /> GPS ativo</div>
+      <div className="fixed inset-0 bg-[#0b1220] overflow-hidden">
+        {/* Fullscreen map background */}
+        <div className="absolute inset-0">{renderMap(false)}</div>
+
+        {/* Top status bar (floating) */}
+        <div className="absolute top-0 inset-x-0 z-10 flex items-center justify-between px-4 pt-4 safe-top">
+          <div className="rounded-full bg-black/55 backdrop-blur-md border border-white/10 px-3 py-1.5 flex items-center gap-1.5">
+            <Navigation className="w-3 h-3 text-primary" />
+            <span className="text-[11px] text-white font-semibold">GPS ativo</span>
           </div>
-          <div className="absolute top-4 right-4 glass rounded-lg px-3 py-1.5">
-            <span className="text-xs text-foreground">{selectedActivity}</span>
+          <div className="rounded-full bg-black/55 backdrop-blur-md border border-white/10 px-3 py-1.5">
+            <span className="text-[11px] text-white font-semibold">{selectedActivity}</span>
           </div>
+          <button
+            onClick={recenterMap}
+            className="w-9 h-9 rounded-full bg-black/55 backdrop-blur-md border border-white/10 flex items-center justify-center active:scale-95 transition-transform"
+            aria-label="Recentralizar"
+          >
+            <LocateFixed className="w-4 h-4 text-primary" />
+          </button>
         </div>
-        <div className="flex-1 bg-card border-t border-border rounded-t-3xl -mt-4 relative z-10 px-6 pt-6 pb-8 flex flex-col items-center justify-between">
-          <div className="text-center mb-4">
-            <p className="text-6xl font-heading font-bold text-foreground tracking-tight">{distanceKm.toFixed(2)}</p>
-            <p className="text-muted-foreground text-sm">quilômetros</p>
-          </div>
-          <div className="grid grid-cols-3 gap-6 w-full max-w-sm mb-6">
-            <div className="text-center">
-              <Timer className="w-4 h-4 mx-auto mb-1 text-primary" />
-              <p className="text-xl font-bold text-foreground">{formatTime(elapsedSeconds)}</p>
-              <p className="text-[10px] text-muted-foreground">Tempo</p>
+
+        {/* Bottom stats + controls overlay (glass) */}
+        <div className="absolute bottom-0 inset-x-0 z-10 px-4 pb-6">
+          <div className="rounded-3xl bg-background/85 backdrop-blur-2xl border border-white/10 shadow-[0_-8px_30px_rgba(0,0,0,0.5)] px-6 pt-5 pb-5">
+            <div className="text-center mb-4">
+              <p className="text-5xl font-heading font-bold text-foreground tracking-tight tabular leading-none">
+                {distanceKm.toFixed(2)}
+              </p>
+              <p className="text-muted-foreground text-xs mt-1 uppercase tracking-wider">quilômetros</p>
             </div>
-            <div className="text-center">
-              <Zap className="w-4 h-4 mx-auto mb-1 text-primary" />
-              <p className="text-xl font-bold text-foreground">{pace}</p>
-              <p className="text-[10px] text-muted-foreground">Pace /km</p>
+            <div className="grid grid-cols-3 gap-4 w-full mb-5">
+              <div className="text-center">
+                <Timer className="w-3.5 h-3.5 mx-auto mb-1 text-primary" />
+                <p className="text-lg font-bold text-foreground tabular leading-none">{formatTime(elapsedSeconds)}</p>
+                <p className="text-[9px] text-muted-foreground uppercase tracking-wider mt-1">Tempo</p>
+              </div>
+              <div className="text-center">
+                <Zap className="w-3.5 h-3.5 mx-auto mb-1 text-primary" />
+                <p className="text-lg font-bold text-foreground tabular leading-none">{pace}</p>
+                <p className="text-[9px] text-muted-foreground uppercase tracking-wider mt-1">Pace /km</p>
+              </div>
+              <div className="text-center">
+                <Flame className="w-3.5 h-3.5 mx-auto mb-1 text-primary" />
+                <p className="text-lg font-bold text-foreground tabular leading-none">{calories}</p>
+                <p className="text-[9px] text-muted-foreground uppercase tracking-wider mt-1">Calorias</p>
+              </div>
             </div>
-            <div className="text-center">
-              <Flame className="w-4 h-4 mx-auto mb-1 text-primary" />
-              <p className="text-xl font-bold text-foreground">{calories}</p>
-              <p className="text-[10px] text-muted-foreground">Calorias</p>
+            <div className="flex items-center justify-center gap-5">
+              <button onClick={togglePause} className="w-14 h-14 rounded-full bg-secondary border border-border flex items-center justify-center active:scale-95 transition-transform">
+                {isPaused ? <Play className="w-6 h-6 text-foreground ml-0.5" /> : <Pause className="w-6 h-6 text-foreground" />}
+              </button>
+              <button onClick={stopRun} className="w-18 h-18 w-[72px] h-[72px] rounded-full bg-destructive flex items-center justify-center active:scale-95 transition-transform shadow-lg shadow-destructive/40">
+                <Square className="w-7 h-7 text-destructive-foreground" />
+              </button>
+              <div className="w-14 h-14" />
             </div>
-          </div>
-          <div className="flex items-center gap-5">
-            <button onClick={togglePause} className="w-16 h-16 rounded-full bg-secondary border border-border flex items-center justify-center active:scale-95 transition-transform">
-              {isPaused ? <Play className="w-7 h-7 text-foreground ml-0.5" /> : <Pause className="w-7 h-7 text-foreground" />}
-            </button>
-            <button onClick={stopRun} className="w-20 h-20 rounded-full bg-destructive flex items-center justify-center active:scale-95 transition-transform shadow-lg">
-              <Square className="w-8 h-8 text-destructive-foreground" />
-            </button>
-            <div className="w-16 h-16" />
           </div>
         </div>
       </div>

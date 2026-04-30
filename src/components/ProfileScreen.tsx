@@ -28,14 +28,13 @@ const ProfileScreen = () => {
       .select("avatar_url")
       .eq("user_id", user.id)
       .maybeSingle()
-      .then(async ({ data }) => {
+      .then(({ data }) => {
         const stored = data?.avatar_url ?? null;
         if (!stored) return setAvatarUrl(null);
         if (/^https?:\/\//i.test(stored)) return setAvatarUrl(stored);
-        const { data: signed } = await supabase.storage
-          .from("avatars")
-          .createSignedUrl(stored, 60 * 60 * 24 * 7);
-        setAvatarUrl(signed?.signedUrl ?? null);
+        // Bucket is public — use direct public URL
+        const { data: pub } = supabase.storage.from("avatars").getPublicUrl(stored);
+        setAvatarUrl(pub.publicUrl);
       });
   }, [user]);
 

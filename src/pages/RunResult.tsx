@@ -297,7 +297,7 @@ const RunResult = () => {
         </div>
       </div>
 
-      {/* Strava-style draggable stats sheet */}
+      {/* EvoCore draggable stats sheet */}
       <RunStatsSheet
         activityLabel={activityLabel}
         dateString={dateString}
