@@ -154,15 +154,33 @@ const RunningScreen = () => {
     const g = (window as any).google;
     if (!g?.maps) return;
     const map = new g.maps.Map(mapContainerRef.current, {
-      center: currentPosition, zoom: phase === "running" ? 16 : 14,
+      center: currentPosition, zoom: phase === "running" ? 17 : 14,
       disableDefaultUI: true, styles: darkMapStyles, zoomControl: false, gestureHandling: "greedy",
+      backgroundColor: "#0b1220",
     });
-    new g.maps.Marker({
+    liveMarkerRef.current = new g.maps.Marker({
       position: currentPosition, map,
-      icon: { path: g.maps.SymbolPath.CIRCLE, scale: 8, fillColor: "hsl(142, 71%, 45%)", fillOpacity: 1, strokeColor: "#fff", strokeWeight: 2 },
+      icon: { path: g.maps.SymbolPath.CIRCLE, scale: 9, fillColor: "#818cf8", fillOpacity: 1, strokeColor: "#fff", strokeWeight: 3 },
+      zIndex: 4,
+    });
+    // Live route polyline (indigo) — drawn while running
+    livePolylineRef.current = new g.maps.Polyline({
+      path: routePath,
+      map,
+      strokeColor: "#818cf8",
+      strokeOpacity: 1,
+      strokeWeight: 5,
+      zIndex: 3,
     });
     mapRef.current = map;
   }, [mapLoadState, currentPosition, phase]);
+
+  // Keep live polyline / marker in sync with state
+  useEffect(() => {
+    if (!livePolylineRef.current || !liveMarkerRef.current) return;
+    livePolylineRef.current.setPath(routePath);
+    if (currentPosition) liveMarkerRef.current.setPosition(currentPosition);
+  }, [routePath, currentPosition]);
 
   const recenterMap = useCallback(() => {
     if (mapRef.current && currentPosition) mapRef.current.panTo(currentPosition);
