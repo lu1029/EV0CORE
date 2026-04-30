@@ -1,3 +1,3 @@
-# Welcome to your Lovable project
+# EvoCore
 
-TODO: Document your project here
+Aplicativo all-in-one de treino, corrida e nutrição.
