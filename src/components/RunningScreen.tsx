@@ -227,6 +227,8 @@ const RunningScreen = () => {
     lastSegmentDistRef.current = 0; lastSegmentTimeRef.current = 0; lastSegmentIdxRef.current = 0;
     lastRawPointRef.current = null;
     mapRef.current = null;
+    livePolylineRef.current = null;
+    liveMarkerRef.current = null;
     timerRef.current = setInterval(() => setElapsedSeconds((s) => s + 1), 1000);
 
     const activityKey = activityKeyMap[selectedActivity] ?? "run";
@@ -268,6 +270,8 @@ const RunningScreen = () => {
     if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current);
     if (timerRef.current) clearInterval(timerRef.current);
     mapRef.current = null;
+    livePolylineRef.current = null;
+    liveMarkerRef.current = null;
     setPhase("summary");
   }, []);
 
@@ -281,6 +285,8 @@ const RunningScreen = () => {
 
   const discardRun = () => {
     mapRef.current = null;
+    livePolylineRef.current = null;
+    liveMarkerRef.current = null;
     summaryMapInstanceRef.current = null;
     setPhase("idle"); setRoutePath([]); setDistanceKm(0); setElapsedSeconds(0); setCalories(0); setSegments([]);
     setSaved(false); setSaving(false); setSavedRunId(null); setSummaryPhotoUrl(null); setSummaryMode("map");
