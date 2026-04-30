@@ -41,11 +41,9 @@ const AvatarUpload: React.FC<Props> = ({ userId, currentUrl, fallbackInitial, on
         .upload(path, file, { upsert: true, cacheControl: "3600", contentType: file.type });
       if (upErr) throw upErr;
 
-      // Store the storage path; generate a signed URL for display
-      const { data: signed, error: signErr } = await supabase.storage
-        .from("avatars")
-        .createSignedUrl(path, 60 * 60 * 24 * 7); // 7 days
-      if (signErr) throw signErr;
+      // Bucket is public — use direct public URL (no expiration, instantly available)
+      const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
+      const publicUrl = `${pub.publicUrl}?v=${Date.now()}`; // cache-bust on update
 
       const { error: dbErr } = await supabase
         .from("profiles")
@@ -53,7 +51,7 @@ const AvatarUpload: React.FC<Props> = ({ userId, currentUrl, fallbackInitial, on
         .eq("user_id", userId);
       if (dbErr) throw dbErr;
 
-      onUploaded(signed.signedUrl);
+      onUploaded(publicUrl);
       toast.success("Foto atualizada");
       setOpen(false);
     } catch (e) {
