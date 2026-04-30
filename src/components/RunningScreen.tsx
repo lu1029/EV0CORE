@@ -334,7 +334,7 @@ const RunningScreen = () => {
     });
     new g.maps.Polyline({
       path: routePath, map,
-      strokeColor: "hsl(142, 71%, 45%)", strokeOpacity: 0.95, strokeWeight: 5,
+      strokeColor: "#818cf8", strokeOpacity: 1, strokeWeight: 5,
     });
     new g.maps.Marker({
       position: routePath[0], map,
