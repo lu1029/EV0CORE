@@ -120,8 +120,8 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
             { icon: HelpCircle, label: "Ajuda & Suporte", action: () => toast.info("suporte@evocore.app") },
             { icon: Star, label: "Avaliar o app", action: () => toast.success("Obrigado!") },
             { icon: Share2, label: "Compartilhar", action: () => {
-              if (navigator.share) navigator.share({ title: "EvoCore", url: "https://ev0core.lovable.app" });
-              else { navigator.clipboard.writeText("https://ev0core.lovable.app"); toast.success("Link copiado"); }
+              if (navigator.share) navigator.share({ title: "EvoCore", url: "https://ev0core.com" });
+              else { navigator.clipboard.writeText("https://ev0core.com"); toast.success("Link copiado"); }
             }},
           ].map((item) => (
             <button
