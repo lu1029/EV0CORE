@@ -21,7 +21,7 @@ interface Props {
 }
 
 /**
- * Strava-style draggable bottom sheet that overlays the fullscreen map.
+ * EvoCore draggable bottom sheet that overlays the fullscreen map.
  * Drag up to expand, drag down (or tap chevron) to collapse.
  */
 export const RunStatsSheet = ({

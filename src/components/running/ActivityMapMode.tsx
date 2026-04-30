@@ -3,7 +3,7 @@ import { Box, Square } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { LatLng } from "@/lib/routePolyline";
 
-// Strava-inspired dark map: deep navy land, muted roads, dim labels
+// EvoCore dark map: deep navy land, muted roads, dim labels
 const darkMapStyles = [
   { elementType: "geometry", stylers: [{ color: "#0b1220" }] },
   { elementType: "labels.text.stroke", stylers: [{ color: "#0b1220" }] },

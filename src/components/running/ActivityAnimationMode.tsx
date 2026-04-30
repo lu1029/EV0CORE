@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { LatLng } from "@/lib/routePolyline";
 import { ElevationChart } from "./ElevationChart";
 
-// Strava-inspired dark map style
+// EvoCore dark map style — deep navy land, muted roads, dim labels
 const darkMapStyles = [
   { elementType: "geometry", stylers: [{ color: "#0b1220" }] },
   { elementType: "labels.text.stroke", stylers: [{ color: "#0b1220" }] },
@@ -163,21 +163,21 @@ export const ActivityAnimationMode = ({
           }
         });
 
-        // Faint base route (full path)
+        // Faint base route (full path) — EvoCore indigo
         new g.maps.Polyline({
           path: points,
           map,
-          strokeColor: "#ff5a1f",
-          strokeOpacity: 0.18,
+          strokeColor: "#6366f1",
+          strokeOpacity: 0.20,
           strokeWeight: 4,
           zIndex: 1,
         });
 
-        // Animated glow + main polylines
+        // Animated glow + main polylines — EvoCore indigo brand
         glowRef.current = new g.maps.Polyline({
           path: [],
           map,
-          strokeColor: "#ff5a1f",
+          strokeColor: "#6366f1",
           strokeOpacity: 0.45,
           strokeWeight: 12,
           zIndex: 2,
@@ -185,20 +185,20 @@ export const ActivityAnimationMode = ({
         polylineRef.current = new g.maps.Polyline({
           path: [],
           map,
-          strokeColor: "#ff6a00",
+          strokeColor: "#818cf8",
           strokeOpacity: 1,
           strokeWeight: 5,
           zIndex: 3,
         });
 
-        // Runner marker (orange dot with white halo)
+        // Runner marker (indigo dot with white halo)
         markerRef.current = new g.maps.Marker({
           position: points[0],
           map,
           icon: {
             path: g.maps.SymbolPath.CIRCLE,
             scale: 7,
-            fillColor: "#ff6a00",
+            fillColor: "#818cf8",
             fillOpacity: 1,
             strokeColor: "#ffffff",
             strokeWeight: 3,
@@ -436,7 +436,7 @@ export const ActivityAnimationMode = ({
           title={followCam ? "Câmera travada — segue o marcador" : "Câmera livre"}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-md border text-xs font-semibold shadow-lg active:scale-95 transition-all disabled:opacity-50 ${
             followCam
-              ? "bg-[#ff6a00] border-[#ff8a00] text-white"
+              ? "bg-primary border-primary/60 text-primary-foreground"
               : "bg-black/60 border-white/10 text-white"
           }`}
         >
@@ -484,7 +484,7 @@ export const ActivityAnimationMode = ({
       {/* Progress bar */}
       <div className="absolute bottom-[132px] left-3 right-3 z-10 h-1 rounded-full bg-white/10 overflow-hidden">
         <div
-          className="h-full bg-gradient-to-r from-[#ff5a1f] to-[#ff8a00]"
+          className="h-full bg-gradient-to-r from-primary to-primary/70"
           style={{ width: `${progress * 100}%` }}
         />
       </div>
