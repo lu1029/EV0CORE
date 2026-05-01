@@ -83,24 +83,34 @@ export default function FeedPostCard({ post, onLike, onSave }: { post: FeedPost;
         </button>
         <button 
           onClick={() => {
+            const shareUrl = `${window.location.origin}/comunidade?post=${post.id}`;
             if (navigator.share) {
               navigator.share({
-                title: `Post de ${post.author?.name}`,
-                text: post.caption,
-                url: window.location.href
+                title: `Post de ${post.author?.name || "Atleta"} no EvoCore`,
+                text: post.caption || "Confira este post na comunidade EvoCore!",
+                url: shareUrl
               }).catch(() => {});
             } else {
-              navigator.clipboard.writeText(window.location.href);
-              toast.success("Link copiado!");
+              navigator.clipboard.writeText(shareUrl);
+              toast.success("Link copiado para a área de transferência!");
             }
           }}
-          className="ml-auto w-10 h-10 rounded-full flex items-center justify-center active:scale-95"
+          className="ml-auto w-10 h-10 rounded-full flex items-center justify-center active:scale-95 hover:bg-secondary/50 transition-colors"
+          title="Compartilhar"
         >
           <Share2 className="w-5 h-5 text-muted-foreground" />
         </button>
         <button 
-          onClick={() => onSave(post.id)}
-          className="w-10 h-10 rounded-full flex items-center justify-center active:scale-95 transition-all"
+          onClick={async () => {
+            try {
+              await onSave(post.id);
+              toast.success(post.saved_by_me ? "Removido dos salvos" : "Salvo com sucesso!");
+            } catch (err) {
+              toast.error("Erro ao salvar post");
+            }
+          }}
+          className="w-10 h-10 rounded-full flex items-center justify-center active:scale-95 transition-all hover:bg-secondary/50"
+          title={post.saved_by_me ? "Remover" : "Salvar"}
         >
           <Bookmark className={`w-5 h-5 ${post.saved_by_me ? "fill-primary text-primary" : "text-muted-foreground"}`} />
         </button>
