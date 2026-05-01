@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Mail, Lock, Eye, EyeOff, User, CheckSquare, Square } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
+import { evocoreAuth } from "@/integrations/evocore-auth/index";
 import { toast } from "sonner";
 import { validatePassword, getPasswordStrength, validateEmail, sanitizeText } from "@/lib/sanitize";
 import { logSecurityEvent } from "@/lib/auditLog";
