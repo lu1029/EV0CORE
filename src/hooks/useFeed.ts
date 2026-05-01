@@ -19,6 +19,7 @@ export interface FeedPost {
   visibility?: PostVisibility;
   author?: { name: string; avatar_url: string | null };
   liked_by_me?: boolean;
+  saved_by_me?: boolean;
 }
 
 // Lightweight cross-instance event bus so every mounted useFeed() refreshes
@@ -56,19 +57,29 @@ export function useFeed() {
     const profileMap = new Map((profilesData ?? []).map((p: any) => [p.user_id, p]));
 
     let likedSet = new Set<string>();
+    let savedSet = new Set<string>();
     if (user) {
-      const { data: myLikes } = await supabase
-        .from("post_likes")
-        .select("post_id")
-        .eq("user_id", user.id)
-        .in("post_id", list.map(p => p.id));
+      const [{ data: myLikes }, { data: mySaves }] = await Promise.all([
+        supabase
+          .from("post_likes")
+          .select("post_id")
+          .eq("user_id", user.id)
+          .in("post_id", list.map(p => p.id)),
+        supabase
+          .from("post_saves")
+          .select("post_id")
+          .eq("user_id", user.id)
+          .in("post_id", list.map(p => p.id))
+      ]);
       likedSet = new Set((myLikes ?? []).map((l: any) => l.post_id));
+      savedSet = new Set((mySaves ?? []).map((s: any) => s.post_id));
     }
 
     setPosts(list.map(p => ({
       ...p,
       author: profileMap.get(p.user_id) ? { name: (profileMap.get(p.user_id) as any).name || "Atleta", avatar_url: (profileMap.get(p.user_id) as any).avatar_url } : { name: "Atleta", avatar_url: null },
       liked_by_me: likedSet.has(p.id),
+      saved_by_me: savedSet.has(p.id),
     })));
     setLoading(false);
   }, [user]);
@@ -160,5 +171,18 @@ export function useFeed() {
     }
   }, [user, posts]);
 
-  return { posts, loading, refetch: load, createPost, toggleLike };
+  const toggleSave = useCallback(async (postId: string) => {
+    if (!user) return;
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+    if (post.saved_by_me) {
+      await supabase.from("post_saves").delete().eq("user_id", user.id).eq("post_id", postId);
+      setPosts(prev => prev.map(p => p.id === postId ? { ...p, saved_by_me: false } : p));
+    } else {
+      await supabase.from("post_saves").insert({ user_id: user.id, post_id: postId });
+      setPosts(prev => prev.map(p => p.id === postId ? { ...p, saved_by_me: true } : p));
+    }
+  }, [user, posts]);
+
+  return { posts, loading, refetch: load, createPost, toggleLike, toggleSave };
 }
