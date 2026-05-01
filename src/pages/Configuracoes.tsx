@@ -13,7 +13,7 @@ export default function Configuracoes() {
     { to: "/configuracoes/idioma", icon: Globe, label: "Idioma" },
     { to: "/premium", icon: CreditCard, label: "Assinatura" },
     { to: "/privacidade", icon: Shield, label: "Privacidade" },
-    { to: "/termos", icon: FileText, label: "Termos de uso" },
+    { to: "/termos", icon: FileText, label: "Termos de Serviço" },
   ];
 
   return (
