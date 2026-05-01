@@ -1248,27 +1248,25 @@ export type Database = {
       }
     }
     Views: {
-      public_profiles: {
-        Row: {
-          avatar_url: string | null
-          name: string | null
-          user_id: string | null
-        }
-        Insert: {
-          avatar_url?: string | null
-          name?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          avatar_url?: string | null
-          name?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_public_profile: {
+        Args: { _user_id: string }
+        Returns: {
+          avatar_url: string
+          name: string
+          user_id: string
+        }[]
+      }
+      get_public_profiles: {
+        Args: { _user_ids: string[] }
+        Returns: {
+          avatar_url: string
+          name: string
+          user_id: string
+        }[]
+      }
     }
     Enums: {
       post_visibility: "public" | "followers" | "private"
