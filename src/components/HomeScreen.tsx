@@ -1,5 +1,5 @@
 import React from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useApp } from "@/contexts/AppContext";
 import { ChevronRight, Flame, Dumbbell, Apple, MapPin, TrendingUp, Users, ChevronDown, Search, Check, Bell } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotifications";
