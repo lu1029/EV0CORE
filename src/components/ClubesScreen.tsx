@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Loader2, X, Trophy, Users } from "lucide-react";
+import { Plus, Loader2, X, Trophy, Users, Image as ImageIcon, Type } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useClubs, type Club } from "@/hooks/useClubs";
 import { toast } from "sonner";
@@ -20,15 +20,23 @@ export default function ClubesScreen() {
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
   const [cat, setCat] = useState("general");
+  const [coverUrl, setCoverUrl] = useState("");
+  const [font, setFont] = useState("font-sans");
   const [submitting, setSubmitting] = useState(false);
 
   const handleCreate = async () => {
     if (!name.trim()) return toast.error("Dê um nome ao clube");
     setSubmitting(true);
     try {
-      await create({ name: name.trim(), description: desc.trim(), category: cat });
+      await create({ 
+        name: name.trim(), 
+        description: desc.trim(), 
+        category: cat,
+        cover_url: coverUrl.trim() || null,
+        font: font
+      });
       toast.success("Clube criado!");
-      setShowCreate(false); setName(""); setDesc("");
+      setShowCreate(false); setName(""); setDesc(""); setCoverUrl(""); setFont("font-sans");
     } catch (e: any) {
       toast.error(e?.message ?? "Erro ao criar clube");
     } finally { setSubmitting(false); }
@@ -95,6 +103,27 @@ export default function ClubesScreen() {
                   ))}
                 </div>
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-1.5">
+                    <ImageIcon className="w-3 h-3" /> Foto de Capa (URL)
+                  </label>
+                  <input value={coverUrl} onChange={e => setCoverUrl(e.target.value)} placeholder="https://..."
+                    className="w-full mt-1 h-11 px-4 rounded-2xl bg-secondary/50 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-1.5">
+                    <Type className="w-3 h-3" /> Fonte
+                  </label>
+                  <select value={font} onChange={e => setFont(e.target.value)}
+                    className="w-full mt-1 h-11 px-4 rounded-2xl bg-secondary/50 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 appearance-none">
+                    <option value="font-sans">Padrão (Sans)</option>
+                    <option value="font-serif">Elegante (Serif)</option>
+                    <option value="font-mono">Moderno (Mono)</option>
+                    <option value="font-heading">Destaque (Heading)</option>
+                  </select>
+                </div>
+              </div>
               <button onClick={handleCreate} disabled={submitting}
                 className="w-full h-12 rounded-2xl gradient-primary text-primary-foreground font-bold flex items-center justify-center gap-2 disabled:opacity-60">
                 {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
@@ -121,7 +150,7 @@ function ClubCard({ club, onJoin, onLeave }: { club: Club; onJoin: (id: string) 
       <div className="p-4 space-y-2">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h3 className="font-heading font-bold truncate">{club.name}</h3>
+            <h3 className={`font-bold truncate ${club.font || 'font-sans'}`}>{club.name}</h3>
             <p className="text-xs text-muted-foreground line-clamp-2">{club.description || "Comunidade fitness"}</p>
           </div>
           <button
