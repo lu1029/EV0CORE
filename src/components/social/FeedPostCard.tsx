@@ -19,7 +19,7 @@ function timeAgo(iso: string) {
   return `${Math.floor(diff / 86400)}d`;
 }
 
-export default function FeedPostCard({ post, onLike }: { post: FeedPost; onLike: (id: string) => void }) {
+export default function FeedPostCard({ post, onLike, onSave }: { post: FeedPost; onLike: (id: string) => void; onSave: (id: string) => void }) {
   const meta = TYPE_META[post.post_type] ?? TYPE_META.journal;
   const Icon = meta.icon;
 
@@ -99,13 +99,10 @@ export default function FeedPostCard({ post, onLike }: { post: FeedPost; onLike:
           <Share2 className="w-5 h-5 text-muted-foreground" />
         </button>
         <button 
-          onClick={() => {
-            // Logic to save post - usually a simple toast if no backend yet
-            toast.success("Salvo nos favoritos!");
-          }}
-          className="w-10 h-10 rounded-full flex items-center justify-center active:scale-95"
+          onClick={() => onSave(post.id)}
+          className="w-10 h-10 rounded-full flex items-center justify-center active:scale-95 transition-all"
         >
-          <Bookmark className="w-5 h-5 text-muted-foreground" />
+          <Bookmark className={`w-5 h-5 ${post.saved_by_me ? "fill-primary text-primary" : "text-muted-foreground"}`} />
         </button>
       </div>
     </motion.article>
