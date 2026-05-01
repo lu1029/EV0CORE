@@ -5,7 +5,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Check, ChevronLeft, Sparkles, Zap, X, CreditCard, QrCode } from "lucide-react";
+import { Check, ChevronLeft, Sparkles, Zap, X, CreditCard, QrCode, Calendar, Info, RefreshCw, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
@@ -186,6 +186,12 @@ const PremiumScreen = () => {
   }
 
   if (isPremium || isActive) {
+    const isTrial = subscription?.status === "trialing";
+    const isCanceled = subscription?.status === "canceled" || subscription?.cancel_at_period_end;
+    const expiryDate = subscription?.current_period_end ? new Date(subscription.current_period_end) : null;
+    const planName = subscription?.price_id === "premium_annual_v2" ? "Anual" : 
+                    subscription?.price_id === "premium_monthly_v2" ? "Mensal" : "Semanal";
+
     return (
       <motion.div
         className="pb-28 px-5 pt-12 max-w-lg mx-auto"
@@ -198,33 +204,102 @@ const PremiumScreen = () => {
             initial={{ scale: 0, rotate: -45 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ ...springSnappy, delay: 0.1 }}
-            className="w-16 h-16 rounded-full bg-primary/15 flex items-center justify-center mx-auto mb-5"
+            className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-5 shadow-inner"
           >
-            <Check className="w-8 h-8 text-primary" strokeWidth={2.5} />
+            <Sparkles className="w-8 h-8 text-primary" strokeWidth={2.5} />
           </motion.div>
-          <h1 className="text-[32px] font-bold text-foreground tracking-[-0.03em]">Você é PRO</h1>
-          <p className="text-[15px] text-muted-foreground mt-1">Aproveite todos os recursos.</p>
-          {subscription?.cancel_at_period_end && subscription.current_period_end && (
-            <p className="text-[13px] text-muted-foreground mt-3">
-              Expira em {new Date(subscription.current_period_end).toLocaleDateString("pt-BR")}
-            </p>
-          )}
+          <h1 className="text-[32px] font-bold text-foreground tracking-[-0.03em]">EvoCore Pro</h1>
+          <p className="text-[15px] text-muted-foreground mt-1">Sua conta está ativa e turbinada.</p>
         </motion.div>
 
-        <motion.div variants={fadeUp} className="space-y-3">
-          <Button
-            onClick={handleManageSubscription}
-            disabled={loadingPortal}
-            className="w-full h-12 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-[15px] font-semibold"
-          >
-            {loadingPortal ? "Carregando…" : "Gerenciar assinatura"}
-          </Button>
-          <button
-            onClick={() => setCurrentTab("home")}
-            className="w-full h-12 rounded-xl bg-secondary text-foreground text-[15px] font-medium active:opacity-60"
-          >
-            Voltar para home
-          </button>
+        <motion.div variants={fadeUp} className="space-y-4">
+          {/* Plan Status Card */}
+          <div className="bg-card rounded-2xl border border-border/40 overflow-hidden">
+            <div className="p-5 border-b border-border/40">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Status do Plano</span>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-tight ${
+                  isTrial ? "bg-amber-500/10 text-amber-500" : 
+                  isCanceled ? "bg-red-500/10 text-red-500" : "bg-emerald-500/10 text-emerald-500"
+                }`}>
+                  {isTrial ? "Em Teste (7 Dias)" : isCanceled ? "Cancelado" : "Ativo"}
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
+                  <Zap className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-lg font-bold text-foreground">Plano {planName}</p>
+                  <p className="text-xs text-muted-foreground">Premium ilimitado</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 bg-secondary/30 space-y-3">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-muted-foreground" />
+                <p className="text-[13px] text-foreground">
+                  {isCanceled ? "Acesso até:" : "Próxima cobrança:"} <span className="font-bold">{expiryDate?.toLocaleDateString("pt-BR")}</span>
+                </p>
+              </div>
+              {isTrial && (
+                <div className="flex items-center gap-2 text-amber-500">
+                  <Info className="w-4 h-4" />
+                  <p className="text-[12px] font-medium">Seu teste termina em breve. Aproveite!</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Manage Actions */}
+          <div className="grid grid-cols-1 gap-2">
+            <Button
+              onClick={handleManageSubscription}
+              disabled={loadingPortal}
+              className="w-full h-12 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-[15px] font-bold flex items-center justify-center gap-2"
+            >
+              {loadingPortal ? (
+                <RefreshCw className="w-4 h-4 animate-spin" />
+              ) : (
+                <CreditCard className="w-4 h-4" />
+              )}
+              {loadingPortal ? "Carregando…" : "Gerenciar Assinatura"}
+            </Button>
+            
+            {!isCanceled && (
+              <p className="text-[11px] text-muted-foreground text-center px-4">
+                Você será redirecionado para o portal de pagamentos para alterar plano ou cancelar.
+              </p>
+            )}
+
+            {isCanceled && (
+              <Button
+                variant="outline"
+                onClick={() => setShowCheckout(false)} // This resets state to show plans
+                className="w-full h-12 rounded-xl border-border text-[14px] font-semibold"
+              >
+                Renovar agora
+              </Button>
+            )}
+
+            <button
+              onClick={() => setCurrentTab("home")}
+              className="w-full h-12 rounded-xl bg-secondary/50 text-foreground text-[14px] font-medium active:opacity-60 transition-colors"
+            >
+              Voltar para o Início
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Support Link */}
+        <motion.div variants={fadeUp} className="mt-8 p-4 rounded-xl bg-secondary/20 border border-border/30 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-muted-foreground mt-0.5" />
+          <div className="flex-1">
+            <p className="text-[13px] font-bold text-foreground">Precisa de ajuda?</p>
+            <p className="text-[12px] text-muted-foreground">Problemas com sua assinatura? Entre em contato com nosso suporte.</p>
+            <button className="text-[12px] text-primary font-bold mt-1 hover:underline">Falar com suporte</button>
+          </div>
         </motion.div>
       </motion.div>
     );
