@@ -117,6 +117,7 @@ export type Database = {
           cover_url: string | null
           created_at: string
           description: string | null
+          font: string | null
           id: string
           is_private: boolean
           members_count: number
@@ -129,6 +130,7 @@ export type Database = {
           cover_url?: string | null
           created_at?: string
           description?: string | null
+          font?: string | null
           id?: string
           is_private?: boolean
           members_count?: number
@@ -141,6 +143,7 @@ export type Database = {
           cover_url?: string | null
           created_at?: string
           description?: string | null
+          font?: string | null
           id?: string
           is_private?: boolean
           members_count?: number
@@ -702,6 +705,33 @@ export type Database = {
           count?: number
           key?: string
           window_start?: string
+        }
+        Relationships: []
+      }
+      reminders: {
+        Row: {
+          created_at: string | null
+          enabled: boolean | null
+          id: string
+          time: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          time: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          time?: string
+          type?: string
+          user_id?: string
         }
         Relationships: []
       }
