@@ -5,16 +5,17 @@ import { useApp } from "@/contexts/AppContext";
 import {
   Bell, Volume2, Vibrate, Ruler, Info, ChevronLeft,
   Moon, Sun, Shield, HelpCircle, Star, Share2,
-  Timer, Target, Dumbbell, Smartphone
+  Timer, Target, Dumbbell, Smartphone, Clock
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import { ReminderSettings } from "../reminders/ReminderSettings";
 
 interface SettingsScreenProps {
   onBack: () => void;
 }
 
-type SettingsPage = "main" | "workout" | "about";
+type SettingsPage = "main" | "workout" | "about" | "reminders";
 
 const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
   const {
@@ -60,15 +61,26 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
         </p>
       </section>
 
-      {/* Notifications */}
+      {/* Notifications & Reminders */}
       <section>
         <h3 className="text-[12px] uppercase tracking-wider text-muted-foreground px-1 mb-2">Geral</h3>
         <div className="bg-card rounded-2xl divide-y divide-border">
-          <div className="flex items-center px-5 py-3.5 gap-3">
+          <button
+            onClick={() => setPage("reminders")}
+            className="w-full flex items-center px-5 py-3.5 gap-3 active:bg-secondary/40 transition-colors"
+          >
             <Bell className="w-4 h-4 text-muted-foreground" />
+            <div className="flex-1 text-left">
+              <p className="text-[15px] text-foreground">Lembretes</p>
+              <p className="text-[12px] text-muted-foreground">Nutrição, treino e corrida</p>
+            </div>
+            <ChevronLeft className="w-4 h-4 text-muted-foreground rotate-180" />
+          </button>
+          <div className="flex items-center px-5 py-3.5 gap-3">
+            <Smartphone className="w-4 h-4 text-muted-foreground" />
             <div className="flex-1">
-              <p className="text-[15px] text-foreground">Notificações</p>
-              <p className="text-[12px] text-muted-foreground">Lembretes de treino</p>
+              <p className="text-[15px] text-foreground">Notificações do Sistema</p>
+              <p className="text-[12px] text-muted-foreground">Alertas de progresso</p>
             </div>
             <Switch checked={notifications} onCheckedChange={setNotifications} />
           </div>
@@ -209,6 +221,16 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
     </div>
   );
 
+  const renderRemindersPage = () => (
+    <div className="space-y-4 animate-fade-in">
+      <button onClick={() => setPage("main")} className="flex items-center gap-1 text-[14px] text-muted-foreground active:opacity-60 mb-2">
+        <ChevronLeft className="w-4 h-4" /> Voltar
+      </button>
+      <h3 className="text-[22px] font-bold text-foreground tracking-[-0.02em]">Lembretes</h3>
+      <ReminderSettings />
+    </div>
+  );
+
   return (
     <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
       <div className="flex items-center gap-3 mb-6 animate-fade-in">
@@ -218,6 +240,7 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
         <h1 className="text-[22px] font-bold text-foreground tracking-[-0.02em]">Configurações</h1>
       </div>
 
+      {page === "reminders" && renderRemindersPage()}
       {page === "main" && renderMainPage()}
       {page === "workout" && renderWorkoutPage()}
       {page === "about" && renderAboutPage()}
