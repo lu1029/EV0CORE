@@ -142,23 +142,23 @@ function ClubCard({ club, onJoin, onLeave }: { club: Club; onJoin: (id: string) 
   
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-      className={`bg-card border border-border rounded-3xl overflow-hidden ${fontClass}`}>
-      <div className="h-32 bg-gradient-to-br from-primary/30 via-accent/20 to-purple-500/30 relative">
+      className={`bg-card border border-border rounded-3xl overflow-hidden shadow-sm group hover:shadow-md transition-shadow ${fontClass}`}>
+      <div className="h-32 bg-gradient-to-br from-primary/30 via-accent/20 to-purple-500/30 relative overflow-hidden">
         {club.cover_url ? (
-          <img src={club.cover_url} className="w-full h-full object-cover" alt={club.name} />
+          <img src={club.cover_url} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={club.name} />
         ) : (
           <div className="w-full h-full flex items-center justify-center opacity-20">
             <Trophy className="w-12 h-12" />
           </div>
         )}
-        <div className="absolute top-3 right-3 px-2 py-1 rounded-lg bg-black/40 backdrop-blur text-[10px] uppercase tracking-wider font-black text-white border border-white/10">
+        <div className="absolute top-3 right-3 px-2 py-1 rounded-lg bg-black/60 backdrop-blur-md text-[10px] uppercase tracking-wider font-black text-white border border-white/10 z-10">
           {club.category}
         </div>
       </div>
       <div className="p-5 space-y-3">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
-            <h3 className="text-lg font-bold truncate leading-tight">{club.name}</h3>
+            <h3 className="text-lg font-bold truncate leading-tight group-hover:text-primary transition-colors">{club.name}</h3>
             <p className="text-sm text-muted-foreground line-clamp-2 mt-1 leading-relaxed">{club.description || "Comunidade fitness"}</p>
           </div>
           <button
