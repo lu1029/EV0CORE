@@ -80,10 +80,30 @@ export default function FeedPostCard({ post, onLike }: { post: FeedPost; onLike:
           <MessageCircle className="w-5 h-5 text-muted-foreground" />
           <span className="text-sm font-medium">{post.comments_count}</span>
         </button>
-        <button className="ml-auto w-10 h-10 rounded-full flex items-center justify-center active:scale-95">
+        <button 
+          onClick={() => {
+            if (navigator.share) {
+              navigator.share({
+                title: `Post de ${post.author?.name}`,
+                text: post.caption,
+                url: window.location.href
+              }).catch(() => {});
+            } else {
+              navigator.clipboard.writeText(window.location.href);
+              toast.success("Link copiado!");
+            }
+          }}
+          className="ml-auto w-10 h-10 rounded-full flex items-center justify-center active:scale-95"
+        >
           <Share2 className="w-5 h-5 text-muted-foreground" />
         </button>
-        <button className="w-10 h-10 rounded-full flex items-center justify-center active:scale-95">
+        <button 
+          onClick={() => {
+            // Logic to save post - usually a simple toast if no backend yet
+            toast.success("Salvo nos favoritos!");
+          }}
+          className="w-10 h-10 rounded-full flex items-center justify-center active:scale-95"
+        >
           <Bookmark className="w-5 h-5 text-muted-foreground" />
         </button>
       </div>

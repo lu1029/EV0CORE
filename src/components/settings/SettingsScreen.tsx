@@ -118,7 +118,13 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
             { icon: Info, label: "Sobre o EvoCore", action: () => setPage("about") },
             { icon: Shield, label: "Política de Privacidade", action: () => window.open("/privacidade", "_blank") },
             { icon: HelpCircle, label: "Ajuda & Suporte", action: () => toast.info("suporte@evocore.app") },
-            { icon: Star, label: "Avaliar o app", action: () => toast.success("Obrigado!") },
+            { icon: Star, label: "Avaliar o app", action: () => {
+              const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+              const storeUrl = isIOS 
+                ? "https://apps.apple.com/app/evocore" // Placeholder, update if real ID exists
+                : "https://play.google.com/store/apps/details?id=com.ev0core.app";
+              window.open(storeUrl, "_blank");
+            }},
             { icon: Share2, label: "Compartilhar", action: () => {
               if (navigator.share) navigator.share({ title: "EvoCore", url: "https://ev0core.com" });
               else { navigator.clipboard.writeText("https://ev0core.com"); toast.success("Link copiado"); }
