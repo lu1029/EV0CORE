@@ -12,7 +12,6 @@ export function useStreak() {
   const loadStreak = useCallback(async () => {
     if (!user) { setLoading(false); return; }
     try {
-      // Get last 30 days of completed workouts AND runs
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       const sinceISO = thirtyDaysAgo.toISOString();
@@ -36,7 +35,6 @@ export function useStreak() {
       if (workoutsRes.error) throw workoutsRes.error;
       if (runsRes.error) throw runsRes.error;
 
-      // Get unique dates across both sources (treino + corrida)
       const uniqueDates = new Set<string>();
       (workoutsRes.data || []).forEach((w: any) => {
         if (w.completed_at) uniqueDates.add(new Date(w.completed_at).toISOString().slice(0, 10));
@@ -46,31 +44,42 @@ export function useStreak() {
       });
 
       const today = new Date().toISOString().slice(0, 10);
-      setTrainedToday(uniqueDates.has(today));
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().slice(0, 10);
 
-      // Calculate streak
-      let currentStreak = 0;
-      const checkDate = new Date();
-      // If haven't trained today, start checking from yesterday
-      if (!uniqueDates.has(today)) {
-        checkDate.setDate(checkDate.getDate() - 1);
-      }
+      const hasTrainedToday = uniqueDates.has(today);
+      const hasTrainedYesterday = uniqueDates.has(yesterdayStr);
       
-      while (true) {
-        const dateStr = checkDate.toISOString().slice(0, 10);
-        if (uniqueDates.has(dateStr)) {
-          currentStreak++;
+      setTrainedToday(hasTrainedToday);
+
+      let currentStreak = 0;
+      
+      // Se não treinou hoje E não treinou ontem, a sequência quebra (reseta para 0)
+      if (!hasTrainedToday && !hasTrainedYesterday) {
+        currentStreak = 0;
+      } else {
+        // Começa a contagem
+        const checkDate = new Date();
+        if (!hasTrainedToday) {
           checkDate.setDate(checkDate.getDate() - 1);
-        } else {
-          break;
+        }
+
+        while (true) {
+          const dateStr = checkDate.toISOString().slice(0, 10);
+          if (uniqueDates.has(dateStr)) {
+            currentStreak++;
+            checkDate.setDate(checkDate.getDate() - 1);
+          } else {
+            break;
+          }
         }
       }
-      if (uniqueDates.has(today)) currentStreak = Math.max(currentStreak, 1);
+
       setStreak(currentStreak);
 
-      // Build current week (Mon-Sun)
       const now = new Date();
-      const dayOfWeek = now.getDay(); // 0=Sun
+      const dayOfWeek = now.getDay();
       const monday = new Date(now);
       monday.setDate(now.getDate() - ((dayOfWeek + 6) % 7));
       
