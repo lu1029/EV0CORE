@@ -1,5 +1,6 @@
 import { Heart, MessageCircle, Share2, Bookmark, Dumbbell, Footprints, Apple, TrendingUp, FileText } from "lucide-react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import type { FeedPost } from "@/hooks/useFeed";
 
 const TYPE_META: Record<string, { label: string; icon: any; color: string }> = {
