@@ -1,7 +1,9 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { useApp } from "@/contexts/AppContext";
-import { ChevronRight, Flame, Dumbbell, Apple, MapPin, TrendingUp, Users, ChevronDown, Search, Check } from "lucide-react";
+import { ChevronRight, Flame, Dumbbell, Apple, MapPin, TrendingUp, Users, ChevronDown, Search, Check, Bell } from "lucide-react";
+import { useNotifications } from "@/hooks/useNotifications";
+import { NotificationCenter } from "./notifications/NotificationCenter";
 import { useStreak } from "@/hooks/useStreak";
 import { useNavigate } from "react-router-dom";
 import { fadeUp, stagger, staggerFast, springSnappy, easeApple } from "@/lib/motion";
@@ -11,6 +13,8 @@ import { StreakWidget } from "./StreakWidget";
 const HomeScreen = () => {
   const { userProfile, setCurrentTab, isPremium } = useApp();
   const { streak, trainedToday, weekDays: activeWeek } = useStreak();
+  const { unreadCount } = useNotifications();
+  const [showNotifications, setShowNotifications] = React.useState(false);
   const navigate = useNavigate();
   const name = userProfile.name || "Atleta";
   const hour = new Date().getHours();
@@ -91,7 +95,19 @@ const HomeScreen = () => {
           <span className="text-[14px] font-semibold tabular text-foreground">{streak}</span>
         </motion.div>
 
-        {/* Search (substitui o menu/sino) */}
+        {/* Notifications */}
+        <motion.button
+          whileTap={{ scale: 0.9 }}
+          onClick={() => setShowNotifications(true)}
+          className="relative w-10 h-10 rounded-full flex items-center justify-center text-foreground hover:bg-card transition-colors"
+        >
+          <Bell className="w-5 h-5" />
+          {unreadCount > 0 && (
+            <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary border-2 border-background" />
+          )}
+        </motion.button>
+
+        {/* Search */}
         <motion.button
           whileTap={{ scale: 0.9 }}
           onClick={() => navigate("/buscar")}
@@ -101,6 +117,21 @@ const HomeScreen = () => {
           <Search className="w-5 h-5" />
         </motion.button>
       </motion.header>
+
+      {/* Notification Center Overlay */}
+      <AnimatePresence>
+        {showNotifications && (
+          <motion.div
+            initial={{ opacity: 0, x: '100%' }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed inset-0 z-[100] md:relative md:inset-auto"
+          >
+            <NotificationCenter onClose={() => setShowNotifications(false)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ============ Day timeline + Start workout card ============ */}
       <motion.section variants={fadeUp} className="flex items-end gap-3 mb-8">
