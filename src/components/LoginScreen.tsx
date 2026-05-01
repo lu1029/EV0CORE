@@ -49,7 +49,7 @@ const LoginScreen = () => {
     // Be precise — do NOT touch supabase auth tokens or unrelated keys.
     try {
       Object.keys(sessionStorage).forEach((k) => {
-        if (/^lovable-oauth/i.test(k) || /pkce-verifier|oauth-state/i.test(k)) {
+        if (/^auth-oauth/i.test(k) || /pkce-verifier|oauth-state/i.test(k)) {
           sessionStorage.removeItem(k);
         }
       });
@@ -78,11 +78,11 @@ const LoginScreen = () => {
   }, []);
 
   // Detect if the custom domain is reachable. If we're already on the
-  // Lovable domain or localhost, no check is needed.
+  // development domain or localhost, no check is needed.
   useEffect(() => {
     if (typeof window === "undefined") return;
     const host = window.location.hostname;
-    const isCustomDomain = !/lovable\.app$/i.test(host) && !/^localhost$/i.test(host) && host !== "127.0.0.1";
+    const isCustomDomain = !/ev0core\.app$/i.test(host) && !/^localhost$/i.test(host) && host !== "127.0.0.1";
     if (!isCustomDomain) return;
 
     const controller = new AbortController();
@@ -184,7 +184,7 @@ const LoginScreen = () => {
     setLoading(true);
     setRetryState(null);
 
-    // Do NOT pre-clean storage here — the lovable OAuth client writes its
+    // Do NOT pre-clean storage here — the auth client writes its
     // PKCE verifier to sessionStorage right before redirect, and any blanket
     // cleanup race-conditions with that. Only clean on explicit error.
 
@@ -192,7 +192,7 @@ const LoginScreen = () => {
     console.info(`[OAuth:${provider}] iniciando`, { redirect_uri });
 
     try {
-      const result = await lovable.auth.signInWithOAuth(provider, { redirect_uri });
+      const result = await evocoreAuth.auth.signInWithOAuth(provider, { redirect_uri });
       console.info(`[OAuth:${provider}] result:`, {
         redirected: result?.redirected,
         hasError: !!result?.error,
