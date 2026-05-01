@@ -68,7 +68,7 @@ export function useClubs() {
         category: input.category ?? "general",
         is_private: input.is_private ?? false,
         cover_url: input.cover_url ?? null,
-        font: input.font ?? 'sans-serif',
+        font: input.font ?? 'font-sans',
       })
       .select()
       .single();
