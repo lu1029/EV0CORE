@@ -267,7 +267,7 @@ async function lookupGif(name: string, muscle?: string): Promise<string | null> 
         if (data?.ai_image_url) return data.ai_image_url;
       } catch { /* ignore */ }
 
-      // 2c) Gera com cascata HF -> Lovable AI (lento, mas garante)
+      // 2c) Gera com cascata HF -> AI Interna (lento, mas garante)
       try {
         const { data, error } = await supabase.functions.invoke("generate-exercise-image", {
           body: { name, muscle },
@@ -322,7 +322,7 @@ async function lookupGif(name: string, muscle?: string): Promise<string | null> 
  *   1. cache de imagens IA por nome
  *   2. biblioteca local (gif/ai_image_url)
  *   3. ExerciseDB OSS via edge function
- *   4. gera com Lovable AI como fallback
+ *   4. gera com AI Interna como fallback
  */
 export function useExerciseGif(
   name: string,
