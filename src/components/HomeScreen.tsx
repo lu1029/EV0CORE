@@ -6,6 +6,7 @@ import { useStreak } from "@/hooks/useStreak";
 import { useNavigate } from "react-router-dom";
 import { fadeUp, stagger, staggerFast, springSnappy, easeApple } from "@/lib/motion";
 import { AnimatedText } from "@/components/motion/AnimatedText";
+import { StreakWidget } from "./StreakWidget";
 
 const HomeScreen = () => {
   const { userProfile, setCurrentTab, isPremium } = useApp();
@@ -178,42 +179,9 @@ const HomeScreen = () => {
         )}
       </motion.div>
 
-      {/* Streak card */}
+      {/* Streak Widget */}
       <motion.section variants={fadeUp} className="mb-10">
-        <div className="flex items-baseline justify-between mb-4 px-1">
-          <h2 className="text-[22px] font-bold text-foreground tracking-[-0.02em]">Esta semana</h2>
-          <span className="text-[13px] text-muted-foreground tabular">
-            {activeWeek.filter(Boolean).length}/7
-          </span>
-        </div>
-        <motion.div
-          whileHover={{ y: -2, transition: springSnappy }}
-          className="bg-card rounded-2xl p-5 border border-border/40"
-        >
-          <div className="flex items-center gap-2 mb-5">
-            <Flame className={`w-4 h-4 transition-colors ${streak > 0 ? "text-primary" : "text-muted-foreground"}`} />
-            <span className="text-[15px] font-medium text-foreground">
-              {streak > 0 ? `${streak} dia${streak > 1 ? "s" : ""} de sequência` : "Sem sequência"}
-            </span>
-          </div>
-          <motion.div variants={staggerFast} initial="hidden" animate="visible" className="flex justify-between">
-            {weekDayLabels.map((d, i) => (
-              <motion.div key={i} variants={fadeUp} className="flex flex-col items-center gap-2">
-                <span className="text-[11px] text-muted-foreground tabular">{d}</span>
-                <motion.div
-                  initial={{ scale: 0.6 }}
-                  animate={{ scale: activeWeek[i] ? 1 : 0.85 }}
-                  transition={{ ...springSnappy, delay: i * 0.04 }}
-                  className={`w-7 h-7 rounded-full flex items-center justify-center ${
-                    activeWeek[i] ? "bg-primary" : "bg-secondary"
-                  }`}
-                >
-                  {activeWeek[i] && <div className="w-1.5 h-1.5 rounded-full bg-primary-foreground" />}
-                </motion.div>
-              </motion.div>
-            ))}
-          </motion.div>
-        </motion.div>
+        <StreakWidget />
       </motion.section>
 
       {/* Activity tiles */}

@@ -63,7 +63,12 @@ serve(async (req) => {
       ...(customerEmail && { customer_email: customerEmail }),
       ...(effectiveUserId && {
         metadata: { userId: effectiveUserId },
-        ...(isRecurring && { subscription_data: { metadata: { userId: effectiveUserId } } }),
+        ...(isRecurring && { 
+          subscription_data: { 
+            metadata: { userId: effectiveUserId },
+            trial_period_days: 7 // Add 7-day free trial
+          } 
+        }),
       }),
     };
 
