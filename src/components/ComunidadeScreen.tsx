@@ -26,7 +26,7 @@ const PERIODS: { value: RankingPeriod; label: string }[] = [
 export default function ComunidadeScreen() {
   const [tab, setTab] = useState<"feed" | "ranking">("feed");
   const [composer, setComposer] = useState(false);
-  const { posts, loading, toggleLike } = useFeed();
+  const { posts, loading, toggleLike, toggleSave } = useFeed();
   const [metric, setMetric] = useState<RankingMetric>("workouts");
   const [period, setPeriod] = useState<RankingPeriod>("week");
   const { rows, loading: rankingLoading } = useRanking(metric, period);
@@ -64,7 +64,7 @@ export default function ComunidadeScreen() {
           <EmptyFeed onCreate={() => setComposer(true)} />
         ) : (
           <div className="space-y-4">
-            {posts.map(p => <FeedPostCard key={p.id} post={p} onLike={toggleLike} />)}
+            {posts.map(p => <FeedPostCard key={p.id} post={p} onLike={toggleLike} onSave={toggleSave} />)}
           </div>
         )
       ) : (
