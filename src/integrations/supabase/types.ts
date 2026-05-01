@@ -1230,8 +1230,6 @@ export type Database = {
         Returns: boolean
       }
       is_email_confirmed: { Args: never; Returns: boolean }
-      show_limit: { Args: never; Returns: number }
-      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       post_visibility: "public" | "followers" | "private"
