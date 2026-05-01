@@ -9,6 +9,7 @@ export interface Club {
   description: string | null;
   category: string;
   cover_url: string | null;
+  font: string;
   is_private: boolean;
   members_count: number;
   created_at: string;
@@ -56,7 +57,7 @@ export function useClubs() {
     setClubs(prev => prev.map(c => c.id === clubId ? { ...c, is_member: false, members_count: Math.max(0, c.members_count - 1) } : c));
   }, [user]);
 
-  const create = useCallback(async (input: { name: string; description?: string; category?: string; is_private?: boolean }) => {
+  const create = useCallback(async (input: { name: string; description?: string; category?: string; is_private?: boolean; cover_url?: string; font?: string }) => {
     if (!user) throw new Error("not_authenticated");
     const { data, error } = await supabase
       .from("clubs")
@@ -66,6 +67,8 @@ export function useClubs() {
         description: input.description ?? "",
         category: input.category ?? "general",
         is_private: input.is_private ?? false,
+        cover_url: input.cover_url ?? null,
+        font: input.font ?? 'sans-serif',
       })
       .select()
       .single();
