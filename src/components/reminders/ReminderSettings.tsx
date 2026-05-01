@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Bell, Dumbbell, Footprints, Apple, Loader2, Save } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useApp } from "@/contexts/AppContext";
@@ -71,12 +71,26 @@ export const ReminderSettings = () => {
         if (error) throw error;
       }
       toast.success("Lembretes salvos!");
+
+      // If enabled, insert an initial notification for demonstration/test
+      for (const r of reminders) {
+        if (r.enabled) {
+          const typeLabel = REMINDER_TYPES.find(t => t.id === r.type)?.label;
+          await supabase.from('notifications').insert({
+            user_id: user.id,
+            title: `Lembrete de ${typeLabel}`,
+            message: `Hora do seu compromisso com a ${typeLabel.toLowerCase()}!`,
+            type: r.type
+          });
+        }
+      }
       
       // Request notification permission
       if ("Notification" in window && Notification.permission !== "granted") {
         await Notification.requestPermission();
       }
     } catch (e: any) {
+      console.error("Save reminders error:", e);
       toast.error("Erro ao salvar lembretes");
     } finally {
       setSaving(false);
