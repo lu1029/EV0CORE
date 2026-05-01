@@ -138,34 +138,51 @@ export default function ClubesScreen() {
 }
 
 function ClubCard({ club, onJoin, onLeave }: { club: Club; onJoin: (id: string) => void; onLeave: (id: string) => void }) {
+  const fontClass = club.font || 'font-sans';
+  
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-      className="bg-card border border-border rounded-3xl overflow-hidden">
-      <div className="h-24 bg-gradient-to-br from-primary/30 via-accent/20 to-purple-500/30 relative">
-        {club.cover_url && <img src={club.cover_url} className="w-full h-full object-cover" alt="" />}
-        <div className="absolute bottom-2 left-3 px-2 py-0.5 rounded-full bg-black/40 backdrop-blur text-[10px] uppercase tracking-wide font-bold text-white">
+      className={`bg-card border border-border rounded-3xl overflow-hidden ${fontClass}`}>
+      <div className="h-32 bg-gradient-to-br from-primary/30 via-accent/20 to-purple-500/30 relative">
+        {club.cover_url ? (
+          <img src={club.cover_url} className="w-full h-full object-cover" alt={club.name} />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center opacity-20">
+            <Trophy className="w-12 h-12" />
+          </div>
+        )}
+        <div className="absolute top-3 right-3 px-2 py-1 rounded-lg bg-black/40 backdrop-blur text-[10px] uppercase tracking-wider font-black text-white border border-white/10">
           {club.category}
         </div>
       </div>
-      <div className="p-4 space-y-2">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h3 className={`font-bold truncate ${club.font || 'font-sans'}`}>{club.name}</h3>
-            <p className="text-xs text-muted-foreground line-clamp-2">{club.description || "Comunidade fitness"}</p>
+      <div className="p-5 space-y-3">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-lg font-bold truncate leading-tight">{club.name}</h3>
+            <p className="text-sm text-muted-foreground line-clamp-2 mt-1 leading-relaxed">{club.description || "Comunidade fitness"}</p>
           </div>
           <button
             onClick={() => club.is_member ? onLeave(club.id) : onJoin(club.id)}
-            className={`shrink-0 h-9 px-4 rounded-full text-xs font-bold ${
+            className={`shrink-0 h-10 px-5 rounded-xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 ${
               club.is_member
                 ? "bg-secondary border border-border text-muted-foreground"
-                : "gradient-primary text-primary-foreground"
+                : "gradient-primary text-primary-foreground shadow-lg shadow-primary/20"
             }`}
           >
             {club.is_member ? "Sair" : "Entrar"}
           </button>
         </div>
-        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-          <Users className="w-3 h-3" /> {club.members_count} {club.members_count === 1 ? "membro" : "membros"}
+        <div className="flex items-center gap-2 pt-1">
+          <div className="flex -space-x-2">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="w-6 h-6 rounded-full bg-secondary border-2 border-card flex items-center justify-center">
+                <Users className="w-3 h-3 text-muted-foreground" />
+              </div>
+            ))}
+          </div>
+          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-tighter">
+            {club.members_count} {club.members_count === 1 ? "membro" : "membros"} ativos
+          </span>
         </div>
       </div>
     </motion.div>
