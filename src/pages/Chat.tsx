@@ -31,9 +31,47 @@ export default function Chat() {
   const { profile: currentUser } = useApp();
   const { profile: otherUser, loading: userLoading } = usePublicProfile(userId);
   const { messages, loading: messagesLoading, hasMore, fetchMore, sendMessage } = useChat(userId);
+  const { blockUser, unblockUser, checkIsBlocked, reportContent, loading: moderationLoading } = useModeration();
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportingMessageId, setReportingMessageId] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [shouldScroll, setShouldScroll] = useState(true);
+
+  useEffect(() => {
+    if (userId) {
+      checkIsBlocked(userId).then(setIsBlocked);
+    }
+  }, [userId, checkIsBlocked]);
+
+  const handleBlock = async () => {
+    if (!userId) return;
+    if (isBlocked) {
+      const success = await unblockUser(userId);
+      if (success) setIsBlocked(false);
+    } else {
+      const success = await blockUser(userId);
+      if (success) setIsBlocked(true);
+    }
+  };
+
+  const handleReport = async () => {
+    if (!userId || !reportReason.trim()) return;
+    
+    const success = await reportContent({
+      contentType: reportingMessageId ? 'message' : 'profile',
+      contentId: reportingMessageId || userId,
+      reason: reportReason,
+    });
+
+    if (success) {
+      setReportDialogOpen(false);
+      setReportReason("");
+      setReportingMessageId(null);
+    }
+  };
 
   const scrollToBottom = () => {
     if (shouldScroll) {
