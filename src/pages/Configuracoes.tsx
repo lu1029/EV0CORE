@@ -68,7 +68,7 @@ export default function Configuracoes() {
       title: "Segurança e Privacidade",
       items: [
         { to: "/privacidade", icon: Shield, label: "Privacidade" },
-        { icon: Lock, label: "Segurança", action: () => toast.info("Configurações de segurança em breve") },
+        { icon: Lock, label: "Segurança", action: () => navigate("/privacidade") },
       ]
     },
     {
