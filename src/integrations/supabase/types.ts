@@ -1379,6 +1379,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_conversations: {
+        Args: { limit_val?: number; offset_val?: number; viewer_id: string }
+        Returns: {
+          last_message: string
+          last_message_at: string
+          peer_avatar_url: string
+          peer_id: string
+          peer_name: string
+          unread_count: number
+        }[]
+      }
       get_public_profile: {
         Args: { _user_id: string }
         Returns: {
