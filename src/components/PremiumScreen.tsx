@@ -186,7 +186,9 @@ const PremiumScreen = () => {
     );
   }
 
-  if (isPremium || isActive) {
+  const hasPremiumAccess = isPremium || isActive;
+
+  if (hasPremiumAccess) {
     const isTrial = subscription?.status === "trialing";
     const isCanceled = subscription?.status === "canceled" || subscription?.cancel_at_period_end;
     const expiryDate = subscription?.current_period_end ? new Date(subscription.current_period_end) : null;

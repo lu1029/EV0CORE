@@ -105,9 +105,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             goal: profile.goal || "",
             level: profile.level || "",
             preference: profile.preference || "",
-            daysPerWeek: profile.days_per_week ?? 4,
+            days_per_week: profile.days_per_week ?? 4,
           });
+          
+          // Only trust DB premium status if it is true. 
+          // If it is false in DB, it might still be active via Stripe (handled by useSubscription in individual screens)
           setIsPremium(profile.is_premium ?? false);
+          
           if (profile.goal) {
             setHasOnboarded(true);
           }
@@ -117,14 +121,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       }
     };
 
-    // CRITICAL: Register the listener FIRST, then call getSession.
-    // Otherwise OAuth callbacks (Google) can fire SIGNED_IN before the
-    // listener is registered, and the user gets bounced back to login.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, newSession) => {
         if (!mounted) return;
 
-        // Block unconfirmed email users on sign-in (OAuth providers are auto-confirmed)
         const provider = newSession?.user?.app_metadata?.provider;
         const needsConfirm =
           event === "SIGNED_IN" &&
@@ -132,7 +132,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           !newSession.user.email_confirmed_at &&
           provider === "email";
         if (needsConfirm) {
-          // Defer signOut so we don't block the auth state machine
           setTimeout(() => { supabase.auth.signOut(); }, 0);
           return;
         }
@@ -150,7 +149,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             email: newSession.user.email ?? prev.email,
             name: newSession.user.user_metadata?.full_name ?? newSession.user.user_metadata?.name ?? prev.name,
           }));
-          // Don't await inside onAuthStateChange to avoid deadlocks
           loadProfile(
             newSession.user.id,
             newSession.user.email ?? "",
@@ -167,9 +165,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       }
     );
 
-    // THEN check existing session (covers page reload with valid session).
-    // The listener above will also fire INITIAL_SESSION, but this guarantees
-    // we exit the loading state even if no event arrives.
     supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
       if (!mounted) return;
       setSession(initialSession);
