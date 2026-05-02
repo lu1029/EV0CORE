@@ -5,7 +5,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Check, ChevronLeft, Sparkles, Zap, X, CreditCard, QrCode, Calendar, Info, RefreshCw, AlertCircle } from "lucide-react";
+import { Check, ChevronLeft, Sparkles, Zap, X, CreditCard, QrCode, Calendar, Info, RefreshCw, AlertCircle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
