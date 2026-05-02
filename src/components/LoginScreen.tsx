@@ -383,7 +383,7 @@ const LoginScreen = () => {
               alt="EvoCore - Seu ecossistema fitness"
               width={112}
               height={112}
-              fetchpriority="high"
+              {...({ fetchPriority: "high" } as any)}
               className="h-28 w-auto object-contain mx-auto mb-4 drop-shadow-[0_0_30px_hsl(239,84%,67%,0.3)]"
             />
           </div>
