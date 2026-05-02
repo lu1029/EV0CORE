@@ -253,7 +253,7 @@ const PremiumScreen = () => {
           </div>
 
           {/* Manage Actions */}
-          <div className="grid grid-cols-1 gap-2">
+          <div className="grid grid-cols-1 gap-3 mt-4">
             <Button
               onClick={handleManageSubscription}
               disabled={loadingPortal}
@@ -264,28 +264,44 @@ const PremiumScreen = () => {
               ) : (
                 <CreditCard className="w-4 h-4" />
               )}
-              {loadingPortal ? "Carregando…" : "Gerenciar Assinatura"}
+              {loadingPortal ? "Carregando…" : isCanceled ? "Ver faturas" : "Gerenciar ou Cancelar"}
             </Button>
             
+            {isTrial && !isCanceled && (
+              <Button
+                variant="outline"
+                onClick={handleManageSubscription}
+                disabled={loadingPortal}
+                className="w-full h-12 rounded-xl border-amber-500/30 bg-amber-500/5 text-amber-500 hover:bg-amber-500/10 hover:text-amber-500 text-[14px] font-bold flex items-center justify-center gap-2"
+              >
+                <X className="w-4 h-4" />
+                Cancelar Teste Grátis
+              </Button>
+            )}
+
             {!isCanceled && (
               <p className="text-[11px] text-muted-foreground text-center px-4">
-                Você será redirecionado para o portal de pagamentos para alterar plano ou cancelar.
+                Você será redirecionado para o portal de pagamentos seguro da Stripe para {isTrial ? "cancelar o teste ou " : ""}alterar seu plano.
               </p>
             )}
 
             {isCanceled && (
-              <Button
-                variant="outline"
-                onClick={() => setShowCheckout(false)} // This resets state to show plans
-                className="w-full h-12 rounded-xl border-border text-[14px] font-semibold"
-              >
-                Renovar agora
-              </Button>
+              <div className="space-y-3">
+                <Button
+                  onClick={() => setShowCheckout(false)}
+                  className="w-full h-12 rounded-xl gradient-primary text-primary-foreground text-[15px] font-bold"
+                >
+                  Reativar Assinatura
+                </Button>
+                <p className="text-[11px] text-red-500 font-medium text-center px-4">
+                  Sua assinatura foi cancelada e não será renovada após {expiryDate?.toLocaleDateString("pt-BR")}.
+                </p>
+              </div>
             )}
 
             <button
               onClick={() => setCurrentTab("home")}
-              className="w-full h-12 rounded-xl bg-secondary/50 text-foreground text-[14px] font-medium active:opacity-60 transition-colors"
+              className="w-full h-12 rounded-xl bg-secondary/50 text-foreground text-[14px] font-medium active:opacity-60 transition-colors mt-2"
             >
               Voltar para o Início
             </button>
