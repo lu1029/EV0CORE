@@ -59,7 +59,9 @@ export default function ComunidadeScreen() {
       </div>
 
       {tab === "feed" ? (
-        loading ? (
+        <div className="space-y-6">
+          <Stories />
+          {loading ? (
           <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
         ) : posts.length === 0 ? (
           <EmptyFeed onCreate={() => setComposer(true)} />
