@@ -7,6 +7,7 @@ import OnboardingScreen from "@/components/OnboardingScreen";
 import BottomNav from "@/components/SmartNavigationBar";
 import EvoAIFab from "@/components/EvoAIFab";
 import InstallPwaPrompt from "@/components/InstallPwaPrompt";
+import FreeTrialModal from "@/components/FreeTrialModal";
 import { Sun, Moon, Search, X } from "lucide-react";
 import evocoreLogo from "@/assets/evocore-logo.png";
 import { PageTransition } from "@/components/PageTransition";
@@ -69,6 +70,7 @@ const AppLayout = () => {
       <EvoAIFab />
       <BottomNav />
       <InstallPwaPrompt />
+      <FreeTrialModal />
     </div>
   );
 };
