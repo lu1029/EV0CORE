@@ -131,9 +131,32 @@ export default function Chat() {
             <p className="text-[10px] text-primary font-medium">Online agora</p>
           </div>
         </div>
-        <button className="p-2 rounded-full active:bg-secondary">
-          <Info className="w-5 h-5 text-muted-foreground" />
-        </button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="p-2 rounded-full active:bg-secondary">
+              <MoreVertical className="w-5 h-5 text-muted-foreground" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem 
+              onClick={() => {
+                setReportingMessageId(null);
+                setReportDialogOpen(true);
+              }}
+              className="text-amber-500 focus:text-amber-500"
+            >
+              <Flag className="w-4 h-4 mr-2" />
+              Denunciar Perfil
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={handleBlock}
+              className={isBlocked ? "text-primary" : "text-destructive focus:text-destructive"}
+            >
+              <UserX className="w-4 h-4 mr-2" />
+              {isBlocked ? "Desbloquear" : "Bloquear Usuário"}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Messages */}
