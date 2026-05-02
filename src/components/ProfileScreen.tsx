@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import SettingsScreen from "@/components/settings/SettingsScreen";
+
 import { useProfileStats } from "@/hooks/useProfileStats";
 import { useAchievements } from "@/hooks/useAchievements";
 import AvatarUpload from "@/components/profile/AvatarUpload";
@@ -20,7 +20,7 @@ const ProfileScreen = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editProfile, setEditProfile] = useState(userProfile);
   const [saving, setSaving] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
+  
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"overview" | "posts">("overview");
 
@@ -80,7 +80,7 @@ const ProfileScreen = () => {
     beginner: "Iniciante", intermediate: "Intermediário", advanced: "Avançado",
   };
 
-  if (showSettings) return <SettingsScreen onBack={() => setShowSettings(false)} />;
+  
 
   if (isEditing) {
     return (
