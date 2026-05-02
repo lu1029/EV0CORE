@@ -435,6 +435,24 @@ const PremiumScreen = () => {
         </motion.div>
       </motion.section>
 
+      {/* Trial Promo */}
+      <motion.div 
+        variants={fadeUp}
+        className="mb-8 p-6 rounded-[24px] bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 relative overflow-hidden"
+      >
+        <div className="relative z-10">
+          <div className="flex items-center gap-2 mb-2">
+            <Clock className="w-4 h-4 text-primary" />
+            <span className="text-[13px] font-bold text-primary uppercase tracking-wider">Oferta por tempo limitado</span>
+          </div>
+          <h3 className="text-[20px] font-bold text-foreground mb-2">Inicie com 7 dias grátis</h3>
+          <p className="text-[14px] text-muted-foreground leading-relaxed mb-4">
+            Assine qualquer plano com cartão hoje e ganhe 7 dias de acesso premium sem cobrança. Se cancelar antes do fim do teste, você não paga nada.
+          </p>
+        </div>
+        <Sparkles className="absolute -bottom-4 -right-4 w-24 h-24 text-primary/5 rotate-12" />
+      </motion.div>
+
       {/* Comparison feature list — animates with selected plan */}
       <motion.section variants={fadeUp} className="mb-8">
         <div className="bg-card rounded-2xl border border-border/40 p-5 sm:p-6">
