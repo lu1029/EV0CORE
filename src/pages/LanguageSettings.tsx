@@ -44,7 +44,7 @@ const LanguageSettings = () => {
                  lng === "it" ? "Italiano" :
                  lng === "ja" ? "日本語" :
                  lng === "ko" ? "한국어" :
-                 lng === "zh-CN" ? "中文 (简体)" : t(`languages.${lng}`)}
+                 lng === "zh-CN" ? "中文 (简体)" : lng}
               </span>
               {active && <Check className="w-5 h-5 text-primary" />}
             </button>
