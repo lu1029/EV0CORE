@@ -242,33 +242,87 @@ export default function Chat() {
 
       {/* Input */}
       <div className="p-4 border-t border-border/40 bg-background shrink-0">
-        <div className="flex items-end gap-2 bg-secondary/50 rounded-2xl p-2 border border-border/20 focus-within:border-primary/30 transition-all">
-          <button className="p-2 rounded-xl text-muted-foreground active:text-primary transition-colors">
-            <ImageIcon className="w-5 h-5" />
-          </button>
-          <textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyPress}
-            placeholder="Mensagem..."
-            rows={1}
-            className="flex-1 bg-transparent border-none focus:ring-0 text-sm py-2 resize-none max-h-32"
-            style={{ height: "auto" }}
-          />
-          <button
-            onClick={handleSend}
-            disabled={!input.trim()}
-            className={`p-2 rounded-xl transition-all ${
-              input.trim() ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105" : "text-muted-foreground"
-            }`}
-          >
-            <Send className="w-5 h-5" />
-          </button>
-        </div>
-        <p className="text-[10px] text-center text-muted-foreground mt-3 uppercase tracking-tighter opacity-50">
-          Suas mensagens são criptografadas e seguras
-        </p>
+        {isBlocked ? (
+          <div className="bg-secondary/50 rounded-2xl p-4 text-center border border-border/20">
+            <p className="text-sm text-muted-foreground font-medium">
+              Você bloqueou este usuário. Desbloqueie para enviar mensagens.
+            </p>
+            <button 
+              onClick={handleBlock}
+              className="mt-2 text-xs font-bold text-primary hover:underline"
+            >
+              Desbloquear agora
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-end gap-2 bg-secondary/50 rounded-2xl p-2 border border-border/20 focus-within:border-primary/30 transition-all">
+              <button className="p-2 rounded-xl text-muted-foreground active:text-primary transition-colors">
+                <ImageIcon className="w-5 h-5" />
+              </button>
+              <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyPress}
+                placeholder="Mensagem..."
+                rows={1}
+                className="flex-1 bg-transparent border-none focus:ring-0 text-sm py-2 resize-none max-h-32"
+                style={{ height: "auto" }}
+              />
+              <button
+                onClick={handleSend}
+                disabled={!input.trim() || moderationLoading}
+                className={`p-2 rounded-xl transition-all ${
+                  input.trim() ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105" : "text-muted-foreground"
+                }`}
+              >
+                {moderationLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+              </button>
+            </div>
+            <p className="text-[10px] text-center text-muted-foreground mt-3 uppercase tracking-tighter opacity-50">
+              Suas mensagens são criptografadas e seguras
+            </p>
+          </>
+        )}
       </div>
+
+      {/* Report Dialog */}
+      <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{reportingMessageId ? "Denunciar Mensagem" : "Denunciar Perfil"}</DialogTitle>
+            <DialogDescription>
+              Explique brevemente o motivo da denúncia. Nossa equipe irá analisar em até 24 horas.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <Textarea
+              placeholder="Ex: Conteúdo inapropriado, spam, assédio..."
+              value={reportReason}
+              onChange={(e) => setReportReason(e.target.value)}
+              className="min-h-[100px]"
+            />
+          </div>
+          <DialogFooter className="sm:justify-end gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setReportDialogOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleReport}
+              disabled={!reportReason.trim() || moderationLoading}
+            >
+              {moderationLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Flag className="w-4 h-4 mr-2" />}
+              Enviar Denúncia
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
