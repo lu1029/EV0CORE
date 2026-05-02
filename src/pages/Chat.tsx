@@ -31,6 +31,7 @@ export default function Chat() {
     if (!input.trim()) return;
     const text = input.trim();
     setInput("");
+    setShouldScroll(true);
     await sendMessage(text);
   };
 
