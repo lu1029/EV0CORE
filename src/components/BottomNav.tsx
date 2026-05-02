@@ -1,7 +1,7 @@
 import React from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Home, Dumbbell, Footprints, Apple, TrendingUp, User, Users, Trophy } from "lucide-react";
+import { Home, Dumbbell, Footprints, Apple, TrendingUp, User, Users, Trophy, PlayCircle } from "lucide-react";
 
 /**
  * Bottom tab bar — 8 tabs (added Comunidade + Clubes).
