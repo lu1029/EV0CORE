@@ -12,12 +12,15 @@ export default function Chat() {
   const navigate = useNavigate();
   const { profile: currentUser } = useApp();
   const { profile: otherUser, loading: userLoading } = usePublicProfile(userId);
-  const { messages, loading: messagesLoading, sendMessage } = useChat(userId);
+  const { messages, loading: messagesLoading, hasMore, fetchMore, sendMessage } = useChat(userId);
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [shouldScroll, setShouldScroll] = useState(true);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (shouldScroll) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   useEffect(() => {
