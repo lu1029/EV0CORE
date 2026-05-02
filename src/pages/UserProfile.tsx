@@ -1,12 +1,64 @@
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ChevronLeft, Loader2, UserPlus, UserCheck, Image as ImageIcon } from "lucide-react";
+import { ChevronLeft, Loader2, UserPlus, UserCheck, Image as ImageIcon, UserX, Flag, MoreVertical } from "lucide-react";
 import { motion } from "framer-motion";
 import { usePublicProfile } from "@/hooks/usePublicProfile";
+import { useModeration } from "@/hooks/useModeration";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function UserProfile() {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const { profile, stats, posts, loading, toggleFollow } = usePublicProfile(userId);
+  const { blockUser, unblockUser, checkBlockStatus, reportContent, loading: moderationLoading } = useModeration();
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+
+  useEffect(() => {
+    if (userId) {
+      checkBlockStatus(userId).then(status => setIsBlocked(status.blocked));
+    }
+  }, [userId, checkBlockStatus]);
+
+  const handleBlock = async () => {
+    if (!userId) return;
+    if (isBlocked) {
+      const success = await unblockUser(userId);
+      if (success) setIsBlocked(false);
+    } else {
+      const success = await blockUser(userId);
+      if (success) setIsBlocked(true);
+    }
+  };
+
+  const handleReport = async () => {
+    if (!userId || !reportReason.trim()) return;
+    const success = await reportContent({
+      contentType: 'profile',
+      contentId: userId,
+      reason: reportReason,
+    });
+    if (success) {
+      setReportDialogOpen(false);
+      setReportReason("");
+    }
+  };
 
   if (loading) {
     return (
@@ -29,9 +81,74 @@ export default function UserProfile() {
 
   return (
     <div className="px-4 pt-4 pb-32 max-w-lg mx-auto">
-      <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-primary mb-4 active:opacity-60">
-        <ChevronLeft className="w-4 h-4" /> Voltar
-      </button>
+      <div className="flex items-center justify-between mb-4">
+        <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-primary active:opacity-60">
+          <ChevronLeft className="w-4 h-4" /> Voltar
+        </button>
+
+        {!stats.is_self && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="p-2 rounded-full active:bg-secondary">
+                <MoreVertical className="w-5 h-5 text-muted-foreground" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem 
+                onClick={() => setReportDialogOpen(true)}
+                className="text-amber-500 focus:text-amber-500"
+              >
+                <Flag className="w-4 h-4 mr-2" />
+                Denunciar
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={handleBlock}
+                className={isBlocked ? "text-primary" : "text-destructive focus:text-destructive"}
+              >
+                <UserX className="w-4 h-4 mr-2" />
+                {isBlocked ? "Desbloquear" : "Bloquear"}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      {/* Report Dialog */}
+      <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Denunciar Perfil</DialogTitle>
+            <DialogDescription>
+              Explique brevemente o motivo da denúncia. Nossa equipe irá analisar em até 24 horas.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <Textarea
+              placeholder="Ex: Conteúdo inapropriado, spam, assédio..."
+              value={reportReason}
+              onChange={(e) => setReportReason(e.target.value)}
+              className="min-h-[100px]"
+            />
+          </div>
+          <DialogFooter className="sm:justify-end gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setReportDialogOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleReport}
+              disabled={!reportReason.trim() || moderationLoading}
+            >
+              {moderationLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Flag className="w-4 h-4 mr-2" />}
+              Enviar Denúncia
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
 
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-5 mb-5">

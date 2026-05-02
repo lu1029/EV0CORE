@@ -1,11 +1,29 @@
 import { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ChevronLeft, Send, Image as ImageIcon, Loader2, Info } from "lucide-react";
+import { ChevronLeft, Send, Image as ImageIcon, Loader2, Info, ShieldAlert, UserX, Flag, MoreVertical } from "lucide-react";
 import { useChat } from "@/hooks/useMessages";
 import { usePublicProfile } from "@/hooks/usePublicProfile";
+import { useModeration } from "@/hooks/useModeration";
 import { useApp } from "@/contexts/AppContext";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 
 export default function Chat() {
   const { userId } = useParams<{ userId: string }>();
@@ -13,9 +31,51 @@ export default function Chat() {
   const { profile: currentUser } = useApp();
   const { profile: otherUser, loading: userLoading } = usePublicProfile(userId);
   const { messages, loading: messagesLoading, hasMore, fetchMore, sendMessage } = useChat(userId);
+  const { blockUser, unblockUser, checkBlockStatus, reportContent, loading: moderationLoading } = useModeration();
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [isBlockedBy, setIsBlockedBy] = useState(false);
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportingMessageId, setReportingMessageId] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [shouldScroll, setShouldScroll] = useState(true);
+
+  useEffect(() => {
+    if (userId) {
+      checkBlockStatus(userId).then(status => {
+        setIsBlocked(status.blocked);
+        setIsBlockedBy(status.blockedBy);
+      });
+    }
+  }, [userId, checkBlockStatus]);
+
+  const handleBlock = async () => {
+    if (!userId) return;
+    if (isBlocked) {
+      const success = await unblockUser(userId);
+      if (success) setIsBlocked(false);
+    } else {
+      const success = await blockUser(userId);
+      if (success) setIsBlocked(true);
+    }
+  };
+
+  const handleReport = async () => {
+    if (!userId || !reportReason.trim()) return;
+    
+    const success = await reportContent({
+      contentType: reportingMessageId ? 'message' : 'profile',
+      contentId: reportingMessageId || userId,
+      reason: reportReason,
+    });
+
+    if (success) {
+      setReportDialogOpen(false);
+      setReportReason("");
+      setReportingMessageId(null);
+    }
+  };
 
   const scrollToBottom = () => {
     if (shouldScroll) {
@@ -72,12 +132,35 @@ export default function Chat() {
           </div>
           <div className="min-w-0">
             <p className="font-bold text-sm truncate leading-none mb-1">{otherUser?.name}</p>
-            <p className="text-[10px] text-primary font-medium">Online agora</p>
+            {!isBlocked && !isBlockedBy && <p className="text-[10px] text-primary font-medium">Online agora</p>}
           </div>
         </div>
-        <button className="p-2 rounded-full active:bg-secondary">
-          <Info className="w-5 h-5 text-muted-foreground" />
-        </button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="p-2 rounded-full active:bg-secondary">
+              <MoreVertical className="w-5 h-5 text-muted-foreground" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem 
+              onClick={() => {
+                setReportingMessageId(null);
+                setReportDialogOpen(true);
+              }}
+              className="text-amber-500 focus:text-amber-500"
+            >
+              <Flag className="w-4 h-4 mr-2" />
+              Denunciar Perfil
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={handleBlock}
+              className={isBlocked ? "text-primary" : "text-destructive focus:text-destructive"}
+            >
+              <UserX className="w-4 h-4 mr-2" />
+              {isBlocked ? "Desbloquear" : "Bloquear Usuário"}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Messages */}
@@ -129,7 +212,19 @@ export default function Chat() {
                       </span>
                     </div>
                   )}
-                  <div className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
+                  <div className={`flex ${isMine ? "justify-end" : "justify-start"} items-end gap-2 group`}>
+                    {!isMine && (
+                      <button 
+                        onClick={() => {
+                          setReportingMessageId(msg.id);
+                          setReportDialogOpen(true);
+                        }}
+                        className="opacity-0 group-hover:opacity-100 p-1.5 rounded-full hover:bg-secondary transition-all text-muted-foreground"
+                        title="Denunciar mensagem"
+                      >
+                        <ShieldAlert className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                     <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm ${
                       isMine 
                         ? "bg-primary text-primary-foreground rounded-tr-none shadow-md shadow-primary/10" 
@@ -151,33 +246,91 @@ export default function Chat() {
 
       {/* Input */}
       <div className="p-4 border-t border-border/40 bg-background shrink-0">
-        <div className="flex items-end gap-2 bg-secondary/50 rounded-2xl p-2 border border-border/20 focus-within:border-primary/30 transition-all">
-          <button className="p-2 rounded-xl text-muted-foreground active:text-primary transition-colors">
-            <ImageIcon className="w-5 h-5" />
-          </button>
-          <textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyPress}
-            placeholder="Mensagem..."
-            rows={1}
-            className="flex-1 bg-transparent border-none focus:ring-0 text-sm py-2 resize-none max-h-32"
-            style={{ height: "auto" }}
-          />
-          <button
-            onClick={handleSend}
-            disabled={!input.trim()}
-            className={`p-2 rounded-xl transition-all ${
-              input.trim() ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105" : "text-muted-foreground"
-            }`}
-          >
-            <Send className="w-5 h-5" />
-          </button>
-        </div>
-        <p className="text-[10px] text-center text-muted-foreground mt-3 uppercase tracking-tighter opacity-50">
-          Suas mensagens são criptografadas e seguras
-        </p>
+        {isBlocked || isBlockedBy ? (
+          <div className="bg-secondary/50 rounded-2xl p-4 text-center border border-border/20">
+            <p className="text-sm text-muted-foreground font-medium">
+              {isBlocked 
+                ? "Você bloqueou este usuário. Desbloqueie para enviar mensagens."
+                : "Você não pode enviar mensagens para este usuário no momento."}
+            </p>
+            {isBlocked && (
+              <button 
+                onClick={handleBlock}
+                className="mt-2 text-xs font-bold text-primary hover:underline"
+              >
+                Desbloquear agora
+              </button>
+            )}
+          </div>
+        ) : (
+          <>
+            <div className="flex items-end gap-2 bg-secondary/50 rounded-2xl p-2 border border-border/20 focus-within:border-primary/30 transition-all">
+              <button className="p-2 rounded-xl text-muted-foreground active:text-primary transition-colors">
+                <ImageIcon className="w-5 h-5" />
+              </button>
+              <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyPress}
+                placeholder="Mensagem..."
+                rows={1}
+                className="flex-1 bg-transparent border-none focus:ring-0 text-sm py-2 resize-none max-h-32"
+                style={{ height: "auto" }}
+              />
+              <button
+                onClick={handleSend}
+                disabled={!input.trim() || moderationLoading}
+                className={`p-2 rounded-xl transition-all ${
+                  input.trim() ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105" : "text-muted-foreground"
+                }`}
+              >
+                {moderationLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+              </button>
+            </div>
+            <p className="text-[10px] text-center text-muted-foreground mt-3 uppercase tracking-tighter opacity-50">
+              Suas mensagens são criptografadas e seguras
+            </p>
+          </>
+        )}
       </div>
+
+      {/* Report Dialog */}
+      <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{reportingMessageId ? "Denunciar Mensagem" : "Denunciar Perfil"}</DialogTitle>
+            <DialogDescription>
+              Explique brevemente o motivo da denúncia. Nossa equipe irá analisar em até 24 horas.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <Textarea
+              placeholder="Ex: Conteúdo inapropriado, spam, assédio..."
+              value={reportReason}
+              onChange={(e) => setReportReason(e.target.value)}
+              className="min-h-[100px]"
+            />
+          </div>
+          <DialogFooter className="sm:justify-end gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setReportDialogOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleReport}
+              disabled={!reportReason.trim() || moderationLoading}
+            >
+              {moderationLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Flag className="w-4 h-4 mr-2" />}
+              Enviar Denúncia
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
