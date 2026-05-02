@@ -183,8 +183,12 @@ export function useChat(otherUserId: string | undefined) {
       if (data) {
         setMessages(prev => [...prev, data as Message]);
       }
-    } catch (error) {
-      toast.error("Erro ao enviar mensagem");
+    } catch (error: any) {
+      if (error.message?.includes('Ação bloqueada')) {
+        toast.error("Você não pode enviar mensagens para este usuário.");
+      } else {
+        toast.error("Erro ao enviar mensagem");
+      }
     }
   };
 
