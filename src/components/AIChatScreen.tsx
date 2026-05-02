@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useApp } from "@/contexts/AppContext";
 import { useSubscription } from "@/hooks/useSubscription";
 import { Send, ArrowLeft, Sparkles, Loader2, Lock } from "lucide-react";
+import evoaiBot from "@/assets/evoai-bot.png";
 import evoaiLogo from "@/assets/evoai-logo.png";
 import { Button } from "@/components/ui/button";
 import ReactMarkdown from "react-markdown";
@@ -182,8 +183,8 @@ const AIChatScreen = () => {
           </div>
         ) : messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center animate-fade-in">
-            <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center mb-4 animate-pulse-glow">
-              <Sparkles className="w-8 h-8 text-primary-foreground" />
+            <div className="w-20 h-20 flex items-center justify-center mb-4 animate-pulse-glow">
+              <img src={evoaiBot} alt="EvoAI" className="w-20 h-20 object-contain" />
             </div>
             <h3 className="text-lg font-heading font-bold text-foreground mb-1">Olá, {userProfile.name || "Atleta"}! 👋</h3>
             <p className="text-sm text-muted-foreground mb-6 max-w-xs">
