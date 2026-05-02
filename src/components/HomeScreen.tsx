@@ -263,7 +263,7 @@ const HomeScreen = () => {
         </motion.div>
       </motion.section>
 
-      {!isPremium && (
+      {!(isPremium || isActive) && (
         <motion.button
           variants={fadeUp}
           whileHover={{ y: -2, transition: springSnappy }}
