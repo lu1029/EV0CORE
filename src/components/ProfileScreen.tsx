@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import SettingsScreen from "@/components/settings/SettingsScreen";
+
 import { useProfileStats } from "@/hooks/useProfileStats";
 import { useAchievements } from "@/hooks/useAchievements";
 import AvatarUpload from "@/components/profile/AvatarUpload";
@@ -20,7 +20,7 @@ const ProfileScreen = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editProfile, setEditProfile] = useState(userProfile);
   const [saving, setSaving] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
+  
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"overview" | "posts">("overview");
 
@@ -80,7 +80,7 @@ const ProfileScreen = () => {
     beginner: "Iniciante", intermediate: "Intermediário", advanced: "Avançado",
   };
 
-  if (showSettings) return <SettingsScreen onBack={() => setShowSettings(false)} />;
+  
 
   if (isEditing) {
     return (
@@ -344,18 +344,9 @@ const ProfileScreen = () => {
         </button>
       )}
 
-      {/* Settings row */}
-      <button
-        onClick={() => setShowSettings(true)}
-        className="w-full bg-card rounded-2xl flex items-center justify-between px-5 py-4 mb-8 active:bg-secondary/40 transition-colors"
-      >
-        <span className="text-[15px] text-foreground">Configurações</span>
-        <ChevronRight className="w-4 h-4 text-muted-foreground" />
-      </button>
+      {/* O Logout/Excluir conta ficam na tela dedicada de Configurações (acessada pelo atalho acima) */}
 
-      {/* O resto (Logout/Excluir) agora fica na tela dedicada de Configurações */}
-
-      <p className="text-center text-[11px] text-muted-foreground tabular">EVOCORE 1.0.0</p>
+      <p className="text-center text-[11px] text-muted-foreground tabular mb-4">EVOCORE 1.0.0</p>
     </div>
   );
 };
