@@ -1395,6 +1395,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_user_social_stats: { Args: { target_user_id: string }; Returns: Json }
     }
     Enums: {
       post_visibility: "public" | "followers" | "private"
