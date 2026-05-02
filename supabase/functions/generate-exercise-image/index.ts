@@ -170,9 +170,9 @@ serve(async (req) => {
       });
     }
     const userId = claims.claims.sub as string;
-    const rl = await checkRateLimit(admin, `exercise-img:user:${userId}`, 10, 60);
+    const rl = await checkRateLimit(admin, `exercise-img:user:${userId}`, 20, 60);
     if (!rl.allowed) {
-      return rateLimitResponse(60, 10, { ...corsHeaders, ...securityHeaders });
+      return rateLimitResponse(60, 20, { ...corsHeaders, ...securityHeaders });
     }
 
     const body = await req.json().catch(() => ({}));
