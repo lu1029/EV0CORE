@@ -74,7 +74,7 @@ export default function Configuracoes() {
     {
       title: "App",
       items: [
-        { icon: Bell, label: "Notificações", action: () => toast.info("Configurações de notificações em breve") },
+        { icon: Bell, label: "Notificações", to: "/configuracoes" },
         { to: "/termos", icon: FileText, label: "Termos de Serviço" },
         { icon: Share2, label: "Compartilhar EvoCore", action: () => {
             if (navigator.share) navigator.share({ title: "EvoCore", url: "https://ev0core.com" });
