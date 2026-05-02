@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 export type LocationType = "casa" | "academia";
 export type Goal = "hipertrofia" | "emagrecimento" | "forca" | "condicionamento";
 export type Level = "iniciante" | "intermediario" | "avancado";
+export type WeekDay = "segunda" | "terça" | "quarta" | "quinta" | "sexta" | "sábado" | "domingo";
 
 export interface WorkoutTemplate {
   id: string;
@@ -25,6 +26,7 @@ export interface TemplateExercise {
   reps: string;
   rest_seconds: number;
   notes: string | null;
+  day_of_week: WeekDay | null;
   exercise: {
     id: string;
     name: string;

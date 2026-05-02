@@ -43,10 +43,12 @@ const WorkoutBuilder: React.FC<WorkoutBuilderProps> = ({
   const { isActive: isPremium } = useSubscription();
   const [planName, setPlanName] = useState(initialPlanName || "Meu plano");
   const [workouts, setWorkouts] = useState<Record<string, Exercise[]>>(
-    initialWorkouts || { "Treino A": [] },
+    initialWorkouts || { 
+      "segunda": [], "terça": [], "quarta": [], "quinta": [], "sexta": [], "sábado": [], "domingo": [] 
+    },
   );
   const [activeWorkout, setActiveWorkout] = useState<string>(
-    Object.keys(initialWorkouts || { "Treino A": [] })[0],
+    initialWorkouts ? Object.keys(initialWorkouts)[0] : "segunda"
   );
   const [showLibrary, setShowLibrary] = useState(false);
   const [search, setSearch] = useState("");
@@ -154,11 +156,11 @@ const WorkoutBuilder: React.FC<WorkoutBuilderProps> = ({
   };
 
   const addWorkoutDay = () => {
-    const letters = ["A", "B", "C", "D", "E", "F"];
-    const next = letters[Object.keys(workouts).length] || `${Object.keys(workouts).length + 1}`;
-    const newName = `Treino ${next}`;
-    setWorkouts({ ...workouts, [newName]: [] });
-    setActiveWorkout(newName);
+    const name = window.prompt("Nome do dia (ex: Peito, Cardio, Descanso)");
+    if (name && !workouts[name]) {
+      setWorkouts({ ...workouts, [name]: [] });
+      setActiveWorkout(name);
+    }
   };
 
   const removeWorkoutDay = (name: string) => {
@@ -178,27 +180,34 @@ const WorkoutBuilder: React.FC<WorkoutBuilderProps> = ({
     setSaving(true);
     try {
       const planData = { planName, description: "Plano personalizado", workouts } as any;
-      // Upsert: replace user's plan of this type
-      const { data: existing } = await supabase
+      
+      // Save plan to user_workout_plans (Active Plan)
+      const { data: planRes, error: planErr } = await supabase
         .from("generated_plans")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("type", mode)
-        .order("updated_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .upsert({
+          user_id: user.id,
+          type: mode,
+          plan_name: planName,
+          description: "Plano personalizado",
+          plan_data: planData,
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
 
-      if (existing?.id) {
-        await supabase.from("generated_plans").update({
-          plan_name: planName, description: "Plano personalizado", plan_data: planData,
-        }).eq("id", existing.id);
-      } else {
-        await supabase.from("generated_plans").insert({
-          user_id: user.id, type: mode, plan_name: planName,
-          description: "Plano personalizado", plan_data: planData,
-        } as any);
-      }
-      toast.success("Plano salvo!");
+      if (planErr) throw planErr;
+
+      // Also set as active template
+      await supabase
+        .from("user_workout_plans")
+        .upsert({
+          user_id: user.id,
+          is_custom: true,
+          custom_data: planData,
+          updated_at: new Date().toISOString()
+        });
+
+      toast.success("Plano salvo e ativado!");
       onSaved(planName, workouts);
       onClose();
     } catch (err) {
@@ -237,26 +246,42 @@ const WorkoutBuilder: React.FC<WorkoutBuilderProps> = ({
 
       {/* Workout day tabs */}
       <motion.div variants={fadeUp} className="px-5 mt-5">
-        <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
-          {Object.keys(workouts).map((name) => (
+        <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 no-scrollbar">
+          {["segunda", "terça", "quarta", "quinta", "sexta", "sábado", "domingo"].map((name) => (
             <button
               key={name}
               onClick={() => setActiveWorkout(name)}
-              className={`shrink-0 px-4 py-2 rounded-full text-[14px] font-semibold whitespace-nowrap transition-colors ${
-                activeWorkout === name ? "bg-primary text-primary-foreground" : "bg-white/[0.06] text-muted-foreground"
+              className={`shrink-0 px-4 py-2.5 rounded-2xl text-[14px] font-bold whitespace-nowrap transition-all border ${
+                activeWorkout === name 
+                  ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20" 
+                  : "bg-card border-border/40 text-muted-foreground"
+              }`}
+            >
+              {name.charAt(0).toUpperCase() + name.slice(1)}
+              {workouts[name]?.length > 0 && (
+                <span className="ml-1.5 w-1.5 h-1.5 rounded-full bg-current opacity-60" />
+              )}
+            </button>
+          ))}
+          {Object.keys(workouts).filter(k => !["segunda", "terça", "quarta", "quinta", "sexta", "sábado", "domingo"].includes(k)).map((name) => (
+             <button
+              key={name}
+              onClick={() => setActiveWorkout(name)}
+              className={`shrink-0 px-4 py-2.5 rounded-2xl text-[14px] font-bold whitespace-nowrap transition-all border ${
+                activeWorkout === name 
+                  ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20" 
+                  : "bg-card border-border/40 text-muted-foreground"
               }`}
             >
               {name}
-              {activeWorkout === name && Object.keys(workouts).length > 1 && (
-                <X className="w-3 h-3 inline ml-2" onClick={(e) => { e.stopPropagation(); removeWorkoutDay(name); }} />
-              )}
+              <X className="w-3.5 h-3.5 inline ml-2 opacity-60" onClick={(e) => { e.stopPropagation(); removeWorkoutDay(name); }} />
             </button>
           ))}
           <button
             onClick={addWorkoutDay}
-            className="shrink-0 w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center text-muted-foreground"
+            className="shrink-0 w-11 h-11 rounded-2xl bg-card border border-border/40 flex items-center justify-center text-muted-foreground active:scale-95"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-5 h-5" />
           </button>
         </div>
       </motion.div>

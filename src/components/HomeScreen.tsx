@@ -99,6 +99,8 @@ const HomeScreen = () => {
         <motion.button
           whileTap={{ scale: 0.9 }}
           onClick={() => setShowNotifications(true)}
+          aria-label={`Notificações${unreadCount > 0 ? `, ${unreadCount} não lidas` : ""}`}
+          title="Notificações"
           className="relative w-10 h-10 rounded-full flex items-center justify-center text-foreground hover:bg-card transition-colors"
         >
           <Bell className="w-5 h-5" />
@@ -111,7 +113,8 @@ const HomeScreen = () => {
         <motion.button
           whileTap={{ scale: 0.9 }}
           onClick={() => navigate("/buscar")}
-          aria-label="Buscar"
+          aria-label="Buscar usuários ou treinos"
+          title="Buscar"
           className="w-10 h-10 rounded-full flex items-center justify-center text-foreground hover:bg-card transition-colors"
         >
           <Search className="w-5 h-5" />

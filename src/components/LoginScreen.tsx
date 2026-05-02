@@ -269,7 +269,11 @@ const LoginScreen = () => {
           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input type={showPassword ? "text" : "password"} placeholder="Senha" value={password} onChange={(e) => setPassword(e.target.value)}
             className="pl-10 pr-10 h-12 bg-secondary/50 border-border/30 text-foreground placeholder:text-muted-foreground rounded-xl backdrop-blur-sm" />
-          <button type="button" onClick={() => setShowPassword(!showPassword)}
+          <button 
+            type="button" 
+            onClick={() => setShowPassword(!showPassword)}
+            aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+            title={showPassword ? "Ocultar senha" : "Mostrar senha"}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground active:scale-90 transition-transform">
             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
@@ -376,7 +380,10 @@ const LoginScreen = () => {
           >
             <img
               src={evocoreLogo}
-              alt="EvoCore"
+              alt="EvoCore - Seu ecossistema fitness"
+              width={112}
+              height={112}
+              {...({ fetchPriority: "high" } as any)}
               className="h-28 w-auto object-contain mx-auto mb-4 drop-shadow-[0_0_30px_hsl(239,84%,67%,0.3)]"
             />
           </div>
