@@ -344,18 +344,9 @@ const ProfileScreen = () => {
         </button>
       )}
 
-      {/* Settings row */}
-      <button
-        onClick={() => setShowSettings(true)}
-        className="w-full bg-card rounded-2xl flex items-center justify-between px-5 py-4 mb-8 active:bg-secondary/40 transition-colors"
-      >
-        <span className="text-[15px] text-foreground">Configurações</span>
-        <ChevronRight className="w-4 h-4 text-muted-foreground" />
-      </button>
+      {/* O Logout/Excluir conta ficam na tela dedicada de Configurações (acessada pelo atalho acima) */}
 
-      {/* O resto (Logout/Excluir) agora fica na tela dedicada de Configurações */}
-
-      <p className="text-center text-[11px] text-muted-foreground tabular">EVOCORE 1.0.0</p>
+      <p className="text-center text-[11px] text-muted-foreground tabular mb-4">EVOCORE 1.0.0</p>
     </div>
   );
 };
