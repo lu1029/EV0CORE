@@ -25,6 +25,40 @@ export default function UserProfile() {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const { profile, stats, posts, loading, toggleFollow } = usePublicProfile(userId);
+  const { blockUser, unblockUser, checkBlockStatus, reportContent, loading: moderationLoading } = useModeration();
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+
+  useEffect(() => {
+    if (userId) {
+      checkBlockStatus(userId).then(status => setIsBlocked(status.blocked));
+    }
+  }, [userId, checkBlockStatus]);
+
+  const handleBlock = async () => {
+    if (!userId) return;
+    if (isBlocked) {
+      const success = await unblockUser(userId);
+      if (success) setIsBlocked(false);
+    } else {
+      const success = await blockUser(userId);
+      if (success) setIsBlocked(true);
+    }
+  };
+
+  const handleReport = async () => {
+    if (!userId || !reportReason.trim()) return;
+    const success = await reportContent({
+      contentType: 'profile',
+      contentId: userId,
+      reason: reportReason,
+    });
+    if (success) {
+      setReportDialogOpen(false);
+      setReportReason("");
+    }
+  };
 
   if (loading) {
     return (
