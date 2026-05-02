@@ -6,6 +6,7 @@ import { getStripeEnvironment } from "@/lib/stripe";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Check, ChevronLeft, Sparkles, Zap, X, CreditCard, QrCode, Calendar, Info, RefreshCw, AlertCircle, Clock } from "lucide-react";
+import { TrialCountdown } from "./premium/TrialCountdown";
 import { Button } from "@/components/ui/button";
 import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
@@ -244,9 +245,8 @@ const PremiumScreen = () => {
                 </p>
               </div>
               {isTrial && (
-                <div className="flex items-center gap-2 text-amber-500">
-                  <Info className="w-4 h-4" />
-                  <p className="text-[12px] font-medium">Seu teste termina em breve. Aproveite!</p>
+                <div className="mt-2">
+                  <TrialCountdown expiryDate={expiryDate} />
                 </div>
               )}
             </div>
