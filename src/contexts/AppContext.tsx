@@ -105,7 +105,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             goal: profile.goal || "",
             level: profile.level || "",
             preference: profile.preference || "",
-            days_per_week: profile.days_per_week ?? 4,
+            daysPerWeek: profile.days_per_week ?? 4,
           });
           
           // Only trust DB premium status if it is true. 
