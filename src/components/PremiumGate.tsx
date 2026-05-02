@@ -13,10 +13,14 @@ interface PremiumGateProps {
 }
 
 const PremiumGate = ({ children, mode = "inline", feature = "este recurso" }: PremiumGateProps) => {
-  const { isPremium, setCurrentTab } = useApp();
-  const { isActive } = useSubscription();
+  const { isPremium: profileIsPremium, setCurrentTab } = useApp();
+  const { isActive, isLoading } = useSubscription();
 
-  if (isPremium || isActive) {
+  const isPremium = profileIsPremium || isActive;
+
+  if (isLoading) return null;
+
+  if (isPremium) {
     return <>{children}</>;
   }
 
