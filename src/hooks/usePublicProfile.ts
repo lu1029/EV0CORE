@@ -29,22 +29,21 @@ export function usePublicProfile(userId: string | undefined) {
     if (!userId) return;
     setLoading(true);
     try {
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("user_id, name, avatar_url")
-        .eq("user_id", userId)
-        .maybeSingle();
+      const { data: rpcData, error: profileError } = await supabase
+        .rpc("get_public_profile", { _user_id: userId });
+
+      const profileData = Array.isArray(rpcData) ? rpcData[0] : rpcData;
 
       if (profileError || !profileData) {
         setProfile(null);
         setLoading(false);
         return;
       }
-      
-      setProfile({ 
-        user_id: profileData.user_id, 
-        name: profileData.name || "Atleta", 
-        avatar_url: profileData.avatar_url 
+
+      setProfile({
+        user_id: profileData.user_id,
+        name: profileData.name || "Atleta",
+        avatar_url: profileData.avatar_url,
       });
 
       const [{ count: followers }, { count: following }, { count: postsCount }, postsRes, followCheck] = await Promise.all([
