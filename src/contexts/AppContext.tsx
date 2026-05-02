@@ -118,6 +118,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         }
       } catch (err) {
         console.error("Error loading profile:", err);
+      } finally {
+        if (mounted) setLoading(false);
       }
     };
 
