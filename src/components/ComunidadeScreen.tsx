@@ -4,6 +4,7 @@ import { useFeed } from "@/hooks/useFeed";
 import { useRanking, type RankingMetric, type RankingPeriod } from "@/hooks/useRanking";
 import FeedPostCard from "@/components/social/FeedPostCard";
 import FeedComposer from "@/components/social/FeedComposer";
+import Stories from "@/components/social/Stories";
 
 const TABS = [
   { value: "feed", label: "Feed" },
