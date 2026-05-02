@@ -192,6 +192,7 @@ const PremiumScreen = () => {
     const isTrial = subscription?.status === "trialing";
     const isCanceled = subscription?.status === "canceled" || subscription?.cancel_at_period_end;
     const expiryDate = subscription?.current_period_end ? new Date(subscription.current_period_end) : null;
+    const startDate = subscription?.created_at ? new Date(subscription.created_at) : null;
     const planName = subscription?.price_id === "premium_annual_v2" ? "Anual" : 
                     subscription?.price_id === "premium_monthly_v2" ? "Mensal" : "Semanal";
 
@@ -215,12 +216,12 @@ const PremiumScreen = () => {
           <p className="text-[15px] text-muted-foreground mt-1">Sua conta está ativa e turbinada.</p>
         </motion.div>
 
-        <motion.div variants={fadeUp} className="space-y-4">
+        <motion.div variants={fadeUp} className="space-y-6">
           {/* Plan Status Card */}
-          <div className="bg-card rounded-2xl border border-border/40 overflow-hidden">
+          <div className="bg-card rounded-2xl border border-border/40 overflow-hidden shadow-sm">
             <div className="p-5 border-b border-border/40">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Status do Plano</span>
+                <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Assinatura Atual</span>
                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-tight ${
                   isTrial ? "bg-amber-500/10 text-amber-500" : 
                   isCanceled ? "bg-red-500/10 text-red-500" : "bg-emerald-500/10 text-emerald-500"
@@ -239,84 +240,115 @@ const PremiumScreen = () => {
               </div>
             </div>
 
-            <div className="p-4 bg-secondary/30 space-y-3">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-muted-foreground" />
-                <p className="text-[13px] text-foreground">
-                  {isCanceled ? "Acesso até:" : "Próxima cobrança:"} <span className="font-bold">{expiryDate?.toLocaleDateString("pt-BR")}</span>
-                </p>
+            <div className="p-5 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                    <Clock className="w-3 h-3" /> Início
+                  </p>
+                  <p className="text-[14px] font-bold text-foreground">
+                    {startDate ? startDate.toLocaleDateString("pt-BR") : "N/A"}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                    <Calendar className="w-3 h-3" /> {isCanceled ? "Término" : "Próxima Cobrança"}
+                  </p>
+                  <p className="text-[14px] font-bold text-foreground">
+                    {expiryDate ? expiryDate.toLocaleDateString("pt-BR") : "N/A"}
+                  </p>
+                </div>
               </div>
+
               {isTrial && (
-                <div className="mt-2">
+                <div className="pt-2 border-t border-border/40">
                   <TrialCountdown expiryDate={expiryDate} />
                 </div>
               )}
             </div>
           </div>
 
-          {/* Manage Actions */}
-          <div className="grid grid-cols-1 gap-3 mt-4">
+          {/* Manage Payment Section */}
+          <div className="space-y-3">
+            <h3 className="text-[13px] font-bold text-muted-foreground uppercase tracking-widest px-1">Pagamento e Gestão</h3>
+            
             <Button
               onClick={handleManageSubscription}
               disabled={loadingPortal}
-              className="w-full h-12 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-[15px] font-bold flex items-center justify-center gap-2"
+              className="w-full h-14 rounded-2xl bg-card border border-border/60 text-foreground hover:bg-secondary/50 shadow-sm text-[15px] font-bold flex items-center justify-between px-5 group"
             >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <CreditCard className="w-5 h-5 text-primary" />
+                </div>
+                <div className="text-left">
+                  <p className="leading-none">{isCanceled ? "Ver faturas" : "Gerenciar Assinatura"}</p>
+                  <p className="text-[11px] font-normal text-muted-foreground mt-1">Alterar cartão ou cancelar</p>
+                </div>
+              </div>
               {loadingPortal ? (
-                <RefreshCw className="w-4 h-4 animate-spin" />
+                <RefreshCw className="w-4 h-4 animate-spin text-muted-foreground" />
               ) : (
-                <CreditCard className="w-4 h-4" />
+                <div className="w-6 h-6 rounded-full bg-secondary flex items-center justify-center">
+                  <ChevronLeft className="w-4 h-4 rotate-180" />
+                </div>
               )}
-              {loadingPortal ? "Carregando…" : isCanceled ? "Ver faturas" : "Gerenciar ou Cancelar"}
             </Button>
-            
+
             {isTrial && !isCanceled && (
               <Button
-                variant="outline"
+                variant="ghost"
                 onClick={handleManageSubscription}
                 disabled={loadingPortal}
-                className="w-full h-12 rounded-xl border-amber-500/30 bg-amber-500/5 text-amber-500 hover:bg-amber-500/10 hover:text-amber-500 text-[14px] font-bold flex items-center justify-center gap-2"
+                className="w-full h-12 rounded-xl text-red-500 hover:text-red-600 hover:bg-red-500/5 text-[14px] font-semibold"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4 mr-2" />
                 Cancelar Teste Grátis
               </Button>
             )}
 
             {!isCanceled && (
-              <p className="text-[11px] text-muted-foreground text-center px-4">
-                Você será redirecionado para o portal de pagamentos seguro da Stripe para {isTrial ? "cancelar o teste ou " : ""}alterar seu plano.
+              <p className="text-[11px] text-muted-foreground text-center px-4 leading-relaxed">
+                Você será redirecionado para o portal seguro da Stripe para {isTrial ? "interromper o teste ou " : ""}ajustar sua forma de pagamento.
               </p>
             )}
 
             {isCanceled && (
-              <div className="space-y-3">
-                <Button
-                  onClick={() => setShowCheckout(false)}
-                  className="w-full h-12 rounded-xl gradient-primary text-primary-foreground text-[15px] font-bold"
-                >
-                  Reativar Assinatura
-                </Button>
-                <p className="text-[11px] text-red-500 font-medium text-center px-4">
-                  Sua assinatura foi cancelada e não será renovada após {expiryDate?.toLocaleDateString("pt-BR")}.
-                </p>
+              <div className="bg-red-500/5 border border-red-500/20 rounded-2xl p-4 mt-2">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-[13px] font-bold text-red-500">Assinatura Cancelada</p>
+                    <p className="text-[12px] text-red-500/80 leading-snug mt-1">
+                      Seu acesso Pro será encerrado em {expiryDate?.toLocaleDateString("pt-BR")}. Você pode reativar a qualquer momento.
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
+          </div>
 
+          <div className="pt-4">
             <button
               onClick={() => setCurrentTab("home")}
-              className="w-full h-12 rounded-xl bg-secondary/50 text-foreground text-[14px] font-medium active:opacity-60 transition-colors mt-2"
+              className="w-full h-13 rounded-2xl bg-secondary/80 text-foreground text-[15px] font-bold active:scale-95 transition-all shadow-sm"
             >
-              Voltar para o Início
+              Voltar ao Início
             </button>
           </div>
         </motion.div>
 
-        {/* Support Link */}
-        <motion.div variants={fadeUp} className="mt-8 p-4 rounded-xl bg-secondary/20 border border-border/30 flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-muted-foreground mt-0.5" />
+        {/* Support Section */}
+        <motion.div variants={fadeUp} className="mt-10 p-5 rounded-2xl bg-secondary/30 border border-border/40 flex items-start gap-4 shadow-inner">
+          <div className="w-10 h-10 rounded-full bg-card flex items-center justify-center border border-border/40 shadow-sm shrink-0">
+            <Info className="w-5 h-5 text-primary" />
+          </div>
           <div className="flex-1">
-            <p className="text-[13px] font-bold text-foreground">Precisa de ajuda?</p>
-            <p className="text-[12px] text-muted-foreground">Problemas com sua assinatura? Entre em contato com nosso suporte.</p>
-            <button className="text-[12px] text-primary font-bold mt-1 hover:underline">Falar com suporte</button>
+            <p className="text-[14px] font-bold text-foreground leading-tight">Suporte Premium</p>
+            <p className="text-[12px] text-muted-foreground mt-1 leading-relaxed">Prioridade total para assinantes Pro. Te ajudamos com qualquer dúvida.</p>
+            <button className="text-[13px] text-primary font-bold mt-2 hover:underline inline-flex items-center gap-1">
+              Abrir chamado <ChevronLeft className="w-3 h-3 rotate-180" />
+            </button>
           </div>
         </motion.div>
       </motion.div>
