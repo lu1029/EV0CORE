@@ -111,7 +111,44 @@ export default function UserProfile() {
             </DropdownMenuContent>
           </DropdownMenu>
         )}
-      </div>
+      {/* Report Dialog */}
+      <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Denunciar Perfil</DialogTitle>
+            <DialogDescription>
+              Explique brevemente o motivo da denúncia. Nossa equipe irá analisar em até 24 horas.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <Textarea
+              placeholder="Ex: Conteúdo inapropriado, spam, assédio..."
+              value={reportReason}
+              onChange={(e) => setReportReason(e.target.value)}
+              className="min-h-[100px]"
+            />
+          </div>
+          <DialogFooter className="sm:justify-end gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setReportDialogOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleReport}
+              disabled={!reportReason.trim() || moderationLoading}
+            >
+              {moderationLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Flag className="w-4 h-4 mr-2" />}
+              Enviar Denúncia
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
 
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-5 mb-5">
