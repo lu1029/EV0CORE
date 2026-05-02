@@ -1,11 +1,16 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useApp } from "@/contexts/AppContext";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 export function useSubscription() {
   const { user } = useApp();
   const queryClient = useQueryClient();
+  const channelIdRef = useRef(
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : Math.random().toString(36).slice(2)
+  );
   const clientToken = import.meta.env.VITE_PAYMENTS_CLIENT_TOKEN;
   const environment = clientToken?.startsWith('pk_test_') ? 'sandbox' : 'live';
 
@@ -31,25 +36,34 @@ export function useSubscription() {
   useEffect(() => {
     if (!user) return;
 
-    const channel = supabase
-      .channel('subscription-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'subscriptions',
-          filter: `user_id=eq.${user.id}`,
-        },
-        () => {
-          refetch();
-          queryClient.invalidateQueries({ queryKey: ["profile", user.id] });
-        }
-      )
-      .subscribe();
+    const channelName = `subscription-changes-${user.id}-${channelIdRef.current}`;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    try {
+      channel = supabase
+        .channel(channelName)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'subscriptions',
+            filter: `user_id=eq.${user.id}`,
+          },
+          () => {
+            refetch();
+            queryClient.invalidateQueries({ queryKey: ["profile", user.id] });
+          }
+        )
+        .subscribe();
+    } catch (error) {
+      console.error("Error subscribing to subscription changes:", error);
+    }
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     };
   }, [user, refetch, queryClient]);
 
