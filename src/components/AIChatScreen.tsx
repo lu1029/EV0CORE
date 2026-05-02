@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useApp } from "@/contexts/AppContext";
-import { Send, ArrowLeft, Sparkles, Loader2 } from "lucide-react";
+import { useSubscription } from "@/hooks/useSubscription";
+import { Send, ArrowLeft, Sparkles, Loader2, Lock } from "lucide-react";
 import evoaiLogo from "@/assets/evoai-logo.png";
 import { Button } from "@/components/ui/button";
 import ReactMarkdown from "react-markdown";
@@ -18,6 +19,7 @@ const quickPrompts = [
 
 const AIChatScreen = () => {
   const { userProfile, setCurrentTab } = useApp();
+  const { isActive: isPremium, isLoading: isSubscriptionLoading } = useSubscription();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -30,6 +32,21 @@ const AIChatScreen = () => {
 
   const sendMessage = async (text: string) => {
     if (!text.trim() || isLoading) return;
+    
+    // Premium check
+    if (!isPremium) {
+      setMessages((prev) => [
+        ...prev,
+        { role: "user", content: text.trim() },
+        { 
+          role: "assistant", 
+          content: "O acesso ao EvoAI é exclusivo para assinantes Premium. Assine agora para desbloquear seu personal trainer 24/7! 🚀" 
+        },
+      ]);
+      setInput("");
+      return;
+    }
+
     const userMsg: Msg = { role: "user", content: text.trim() };
     const allMessages = [...messages, userMsg];
     setMessages(allMessages);
@@ -119,6 +136,7 @@ const AIChatScreen = () => {
     }
   };
 
+
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] max-w-lg mx-auto relative z-10">
       {/* Header */}
@@ -141,7 +159,28 @@ const AIChatScreen = () => {
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-4 hide-scrollbar">
-        {messages.length === 0 && (
+        {isSubscriptionLoading ? (
+          <div className="flex items-center justify-center h-full">
+            <Loader2 className="w-8 h-8 animate-spin text-primary/50" />
+          </div>
+        ) : !isPremium ? (
+          <div className="flex flex-col items-center justify-center h-full text-center animate-fade-in px-6">
+            <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
+              <Lock className="w-8 h-8 text-primary" />
+            </div>
+            <h3 className="text-xl font-heading font-bold text-foreground mb-2">EvoAI é Premium</h3>
+            <p className="text-sm text-muted-foreground mb-8">
+              Tenha acesso ilimitado ao seu personal trainer inteligente, planos personalizados e suporte 24/7.
+            </p>
+            <Button 
+              variant="hero" 
+              className="w-full max-w-[200px] rounded-xl"
+              onClick={() => setCurrentTab("premium")}
+            >
+              Assinar Premium
+            </Button>
+          </div>
+        ) : messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center animate-fade-in">
             <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center mb-4 animate-pulse-glow">
               <Sparkles className="w-8 h-8 text-primary-foreground" />

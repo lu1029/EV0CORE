@@ -1456,6 +1456,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_premium_status: {
+        Args: { target_user_id: string }
+        Returns: boolean
+      }
       get_conversations: {
         Args: { limit_val?: number; offset_val?: number }
         Returns: {
