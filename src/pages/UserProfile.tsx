@@ -81,9 +81,37 @@ export default function UserProfile() {
 
   return (
     <div className="px-4 pt-4 pb-32 max-w-lg mx-auto">
-      <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-primary mb-4 active:opacity-60">
-        <ChevronLeft className="w-4 h-4" /> Voltar
-      </button>
+      <div className="flex items-center justify-between mb-4">
+        <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-primary active:opacity-60">
+          <ChevronLeft className="w-4 h-4" /> Voltar
+        </button>
+
+        {!stats.is_self && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="p-2 rounded-full active:bg-secondary">
+                <MoreVertical className="w-5 h-5 text-muted-foreground" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem 
+                onClick={() => setReportDialogOpen(true)}
+                className="text-amber-500 focus:text-amber-500"
+              >
+                <Flag className="w-4 h-4 mr-2" />
+                Denunciar
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={handleBlock}
+                className={isBlocked ? "text-primary" : "text-destructive focus:text-destructive"}
+              >
+                <UserX className="w-4 h-4 mr-2" />
+                {isBlocked ? "Desbloquear" : "Bloquear"}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </div>
 
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-5 mb-5">
