@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useApp } from "@/contexts/AppContext";
-import { ChevronRight, LogOut, X, Save, Trash2 } from "lucide-react";
+import { ChevronRight, LogOut, X, Save, Trash2, Settings } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -11,6 +12,7 @@ import AvatarUpload from "@/components/profile/AvatarUpload";
 
 const ProfileScreen = () => {
   const { userProfile, setUserProfile, isPremium, setCurrentTab, user } = useApp();
+  const navigate = useNavigate();
   const { stats, loading: statsLoading } = useProfileStats();
   const { unlockedCount, totalCount } = useAchievements();
   const name = userProfile.name || "Atleta";
@@ -20,6 +22,7 @@ const ProfileScreen = () => {
   const [saving, setSaving] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"overview" | "posts">("overview");
 
   useEffect(() => {
     if (!user) return;
@@ -219,19 +222,78 @@ const ProfileScreen = () => {
       </header>
 
       {/* Stats grid */}
-      <section className="grid grid-cols-4 gap-3 mb-10 animate-fade-in">
+      <section className="grid grid-cols-4 gap-2 mb-8 animate-fade-in px-1">
         {[
           { label: "Treinos", value: stats.totalWorkouts.toString() },
           { label: "Streak", value: `${stats.streak}` },
-          { label: "Volume", value: stats.totalVolume > 1000 ? `${(stats.totalVolume / 1000).toFixed(1)}t` : `${stats.totalVolume}` },
-          { label: "km", value: `${stats.totalDistanceKm}` },
+          { label: "Seguidores", value: "0" }, // Mock por enquanto até hook de seguidores
+          { label: "Seguindo", value: "0" },
         ].map((c) => (
-          <div key={c.label} className="bg-card rounded-2xl py-4 text-center">
-            <p className="text-[20px] font-bold text-foreground tabular tracking-tight">{statsLoading ? "—" : c.value}</p>
-            <p className="text-[11px] text-muted-foreground mt-0.5">{c.label}</p>
+          <div key={c.label} className="bg-card/40 border border-border/20 rounded-2xl py-3.5 text-center">
+            <p className="text-[18px] font-bold text-foreground tabular tracking-tight">{statsLoading ? "—" : c.value}</p>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5 font-medium">{c.label}</p>
           </div>
         ))}
       </section>
+
+      {/* Tabs */}
+      <div className="flex bg-secondary/30 rounded-2xl p-1 mb-8">
+        <button
+          onClick={() => setActiveTab("overview")}
+          className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
+            activeTab === "overview" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"
+          }`}
+        >
+          Visão geral
+        </button>
+        <button
+          onClick={() => setActiveTab("posts")}
+          className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
+            activeTab === "posts" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"
+          }`}
+        >
+          Publicações
+        </button>
+      </div>
+
+      {activeTab === "overview" ? (
+        <div className="space-y-8 animate-fade-in">
+          {/* Info list */}
+          <section>
+            <h2 className="text-[12px] uppercase tracking-wider text-muted-foreground px-1 mb-3 font-semibold">Seu Perfil</h2>
+            <div className="glass-card rounded-[32px] divide-y divide-border/20 overflow-hidden">
+...
+            </div>
+          </section>
+
+          {/* Settings row shortcut */}
+          <button
+            onClick={() => navigate("/configuracoes")}
+            className="w-full h-14 glass-card rounded-2xl px-5 flex items-center justify-between active:scale-[0.98] transition-all"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-secondary/50 flex items-center justify-center text-muted-foreground">
+                <Settings className="w-5 h-5" />
+              </div>
+              <span className="text-[16px] font-medium text-foreground">Configurações</span>
+            </div>
+            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          </button>
+        </div>
+      ) : (
+        <div className="animate-fade-in">
+          {/* Posts grid mock */}
+          <div className="text-center py-16 bg-secondary/20 rounded-3xl border border-dashed border-border/60">
+            <p className="text-sm text-muted-foreground">Você ainda não tem publicações.</p>
+            <button 
+              onClick={() => setCurrentTab("comunidade")}
+              className="mt-4 text-sm font-bold text-primary underline underline-offset-4"
+            >
+              Criar minha primeira publicação
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Info list */}
       <section className="mb-8">
@@ -291,28 +353,7 @@ const ProfileScreen = () => {
         <ChevronRight className="w-4 h-4 text-muted-foreground" />
       </button>
 
-      {/* Destructive */}
-      <div className="bg-card rounded-2xl divide-y divide-border mb-6">
-        <button
-          onClick={async () => {
-            await supabase.auth.signOut();
-            localStorage.clear();
-            sessionStorage.clear();
-          }}
-          className="w-full flex items-center justify-center gap-2 px-5 py-4 text-[15px] text-destructive active:opacity-60"
-        >
-          <LogOut className="w-4 h-4" /> Sair da conta
-        </button>
-        <button
-          onClick={() => {
-            if (!confirm("Tem certeza que deseja excluir sua conta? Esta ação é irreversível.")) return;
-            toast.info("Solicitação registrada. Seus dados serão removidos em até 30 dias.");
-          }}
-          className="w-full flex items-center justify-center gap-2 px-5 py-4 text-[15px] text-destructive active:opacity-60"
-        >
-          <Trash2 className="w-4 h-4" /> Excluir conta
-        </button>
-      </div>
+      {/* O resto (Logout/Excluir) agora fica na tela dedicada de Configurações */}
 
       <p className="text-center text-[11px] text-muted-foreground tabular">EVOCORE 1.0.0</p>
     </div>
