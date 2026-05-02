@@ -113,7 +113,10 @@ const NotificationItem = ({
             {n.title}
           </h3>
           <span className="text-[10px] text-muted-foreground whitespace-nowrap ml-2">
-            {format(new Date(n.created_at), "HH:mm", { locale: ptBR })}
+            {n.created_at ? (() => {
+              try { return format(new Date(n.created_at), "HH:mm", { locale: ptBR }); }
+              catch { return ""; }
+            })() : ""}
           </span>
         </div>
         <p className={`text-sm leading-relaxed mb-3 ${n.completed ? 'text-muted-foreground/60' : 'text-muted-foreground'}`}>
