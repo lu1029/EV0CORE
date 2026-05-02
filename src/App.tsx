@@ -45,6 +45,9 @@ const WorkoutSession = lazy(() => import("./pages/WorkoutSession"));
 const WorkoutSummary = lazy(() => import("./pages/WorkoutSummary"));
 const WorkoutBuilderPage = lazy(() => import("./pages/WorkoutBuilder"));
 const UserProfile = lazy(() => import("./pages/UserProfile"));
+const Messages = lazy(() => import("./pages/Messages"));
+const Chat = lazy(() => import("./pages/Chat"));
+const Clips = lazy(() => import("./pages/Clips"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const CheckoutReturn = lazy(() => import("./pages/CheckoutReturn"));
 
@@ -103,6 +106,9 @@ const App = () => (
                     <Route path="/workout-summary/:id" element={<WorkoutSummary />} />
                     <Route path="/workout-builder" element={<WorkoutBuilderPage />} />
                     <Route path="/u/:userId" element={<UserProfile />} />
+                    <Route path="/mensagens" element={<Messages />} />
+                    <Route path="/chat/:userId" element={<Chat />} />
+                    <Route path="/clipes" element={<Clips />} />
                   </Route>
 
                   <Route path="*" element={<NotFound />} />

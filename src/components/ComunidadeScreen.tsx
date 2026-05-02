@@ -4,6 +4,7 @@ import { useFeed } from "@/hooks/useFeed";
 import { useRanking, type RankingMetric, type RankingPeriod } from "@/hooks/useRanking";
 import FeedPostCard from "@/components/social/FeedPostCard";
 import FeedComposer from "@/components/social/FeedComposer";
+import Stories from "@/components/social/Stories";
 
 const TABS = [
   { value: "feed", label: "Feed" },
@@ -58,15 +59,22 @@ export default function ComunidadeScreen() {
       </div>
 
       {tab === "feed" ? (
-        loading ? (
-          <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
-        ) : posts.length === 0 ? (
-          <EmptyFeed onCreate={() => setComposer(true)} />
-        ) : (
-          <div className="space-y-4">
-            {posts.map(p => <FeedPostCard key={p.id} post={p} onLike={toggleLike} onSave={toggleSave} />)}
-          </div>
-        )
+        <div className="space-y-6">
+          <Stories />
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            </div>
+          ) : posts.length === 0 ? (
+            <EmptyFeed onCreate={() => setComposer(true)} />
+          ) : (
+            <div className="space-y-4">
+              {posts.map((p) => (
+                <FeedPostCard key={p.id} post={p} onLike={toggleLike} onSave={toggleSave} />
+              ))}
+            </div>
+          )}
+        </div>
       ) : (
         <div className="space-y-4">
           {/* Filters */}

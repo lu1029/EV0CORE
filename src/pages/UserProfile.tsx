@@ -59,16 +59,25 @@ export default function UserProfile() {
       <h1 className="text-xl font-heading font-bold mb-3">{profile.name}</h1>
 
       {!stats.is_self && (
-        <button
-          onClick={toggleFollow}
-          className={`w-full h-11 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 mb-6 transition active:scale-95 ${
-            stats.is_following
-              ? "bg-secondary border border-border text-foreground"
-              : "gradient-primary text-primary-foreground"
-          }`}
-        >
-          {stats.is_following ? <><UserCheck className="w-4 h-4" /> Seguindo</> : <><UserPlus className="w-4 h-4" /> Seguir</>}
-        </button>
+        <div className="flex gap-2 mb-6">
+          <button
+            onClick={toggleFollow}
+            className={`flex-1 h-11 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition active:scale-95 ${
+              stats.is_following
+                ? "bg-secondary border border-border text-foreground"
+                : "gradient-primary text-primary-foreground shadow-lg shadow-primary/20"
+            }`}
+          >
+            {stats.is_following ? <><UserCheck className="w-4 h-4" /> Seguindo</> : <><UserPlus className="w-4 h-4" /> Seguir</>}
+          </button>
+          
+          <button
+            onClick={() => navigate(`/chat/${userId}`)}
+            className="flex-1 h-11 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 bg-secondary border border-border text-foreground transition active:scale-95"
+          >
+            Mensagem
+          </button>
+        </div>
       )}
 
       {/* Posts grid */}
