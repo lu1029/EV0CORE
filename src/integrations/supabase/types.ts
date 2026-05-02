@@ -41,6 +41,42 @@ export type Database = {
         }
         Relationships: []
       }
+      clips: {
+        Row: {
+          caption: string | null
+          comments_count: number | null
+          created_at: string | null
+          id: string
+          likes_count: number | null
+          thumbnail_url: string | null
+          user_id: string
+          video_url: string
+          views_count: number | null
+        }
+        Insert: {
+          caption?: string | null
+          comments_count?: number | null
+          created_at?: string | null
+          id?: string
+          likes_count?: number | null
+          thumbnail_url?: string | null
+          user_id: string
+          video_url: string
+          views_count?: number | null
+        }
+        Update: {
+          caption?: string | null
+          comments_count?: number | null
+          created_at?: string | null
+          id?: string
+          likes_count?: number | null
+          thumbnail_url?: string | null
+          user_id?: string
+          video_url?: string
+          views_count?: number | null
+        }
+        Relationships: []
+      }
       club_members: {
         Row: {
           club_id: string
@@ -485,6 +521,33 @@ export type Database = {
           meal_type?: string
           name?: string
           protein_g?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      moments: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          media_type: string | null
+          media_url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          media_type?: string | null
+          media_url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          media_type?: string | null
+          media_url?: string
           user_id?: string
         }
         Relationships: []
@@ -945,6 +1008,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_saved_items: {
+        Row: {
+          created_at: string | null
+          id: string
+          item_id: string
+          item_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          item_id: string
+          item_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          item_id?: string
+          item_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_set_logs: {
         Row: {
           completed: boolean
@@ -1034,6 +1121,44 @@ export type Database = {
           },
         ]
       }
+      user_workout_plans: {
+        Row: {
+          created_at: string | null
+          custom_data: Json | null
+          id: string
+          is_custom: boolean | null
+          template_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          custom_data?: Json | null
+          id?: string
+          is_custom?: boolean | null
+          template_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          custom_data?: Json | null
+          id?: string
+          is_custom?: boolean | null
+          template_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_workout_plans_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "workout_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       water_logs: {
         Row: {
           amount_ml: number
@@ -1108,6 +1233,7 @@ export type Database = {
       workout_template_items: {
         Row: {
           created_at: string
+          day_of_week: Database["public"]["Enums"]["weekday"] | null
           exercise_id: string
           id: string
           notes: string | null
@@ -1119,6 +1245,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          day_of_week?: Database["public"]["Enums"]["weekday"] | null
           exercise_id: string
           id?: string
           notes?: string | null
@@ -1130,6 +1257,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          day_of_week?: Database["public"]["Enums"]["weekday"] | null
           exercise_id?: string
           id?: string
           notes?: string | null
@@ -1270,6 +1398,14 @@ export type Database = {
     }
     Enums: {
       post_visibility: "public" | "followers" | "private"
+      weekday:
+        | "segunda"
+        | "terça"
+        | "quarta"
+        | "quinta"
+        | "sexta"
+        | "sábado"
+        | "domingo"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1398,6 +1534,15 @@ export const Constants = {
   public: {
     Enums: {
       post_visibility: ["public", "followers", "private"],
+      weekday: [
+        "segunda",
+        "terça",
+        "quarta",
+        "quinta",
+        "sexta",
+        "sábado",
+        "domingo",
+      ],
     },
   },
 } as const
