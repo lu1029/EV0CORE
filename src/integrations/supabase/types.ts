@@ -1380,7 +1380,7 @@ export type Database = {
     }
     Functions: {
       get_conversations: {
-        Args: { limit_val?: number; offset_val?: number; viewer_id: string }
+        Args: { limit_val?: number; offset_val?: number }
         Returns: {
           last_message: string
           last_message_at: string
