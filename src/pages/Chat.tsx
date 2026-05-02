@@ -31,8 +31,9 @@ export default function Chat() {
   const { profile: currentUser } = useApp();
   const { profile: otherUser, loading: userLoading } = usePublicProfile(userId);
   const { messages, loading: messagesLoading, hasMore, fetchMore, sendMessage } = useChat(userId);
-  const { blockUser, unblockUser, checkIsBlocked, reportContent, loading: moderationLoading } = useModeration();
+  const { blockUser, unblockUser, checkBlockStatus, reportContent, loading: moderationLoading } = useModeration();
   const [isBlocked, setIsBlocked] = useState(false);
+  const [isBlockedBy, setIsBlockedBy] = useState(false);
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [reportReason, setReportReason] = useState("");
   const [reportingMessageId, setReportingMessageId] = useState<string | null>(null);
@@ -42,9 +43,12 @@ export default function Chat() {
 
   useEffect(() => {
     if (userId) {
-      checkIsBlocked(userId).then(setIsBlocked);
+      checkBlockStatus(userId).then(status => {
+        setIsBlocked(status.blocked);
+        setIsBlockedBy(status.blockedBy);
+      });
     }
-  }, [userId, checkIsBlocked]);
+  }, [userId, checkBlockStatus]);
 
   const handleBlock = async () => {
     if (!userId) return;
