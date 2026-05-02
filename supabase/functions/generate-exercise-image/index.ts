@@ -170,9 +170,10 @@ serve(async (req) => {
       });
     }
     const userId = claims.claims.sub as string;
-    const rl = await checkRateLimit(admin, `exercise-img:user:${userId}`, 20, 60);
+    const rl = await checkRateLimit(admin, `exercise-img:user:${userId}`, 100, 60);
     if (!rl.allowed) {
-      return rateLimitResponse(60, 20, { ...corsHeaders, ...securityHeaders });
+      console.warn(`User ${userId} hit internal rate limit for images`);
+      return rateLimitResponse(60, 100, { ...corsHeaders, ...securityHeaders });
     }
 
     const body = await req.json().catch(() => ({}));
@@ -216,7 +217,8 @@ serve(async (req) => {
     const msg = e instanceof Error ? e.message : "Internal error";
     console.error("generate-exercise-image error:", msg);
     if (msg.includes("429")) {
-      return new Response(JSON.stringify({ error: "Rate limited, try again later." }), {
+      console.error("External provider rate limit (429):", msg);
+      return new Response(JSON.stringify({ error: "AI providers are busy, please try again in a moment." }), {
         status: 429,
         headers: { ...corsHeaders, ...securityHeaders, "Content-Type": "application/json" },
       });
