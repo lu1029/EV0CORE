@@ -112,7 +112,7 @@ export function useModeration() {
     loading,
     blockUser,
     unblockUser,
-    checkIsBlocked,
+    checkBlockStatus,
     reportContent
   };
 }
