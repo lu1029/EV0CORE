@@ -1,7 +1,25 @@
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ChevronLeft, Loader2, UserPlus, UserCheck, Image as ImageIcon } from "lucide-react";
+import { ChevronLeft, Loader2, UserPlus, UserCheck, Image as ImageIcon, UserX, Flag, MoreVertical } from "lucide-react";
 import { motion } from "framer-motion";
 import { usePublicProfile } from "@/hooks/usePublicProfile";
+import { useModeration } from "@/hooks/useModeration";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function UserProfile() {
   const { userId } = useParams<{ userId: string }>();
