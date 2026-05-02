@@ -1,11 +1,29 @@
 import { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ChevronLeft, Send, Image as ImageIcon, Loader2, Info } from "lucide-react";
+import { ChevronLeft, Send, Image as ImageIcon, Loader2, Info, ShieldAlert, UserX, Flag, MoreVertical } from "lucide-react";
 import { useChat } from "@/hooks/useMessages";
 import { usePublicProfile } from "@/hooks/usePublicProfile";
+import { useModeration } from "@/hooks/useModeration";
 import { useApp } from "@/contexts/AppContext";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 
 export default function Chat() {
   const { userId } = useParams<{ userId: string }>();
