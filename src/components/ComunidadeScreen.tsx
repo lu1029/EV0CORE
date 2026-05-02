@@ -62,14 +62,19 @@ export default function ComunidadeScreen() {
         <div className="space-y-6">
           <Stories />
           {loading ? (
-          <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
-        ) : posts.length === 0 ? (
-          <EmptyFeed onCreate={() => setComposer(true)} />
-        ) : (
-          <div className="space-y-4">
-            {posts.map(p => <FeedPostCard key={p.id} post={p} onLike={toggleLike} onSave={toggleSave} />)}
-          </div>
-        )
+            <div className="flex justify-center py-12">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            </div>
+          ) : posts.length === 0 ? (
+            <EmptyFeed onCreate={() => setComposer(true)} />
+          ) : (
+            <div className="space-y-4">
+              {posts.map((p) => (
+                <FeedPostCard key={p.id} post={p} onLike={toggleLike} onSave={toggleSave} />
+              ))}
+            </div>
+          )}
+        </div>
       ) : (
         <div className="space-y-4">
           {/* Filters */}
