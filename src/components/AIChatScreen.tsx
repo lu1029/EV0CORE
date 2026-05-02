@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useApp } from "@/contexts/AppContext";
-import { Send, ArrowLeft, Sparkles, Loader2 } from "lucide-react";
+import { useSubscription } from "@/hooks/useSubscription";
+import { Send, ArrowLeft, Sparkles, Loader2, Lock } from "lucide-react";
 import evoaiLogo from "@/assets/evoai-logo.png";
 import { Button } from "@/components/ui/button";
 import ReactMarkdown from "react-markdown";
