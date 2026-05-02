@@ -57,20 +57,23 @@ export function useModeration() {
     }
   }, [profile]);
 
-  const checkIsBlocked = useCallback(async (userId: string) => {
-    if (!profile) return false;
+  const checkBlockStatus = useCallback(async (userId: string) => {
+    if (!profile) return { blocked: false, blockedBy: false };
     try {
       const { data, error } = await supabase
         .from("user_blocks")
-        .select("id")
-        .match({ blocker_id: profile.id, blocked_id: userId })
-        .maybeSingle();
+        .select("blocker_id, blocked_id")
+        .or(`and(blocker_id.eq.${profile.id},blocked_id.eq.${userId}),and(blocker_id.eq.${userId},blocked_id.eq.${profile.id})`);
 
       if (error) throw error;
-      return !!data;
+      
+      return {
+        blocked: data.some(b => b.blocker_id === profile.id),
+        blockedBy: data.some(b => b.blocker_id === userId)
+      };
     } catch (error) {
       console.error("Error checking block status:", error);
-      return false;
+      return { blocked: false, blockedBy: false };
     }
   }, [profile]);
 
