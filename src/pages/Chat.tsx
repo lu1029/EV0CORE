@@ -246,17 +246,21 @@ export default function Chat() {
 
       {/* Input */}
       <div className="p-4 border-t border-border/40 bg-background shrink-0">
-        {isBlocked ? (
+        {isBlocked || isBlockedBy ? (
           <div className="bg-secondary/50 rounded-2xl p-4 text-center border border-border/20">
             <p className="text-sm text-muted-foreground font-medium">
-              Você bloqueou este usuário. Desbloqueie para enviar mensagens.
+              {isBlocked 
+                ? "Você bloqueou este usuário. Desbloqueie para enviar mensagens."
+                : "Você não pode enviar mensagens para este usuário no momento."}
             </p>
-            <button 
-              onClick={handleBlock}
-              className="mt-2 text-xs font-bold text-primary hover:underline"
-            >
-              Desbloquear agora
-            </button>
+            {isBlocked && (
+              <button 
+                onClick={handleBlock}
+                className="mt-2 text-xs font-bold text-primary hover:underline"
+              >
+                Desbloquear agora
+              </button>
+            )}
           </div>
         ) : (
           <>
