@@ -105,6 +105,8 @@ const App = () => (
                     <Route path="/workout-summary/:id" element={<WorkoutSummary />} />
                     <Route path="/workout-builder" element={<WorkoutBuilderPage />} />
                     <Route path="/u/:userId" element={<UserProfile />} />
+                    <Route path="/mensagens" element={<Messages />} />
+                    <Route path="/chat/:userId" element={<Chat />} />
                   </Route>
 
                   <Route path="*" element={<NotFound />} />
