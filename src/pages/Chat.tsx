@@ -12,12 +12,15 @@ export default function Chat() {
   const navigate = useNavigate();
   const { profile: currentUser } = useApp();
   const { profile: otherUser, loading: userLoading } = usePublicProfile(userId);
-  const { messages, loading: messagesLoading, sendMessage } = useChat(userId);
+  const { messages, loading: messagesLoading, hasMore, fetchMore, sendMessage } = useChat(userId);
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [shouldScroll, setShouldScroll] = useState(true);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (shouldScroll) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   useEffect(() => {
@@ -28,6 +31,7 @@ export default function Chat() {
     if (!input.trim()) return;
     const text = input.trim();
     setInput("");
+    setShouldScroll(true);
     await sendMessage(text);
   };
 
@@ -77,48 +81,70 @@ export default function Chat() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messagesLoading ? (
-          <div className="flex justify-center py-10">
-            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 flex flex-col">
+        {hasMore && (
+          <div className="flex justify-center py-2">
+            <button 
+              onClick={() => {
+                setShouldScroll(false);
+                fetchMore();
+              }}
+              disabled={messagesLoading}
+              className="text-[10px] font-bold text-primary bg-primary/5 px-4 py-1.5 rounded-full active:bg-primary/10 transition-all"
+            >
+              {messagesLoading ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : (
+                "Ver mensagens anteriores"
+              )}
+            </button>
+          </div>
+        )}
+
+        {messagesLoading && messages.length === 0 ? (
+          <div className="flex-1 flex flex-col justify-center items-center py-10 gap-3">
+            <Loader2 className="w-6 h-6 animate-spin text-primary/50" />
+            <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Carregando histórico...</p>
           </div>
         ) : messages.length === 0 ? (
-          <div className="py-10 text-center space-y-2">
+          <div className="py-10 text-center space-y-2 flex-1 flex flex-col justify-center">
             <p className="text-sm font-medium">Nenhuma mensagem com {otherUser?.name}</p>
             <p className="text-xs text-muted-foreground px-10">
               Diga oi! Comece uma conversa amigável compartilhando sua rotina de treinos.
             </p>
           </div>
         ) : (
-          messages.map((msg, i) => {
-            const isMine = msg.sender_id === currentUser?.id;
-            const showDate = i === 0 || 
-              new Date(msg.created_at).toDateString() !== new Date(messages[i-1].created_at).toDateString();
+          <div className="space-y-4">
+            {messages.map((msg, i) => {
+              const isMine = msg.sender_id === currentUser?.id;
+              const showDate = i === 0 || 
+                new Date(msg.created_at).toDateString() !== new Date(messages[i-1].created_at).toDateString();
 
-            return (
-              <div key={msg.id} className="space-y-4">
-                {showDate && (
-                  <div className="flex justify-center py-2">
-                    <span className="px-3 py-1 rounded-full bg-secondary text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-                      {format(new Date(msg.created_at), "EEEE, d 'de' MMMM", { locale: ptBR })}
-                    </span>
-                  </div>
-                )}
-                <div className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
-                  <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm ${
-                    isMine 
-                      ? "bg-primary text-primary-foreground rounded-tr-none" 
-                      : "bg-secondary text-foreground rounded-tl-none"
-                  }`}>
-                    <p className="leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-                    <p className={`text-[9px] mt-1 text-right opacity-60`}>
-                      {format(new Date(msg.created_at), "HH:mm")}
-                    </p>
+              return (
+                <div key={msg.id} className="space-y-4">
+                  {showDate && (
+                    <div className="flex justify-center py-2">
+                      <span className="px-3 py-1 rounded-full bg-secondary text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                        {format(new Date(msg.created_at), "EEEE, d 'de' MMMM", { locale: ptBR })}
+                      </span>
+                    </div>
+                  )}
+                  <div className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
+                    <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm ${
+                      isMine 
+                        ? "bg-primary text-primary-foreground rounded-tr-none shadow-md shadow-primary/10" 
+                        : "bg-secondary text-foreground rounded-tl-none"
+                    }`}>
+                      <p className="leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                      <p className={`text-[9px] mt-1 text-right opacity-60`}>
+                        {format(new Date(msg.created_at), "HH:mm")}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })
+              );
+            })}
+          </div>
         )}
         <div ref={messagesEndRef} />
       </div>
