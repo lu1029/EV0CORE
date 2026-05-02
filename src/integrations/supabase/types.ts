@@ -1028,6 +1028,38 @@ export type Database = {
         }
         Relationships: []
       }
+      trial_email_logs: {
+        Row: {
+          id: string
+          reminder_type: string
+          sent_at: string | null
+          subscription_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          reminder_type: string
+          sent_at?: string | null
+          subscription_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          reminder_type?: string
+          sent_at?: string | null
+          subscription_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trial_email_logs_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_blocks: {
         Row: {
           blocked_id: string
@@ -1460,6 +1492,7 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: boolean
       }
+      check_trial_reminders: { Args: never; Returns: undefined }
       get_conversations: {
         Args: { limit_val?: number; offset_val?: number }
         Returns: {
