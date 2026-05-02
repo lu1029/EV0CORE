@@ -60,7 +60,7 @@ export default function Configuracoes() {
       title: "Conta e Perfil",
       items: [
         { to: "/perfil", icon: User, label: "Perfil" },
-        { icon: Bookmark, label: "Salvos", action: () => toast.info("Em breve: Área de salvos") },
+        { icon: Bookmark, label: "Salvos", action: () => navigate("/perfil") },
         { to: "/configuracoes/idioma", icon: Globe, label: "Idioma" },
       ]
     },
@@ -68,13 +68,13 @@ export default function Configuracoes() {
       title: "Segurança e Privacidade",
       items: [
         { to: "/privacidade", icon: Shield, label: "Privacidade" },
-        { icon: Lock, label: "Segurança", action: () => toast.info("Configurações de segurança em breve") },
+        { icon: Lock, label: "Segurança", action: () => navigate("/privacidade") },
       ]
     },
     {
       title: "App",
       items: [
-        { icon: Bell, label: "Notificações", action: () => toast.info("Configurações de notificações em breve") },
+        { icon: Bell, label: "Notificações", to: "/configuracoes" },
         { to: "/termos", icon: FileText, label: "Termos de Serviço" },
         { icon: Share2, label: "Compartilhar EvoCore", action: () => {
             if (navigator.share) navigator.share({ title: "EvoCore", url: "https://ev0core.com" });

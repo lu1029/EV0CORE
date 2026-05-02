@@ -35,7 +35,17 @@ const LanguageSettings = () => {
                 active ? "border-primary bg-primary/5 glow-primary" : "border-border bg-card"
               }`}
             >
-              <span className="text-foreground font-medium">{t(`languages.${lng}`)}</span>
+              <span className="text-foreground font-medium">
+                {lng === "pt-BR" ? "Português (Brasil)" :
+                 lng === "en" ? "English" :
+                 lng === "es" ? "Español" :
+                 lng === "fr" ? "Français" :
+                 lng === "de" ? "Deutsch" :
+                 lng === "it" ? "Italiano" :
+                 lng === "ja" ? "日本語" :
+                 lng === "ko" ? "한국어" :
+                 lng === "zh-CN" ? "中文 (简体)" : lng}
+              </span>
               {active && <Check className="w-5 h-5 text-primary" />}
             </button>
           );

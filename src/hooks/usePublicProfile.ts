@@ -29,10 +29,23 @@ export function usePublicProfile(userId: string | undefined) {
     if (!userId) return;
     setLoading(true);
     try {
-      const { data: profileData } = await supabase
-        .rpc("get_public_profile", { _user_id: userId });
-      const p = (profileData as any[])?.[0];
-      setProfile(p ? { user_id: p.user_id, name: p.name || "Atleta", avatar_url: p.avatar_url } : null);
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("user_id, name, avatar_url")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (profileError || !profileData) {
+        setProfile(null);
+        setLoading(false);
+        return;
+      }
+      
+      setProfile({ 
+        user_id: profileData.user_id, 
+        name: profileData.name || "Atleta", 
+        avatar_url: profileData.avatar_url 
+      });
 
       const [{ count: followers }, { count: following }, { count: postsCount }, postsRes, followCheck] = await Promise.all([
         supabase.from("user_follows").select("*", { count: "exact", head: true }).eq("following_id", userId),

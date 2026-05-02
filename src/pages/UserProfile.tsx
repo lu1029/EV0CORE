@@ -74,7 +74,13 @@ export default function UserProfile() {
         <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-primary mb-6">
           <ChevronLeft className="w-4 h-4" /> Voltar
         </button>
-        <p className="text-center text-muted-foreground mt-12">Usuário não encontrado</p>
+        <div className="text-center py-20">
+          <div className="w-20 h-20 mx-auto rounded-full bg-secondary flex items-center justify-center mb-4">
+            <UserX className="w-10 h-10 text-muted-foreground" />
+          </div>
+          <h2 className="text-xl font-bold mb-2">Usuário não encontrado</h2>
+          <p className="text-muted-foreground px-10">O perfil que você está tentando acessar não existe ou foi removido.</p>
+        </div>
       </div>
     );
   }
