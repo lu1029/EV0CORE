@@ -124,6 +124,16 @@ const HomeScreen = () => {
         </motion.button>
       </motion.header>
 
+      {/* Trial Countdown Banner */}
+      {subscription?.status === "trialing" && subscription?.current_period_end && (
+        <motion.div 
+          variants={fadeUp}
+          className="mb-6"
+        >
+          <TrialCountdown expiryDate={new Date(subscription.current_period_end)} />
+        </motion.div>
+      )}
+
       {/* Notification Center Overlay */}
       <AnimatePresence>
         {showNotifications && (
