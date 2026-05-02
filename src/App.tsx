@@ -45,6 +45,8 @@ const WorkoutSession = lazy(() => import("./pages/WorkoutSession"));
 const WorkoutSummary = lazy(() => import("./pages/WorkoutSummary"));
 const WorkoutBuilderPage = lazy(() => import("./pages/WorkoutBuilder"));
 const UserProfile = lazy(() => import("./pages/UserProfile"));
+const Messages = lazy(() => import("./pages/Messages"));
+const Chat = lazy(() => import("./pages/Chat"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const CheckoutReturn = lazy(() => import("./pages/CheckoutReturn"));
 
