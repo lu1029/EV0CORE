@@ -208,7 +208,19 @@ export default function Chat() {
                       </span>
                     </div>
                   )}
-                  <div className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
+                  <div className={`flex ${isMine ? "justify-end" : "justify-start"} items-end gap-2 group`}>
+                    {!isMine && (
+                      <button 
+                        onClick={() => {
+                          setReportingMessageId(msg.id);
+                          setReportDialogOpen(true);
+                        }}
+                        className="opacity-0 group-hover:opacity-100 p-1.5 rounded-full hover:bg-secondary transition-all text-muted-foreground"
+                        title="Denunciar mensagem"
+                      >
+                        <ShieldAlert className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                     <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm ${
                       isMine 
                         ? "bg-primary text-primary-foreground rounded-tr-none shadow-md shadow-primary/10" 
