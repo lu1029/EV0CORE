@@ -60,7 +60,7 @@ export default function Configuracoes() {
       title: "Conta e Perfil",
       items: [
         { to: "/perfil", icon: User, label: "Perfil" },
-        { icon: Bookmark, label: "Salvos", action: () => toast.info("Em breve: Área de salvos") },
+        { icon: Bookmark, label: "Salvos", action: () => navigate("/perfil") },
         { to: "/configuracoes/idioma", icon: Globe, label: "Idioma" },
       ]
     },
