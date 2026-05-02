@@ -132,7 +132,7 @@ export default function Chat() {
           </div>
           <div className="min-w-0">
             <p className="font-bold text-sm truncate leading-none mb-1">{otherUser?.name}</p>
-            <p className="text-[10px] text-primary font-medium">Online agora</p>
+            {!isBlocked && !isBlockedBy && <p className="text-[10px] text-primary font-medium">Online agora</p>}
           </div>
         </div>
         <DropdownMenu>
