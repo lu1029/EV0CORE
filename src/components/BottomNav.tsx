@@ -17,6 +17,7 @@ const BottomNav = () => {
     { to: "/nutricao",   label: "Nutrição",  icon: Apple },
     { to: "/evolucao",   label: "Progresso", icon: TrendingUp },
     { to: "/comunidade", label: "Feed",      icon: Users },
+    { to: "/clipes",     label: "Clipes",    icon: PlayCircle },
     { to: "/clubes",     label: "Clubes",    icon: Trophy },
     { to: "/perfil",     label: "Perfil",    icon: User },
   ];
