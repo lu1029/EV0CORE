@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -45,11 +45,17 @@ Mais resultado."
       content="https://storage.googleapis.com/gpt-engineer-file-uploads/riBPauiai9ftdMzJ6rdXkjD1RxH2/social-images/social-1776277127977-IMG_5327.webp"
     />
 
-    <script
-      async
-      src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5904660833916833"
-      crossorigin="anonymous"
-    ></script>
+    <!-- Scripts de terceiros adiados (lazy) -->
+    <script>
+      window.addEventListener('load', () => {
+        // Carregar Google Ads apenas após o carregamento da página
+        const adsScript = document.createElement('script');
+        adsScript.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5904660833916833";
+        adsScript.async = true;
+        adsScript.crossOrigin = "anonymous";
+        document.body.appendChild(adsScript);
+      });
+    </script>
 
     <meta property="og:title" content="EV0CORE" />
     <meta name="twitter:title" content="EV0CORE" />
@@ -72,35 +78,18 @@ Mais consistência.
 Mais resultado."
     />
 
-    <script src="https://api.mapbox.com/search-js/v1.5.0/core.js"></script>
-    <script>
-      const {
-          MapboxSearch,
-          SearchSession
-      } = mapboxsearchcore;
-
-      const search = new MapboxSearch({
-          accessToken: 'pk.eyJ1IjoibHVhbjEwMjkiLCJhIjoiY21vNmMxNzV5MXowNTJvcTRwMmV1NmN4MiJ9.LujhTBFaT161DV-QX_OA6Q'
-      })
-
-      const session = new SearchSession(search);
-    </script>
-
-    <script id="search-js" defer src="https://api.mapbox.com/search-js/v1.5.0/web.js"></script>
-    <script>
-      const accessToken = 'pk.eyJ1IjoibHVhbjEwMjkiLCJhIjoiY21vNmMxNzV5MXowNTJvcTRwMmV1NmN4MiJ9.LujhTBFaT161DV-QX_OA6Q';
-
-      const script = document.getElementById('search-js');
-      script.onload = function() {
-        mapboxsearch.autofill({
-          accessToken
-        });
-      };
-    </script>
+    <!-- Mapbox carregado dinamicamente via componente quando necessário -->
+    <style>
+      /* Font-display swap para performance */
+      @font-face {
+        font-family: 'Inter';
+        font-display: swap;
+      }
+    </style>
   </head>
 
   <body>
-    <div id="root"></div>
+    <main id="root"></main>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
