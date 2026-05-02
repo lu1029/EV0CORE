@@ -156,11 +156,11 @@ const WorkoutBuilder: React.FC<WorkoutBuilderProps> = ({
   };
 
   const addWorkoutDay = () => {
-    const letters = ["A", "B", "C", "D", "E", "F"];
-    const next = letters[Object.keys(workouts).length] || `${Object.keys(workouts).length + 1}`;
-    const newName = `Treino ${next}`;
-    setWorkouts({ ...workouts, [newName]: [] });
-    setActiveWorkout(newName);
+    const name = window.prompt("Nome do dia (ex: Peito, Cardio, Descanso)");
+    if (name && !workouts[name]) {
+      setWorkouts({ ...workouts, [name]: [] });
+      setActiveWorkout(name);
+    }
   };
 
   const removeWorkoutDay = (name: string) => {
