@@ -1,7 +1,9 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useApp } from "@/contexts/AppContext";
-import { ChevronRight, Flame, Dumbbell, Apple, MapPin, TrendingUp, Users, ChevronDown, Search, Check, Bell } from "lucide-react";
+import { ChevronRight, Flame, Dumbbell, Apple, MapPin, TrendingUp, Users, ChevronDown, Search, Check, Bell, AlertCircle } from "lucide-react";
+import { useSubscription } from "@/hooks/useSubscription";
+import { TrialCountdown } from "./premium/TrialCountdown";
 import { useNotifications } from "@/hooks/useNotifications";
 import { NotificationCenter } from "./notifications/NotificationCenter";
 import { useStreak } from "@/hooks/useStreak";
@@ -13,6 +15,7 @@ import { StreakWidget } from "./StreakWidget";
 const HomeScreen = () => {
   const { userProfile, setCurrentTab, isPremium } = useApp();
   const { streak, trainedToday, weekDays: activeWeek } = useStreak();
+  const { subscription, isActive } = useSubscription();
   const { unreadCount } = useNotifications();
   const [showNotifications, setShowNotifications] = React.useState(false);
   const navigate = useNavigate();
@@ -120,6 +123,16 @@ const HomeScreen = () => {
           <Search className="w-5 h-5" />
         </motion.button>
       </motion.header>
+
+      {/* Trial Countdown Banner */}
+      {subscription?.status === "trialing" && subscription?.current_period_end && (
+        <motion.div 
+          variants={fadeUp}
+          className="mb-6"
+        >
+          <TrialCountdown expiryDate={new Date(subscription.current_period_end)} />
+        </motion.div>
+      )}
 
       {/* Notification Center Overlay */}
       <AnimatePresence>
