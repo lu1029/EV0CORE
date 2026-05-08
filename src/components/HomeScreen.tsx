@@ -241,7 +241,10 @@ const HomeScreen = () => {
               variants={fadeUp}
               whileHover={{ y: -4, transition: springSnappy }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => setCurrentTab(t.id)}
+              onClick={() => {
+                if (t.id === "training") navigate("/workouts");
+                else setCurrentTab(t.id);
+              }}
               className="group relative overflow-hidden bg-card rounded-2xl p-4 text-left border border-border/40"
             >
               <div className={`absolute inset-0 bg-gradient-to-br ${t.tint} opacity-80 pointer-events-none`} />
