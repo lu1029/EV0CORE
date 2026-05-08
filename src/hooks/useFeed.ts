@@ -38,50 +38,64 @@ export function useFeed() {
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const inflightRef = useRef(false);
+  const lastLoadRef = useRef(0);
+
   const load = useCallback(async () => {
+    // Avoid concurrent reloads and aggressive re-fetches (debounce 800ms)
+    if (inflightRef.current) return;
+    if (Date.now() - lastLoadRef.current < 800) return;
+    inflightRef.current = true;
+    lastLoadRef.current = Date.now();
     setLoading(true);
-    const { data: rawPosts } = await supabase
-      .from("feed_posts")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(60);
+    try {
+      const { data: rawPosts } = await supabase
+        .from("feed_posts")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(60);
 
-    const list = (rawPosts as any[]) ?? [];
-    if (list.length === 0) { setPosts([]); setLoading(false); return; }
+      const list = (rawPosts as any[]) ?? [];
+      if (list.length === 0) { setPosts([]); return; }
 
-    const userIds = Array.from(new Set(list.map(p => p.user_id)));
-    const { data: profilesData } = await supabase
-      .from("profiles")
-      .select("user_id, name, avatar_url")
-      .in("user_id", userIds);
-    const profileMap = new Map((profilesData ?? []).map((p: any) => [p.user_id, p]));
+      const userIds = Array.from(new Set(list.map(p => p.user_id)));
+      const { data: profilesData } = await supabase
+        .from("profiles")
+        .select("user_id, name, avatar_url")
+        .in("user_id", userIds);
+      const profileMap = new Map((profilesData ?? []).map((p: any) => [p.user_id, p]));
 
-    let likedSet = new Set<string>();
-    let savedSet = new Set<string>();
-    if (user) {
-      const [{ data: myLikes }, { data: mySaves }] = await Promise.all([
-        supabase
-          .from("post_likes")
-          .select("post_id")
-          .eq("user_id", user.id)
-          .in("post_id", list.map(p => p.id)),
-        supabase
-          .from("post_saves")
-          .select("post_id")
-          .eq("user_id", user.id)
-          .in("post_id", list.map(p => p.id))
-      ]);
-      likedSet = new Set((myLikes ?? []).map((l: any) => l.post_id));
-      savedSet = new Set((mySaves ?? []).map((s: any) => s.post_id));
+      let likedSet = new Set<string>();
+      let savedSet = new Set<string>();
+      if (user) {
+        const [{ data: myLikes }, { data: mySaves }] = await Promise.all([
+          supabase
+            .from("post_likes")
+            .select("post_id")
+            .eq("user_id", user.id)
+            .in("post_id", list.map(p => p.id)),
+          supabase
+            .from("post_saves")
+            .select("post_id")
+            .eq("user_id", user.id)
+            .in("post_id", list.map(p => p.id))
+        ]);
+        likedSet = new Set((myLikes ?? []).map((l: any) => l.post_id));
+        savedSet = new Set((mySaves ?? []).map((s: any) => s.post_id));
+      }
+
+      setPosts(list.map(p => ({
+        ...p,
+        author: profileMap.get(p.user_id) ? { name: (profileMap.get(p.user_id) as any).name || "Atleta", avatar_url: (profileMap.get(p.user_id) as any).avatar_url } : { name: "Atleta", avatar_url: null },
+        liked_by_me: likedSet.has(p.id),
+        saved_by_me: savedSet.has(p.id),
+      })));
+    } catch (err) {
+      console.error("[useFeed] load error", err);
+    } finally {
+      setLoading(false);
+      inflightRef.current = false;
     }
-
-    setPosts(list.map(p => ({
-      ...p,
-      author: profileMap.get(p.user_id) ? { name: (profileMap.get(p.user_id) as any).name || "Atleta", avatar_url: (profileMap.get(p.user_id) as any).avatar_url } : { name: "Atleta", avatar_url: null },
-      liked_by_me: likedSet.has(p.id),
-      saved_by_me: savedSet.has(p.id),
-    })));
-    setLoading(false);
   }, [user]);
 
   useEffect(() => { load(); }, [load]);
