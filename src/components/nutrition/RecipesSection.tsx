@@ -66,8 +66,8 @@ const RecipesSection: React.FC<Props> = ({ goal }) => {
       {/* Modal */}
       {open && (
         <div
-          className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-end sm:items-center justify-center animate-fade-in p-0 sm:p-4"
-          onClick={() => setOpen(null)}
+          className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-sm flex items-end sm:items-center justify-center animate-fade-in p-0 sm:p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) setOpen(null); }}
         >
           <div
             className="bg-card w-full max-w-lg rounded-t-3xl sm:rounded-3xl max-h-[85vh] overflow-y-auto animate-slide-in-right"
