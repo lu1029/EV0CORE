@@ -100,15 +100,21 @@ export default function UserProfile() {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem 
-                onClick={() => setReportDialogOpen(true)}
+              <DropdownMenuItem
+                onSelect={(e) => {
+                  e.preventDefault();
+                  setTimeout(() => setReportDialogOpen(true), 0);
+                }}
                 className="text-amber-500 focus:text-amber-500"
               >
                 <Flag className="w-4 h-4 mr-2" />
                 Denunciar
               </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={handleBlock}
+              <DropdownMenuItem
+                onSelect={(e) => {
+                  e.preventDefault();
+                  setTimeout(handleBlock, 0);
+                }}
                 className={isBlocked ? "text-primary" : "text-destructive focus:text-destructive"}
               >
                 <UserX className="w-4 h-4 mr-2" />

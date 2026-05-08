@@ -39,7 +39,7 @@ const MealEditor: React.FC<Props> = ({ meal, onSave, onClose, onDelete }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-end sm:items-center justify-center animate-fade-in p-0 sm:p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-sm flex items-end sm:items-center justify-center animate-fade-in p-0 sm:p-4" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="bg-card w-full max-w-lg rounded-t-3xl sm:rounded-3xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="sticky top-0 bg-card flex items-center justify-between p-5 border-b border-border z-10">
           <h3 className="text-[18px] font-bold text-foreground">Editar refeição</h3>
