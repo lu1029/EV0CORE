@@ -81,6 +81,7 @@ const App = () => (
                   {/* App (auth gated inside AppLayout) */}
                   <Route element={<AppLayout />}>
                     <Route path="/" element={<Navigate to="/home" replace />} />
+                    <Route path="/index" element={<Navigate to="/home" replace />} />
                     <Route path="/home" element={<HomeScreen />} />
                     <Route path="/treinos" element={<TrainingScreen />} />
                     <Route path="/corrida" element={<RunningScreen />} />
