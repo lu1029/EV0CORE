@@ -26,11 +26,10 @@ export const evocoreAuth = {
         return result;
       }
 
-      try {
-        await supabase.auth.setSession(result.tokens);
-      } catch (e) {
-        return { error: e instanceof Error ? e : new Error(String(e)) };
-      }
+      // O cliente Lovable já configura a sessão Supabase internamente via
+      // signInWithIdToken. Chamar setSession aqui novamente sobrescreve com
+      // tokens em formato incompatível (faltando claim "sub"), causando 403
+      // em todas as chamadas /user subsequentes.
       return result;
     },
   },
