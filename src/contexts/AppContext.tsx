@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 import { useInactivityLogout } from "@/hooks/useInactivityLogout";
 import { logSecurityEvent } from "@/lib/auditLog";
+import { clearMalformedSupabaseAuthSession } from "@/lib/authStorage";
 import evocoreLogo from "@/assets/evocore-logo.png";
 
 // Map legacy tab ids to real routes so all existing setCurrentTab() calls keep working
@@ -83,6 +84,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     let mounted = true;
+
+    clearMalformedSupabaseAuthSession();
 
     const loadProfile = async (userId: string, email: string, metadata: any) => {
       try {
