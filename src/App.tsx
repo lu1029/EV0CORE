@@ -50,6 +50,7 @@ const Chat = lazy(() => import("./pages/Chat"));
 const Clips = lazy(() => import("./pages/Clips"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const CheckoutReturn = lazy(() => import("./pages/CheckoutReturn"));
+const Admin = lazy(() => import("./pages/Admin"));
 
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-[60vh]">
