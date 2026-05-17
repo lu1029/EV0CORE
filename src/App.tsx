@@ -111,6 +111,7 @@ const App = () => (
                     <Route path="/mensagens" element={<Messages />} />
                     <Route path="/chat/:userId" element={<Chat />} />
                     <Route path="/clipes" element={<Clips />} />
+                    <Route path="/admin" element={<Admin />} />
                   </Route>
 
                   <Route path="*" element={<NotFound />} />
