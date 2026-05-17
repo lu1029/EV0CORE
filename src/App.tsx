@@ -50,6 +50,7 @@ const Chat = lazy(() => import("./pages/Chat"));
 const Clips = lazy(() => import("./pages/Clips"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const CheckoutReturn = lazy(() => import("./pages/CheckoutReturn"));
+const Admin = lazy(() => import("./pages/Admin"));
 
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-[60vh]">
@@ -110,6 +111,7 @@ const App = () => (
                     <Route path="/mensagens" element={<Messages />} />
                     <Route path="/chat/:userId" element={<Chat />} />
                     <Route path="/clipes" element={<Clips />} />
+                    <Route path="/admin" element={<Admin />} />
                   </Route>
 
                   <Route path="*" element={<NotFound />} />
