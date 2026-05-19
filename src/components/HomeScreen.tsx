@@ -64,39 +64,45 @@ const HomeScreen = () => {
       initial="hidden"
       animate="visible"
     >
-      {/* ============ Top bar (Gymrats-style) ============ */}
-      <motion.header variants={fadeUp} className="flex items-center gap-2 mb-5">
-        {/* Following pill */}
+      {/* ============ Top bar (Ev0core signature) ============ */}
+      <motion.header variants={fadeUp} className="flex items-center gap-2 mb-6">
+        {/* Brand mark + Following selector */}
         <motion.button
           whileTap={{ scale: 0.96 }}
-          className="flex items-center gap-2 h-10 px-3 rounded-full bg-card border border-border/60 text-foreground"
+          className="group relative flex items-center gap-2.5 h-11 pl-1.5 pr-3.5 rounded-2xl bg-card/60 backdrop-blur-xl border border-border/50 text-foreground overflow-hidden"
         >
-          <Users className="w-4 h-4" />
-          <span className="text-[14px] font-semibold">Seguindo</span>
-          <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+          <span className="absolute inset-0 bg-gradient-to-br from-primary/15 via-transparent to-emerald-500/10 opacity-60 pointer-events-none" />
+          <span className="relative w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-emerald-400 flex items-center justify-center shadow-[0_4px_12px_-2px_hsl(var(--primary)/0.5)]">
+            <Users className="w-4 h-4 text-white" strokeWidth={2.4} />
+          </span>
+          <span className="relative text-[13px] font-semibold tracking-tight">Seguindo</span>
+          <ChevronDown className="relative w-3.5 h-3.5 text-muted-foreground" />
         </motion.button>
 
-        {/* PRO badge */}
+        {/* PRO badge — Ev0core indigo→green */}
         <motion.button
           whileHover={{ y: -1 }}
           whileTap={{ scale: 0.94 }}
           onClick={() => setCurrentTab("premium")}
-          style={{ background: "hsl(48 100% 55%)", color: "hsl(0 0% 8%)" }}
-          className="h-7 px-3 rounded-full text-[11px] font-extrabold tracking-wider shadow-[0_4px_14px_-4px_hsl(48_100%_50%/0.6)]"
+          className="relative h-8 px-3.5 rounded-full text-[11px] font-extrabold tracking-[0.18em] text-white bg-gradient-to-r from-primary via-violet-500 to-emerald-400 shadow-[0_6px_20px_-6px_hsl(var(--primary)/0.7)] overflow-hidden"
         >
+          <span className="absolute inset-0 bg-[linear-gradient(120deg,transparent_30%,rgba(255,255,255,0.35)_50%,transparent_70%)] opacity-0 group-hover:opacity-100" />
           PRO
         </motion.button>
 
         <div className="flex-1" />
 
-        {/* Streak fire */}
-        <motion.div
+        {/* Streak — pill com chama suave */}
+        <motion.button
           whileTap={{ scale: 0.94 }}
-          className="flex items-center gap-1.5 h-10 px-3 rounded-full bg-card border border-border/60"
+          className="flex items-center gap-1.5 h-10 px-3 rounded-2xl bg-card/60 backdrop-blur-xl border border-border/50"
         >
-          <Flame className={`w-4 h-4 ${streak > 0 ? "text-orange-500" : "text-muted-foreground"}`} fill={streak > 0 ? "currentColor" : "none"} />
-          <span className="text-[14px] font-semibold tabular text-foreground">{streak}</span>
-        </motion.div>
+          <Flame
+            className={`w-4 h-4 ${streak > 0 ? "text-orange-400 drop-shadow-[0_0_6px_hsl(25_95%_55%/0.6)]" : "text-muted-foreground"}`}
+            fill={streak > 0 ? "currentColor" : "none"}
+          />
+          <span className="text-[13px] font-bold tabular text-foreground">{streak}</span>
+        </motion.button>
 
         {/* Notifications */}
         <motion.button
@@ -104,11 +110,11 @@ const HomeScreen = () => {
           onClick={() => setShowNotifications(true)}
           aria-label={`Notificações${unreadCount > 0 ? `, ${unreadCount} não lidas` : ""}`}
           title="Notificações"
-          className="relative w-10 h-10 rounded-full flex items-center justify-center text-foreground hover:bg-card transition-colors"
+          className="relative w-10 h-10 rounded-2xl flex items-center justify-center text-foreground bg-card/40 border border-border/40 hover:bg-card/70 transition-colors"
         >
-          <Bell className="w-5 h-5" />
+          <Bell className="w-[18px] h-[18px]" strokeWidth={2} />
           {unreadCount > 0 && (
-            <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary border-2 border-background" />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-gradient-to-br from-primary to-emerald-400 ring-2 ring-background" />
           )}
         </motion.button>
 
@@ -118,15 +124,15 @@ const HomeScreen = () => {
           onClick={() => navigate("/buscar")}
           aria-label="Buscar usuários ou treinos"
           title="Buscar"
-          className="w-10 h-10 rounded-full flex items-center justify-center text-foreground hover:bg-card transition-colors"
+          className="w-10 h-10 rounded-2xl flex items-center justify-center text-foreground bg-card/40 border border-border/40 hover:bg-card/70 transition-colors"
         >
-          <Search className="w-5 h-5" />
+          <Search className="w-[18px] h-[18px]" strokeWidth={2} />
         </motion.button>
       </motion.header>
 
       {/* Trial Countdown Banner */}
       {subscription?.status === "trialing" && subscription?.current_period_end && (
-        <motion.div 
+        <motion.div
           variants={fadeUp}
           className="mb-6"
         >
@@ -149,57 +155,76 @@ const HomeScreen = () => {
         )}
       </AnimatePresence>
 
-      {/* ============ Day timeline + Start workout card ============ */}
-      <motion.section variants={fadeUp} className="flex items-end gap-3 mb-8">
-        {/* Days */}
-        <div className="flex-1 flex justify-between items-end">
-          {timeline.map((d, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 * i, ease: easeApple, duration: 0.4 }}
-              className="flex flex-col items-center gap-1.5"
-            >
-              <span className={`text-[12px] font-medium ${d.isToday ? "text-primary" : "text-muted-foreground"}`}>
-                {d.label}
-              </span>
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center border ${
-                  d.isToday
-                    ? "border-primary text-primary"
-                    : d.isFuture
-                      ? "border-border/60 text-muted-foreground/40"
-                      : d.trained
-                        ? "border-primary bg-primary/15 text-primary"
-                        : "border-border text-muted-foreground/60"
-                }`}
-              >
-                {d.isToday ? (
-                  <span className="block w-2.5 h-0.5 bg-primary rounded-full" />
-                ) : d.trained ? (
-                  <Check className="w-3.5 h-3.5" strokeWidth={3} />
-                ) : (
-                  <svg viewBox="0 0 24 24" className="w-3.5 h-3.5"><path d="M6 6L18 18M6 18L18 6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"/></svg>
-                )}
-              </div>
-            </motion.div>
-          ))}
-        </div>
+      {/* ============ Week pulse + Start workout (Ev0core) ============ */}
+      <motion.section
+        variants={fadeUp}
+        className="relative mb-8 rounded-3xl border border-border/50 bg-card/40 backdrop-blur-xl overflow-hidden"
+      >
+        {/* Mesh ambient */}
+        <div className="pointer-events-none absolute -top-16 -left-10 w-48 h-48 rounded-full bg-primary/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-20 -right-10 w-56 h-56 rounded-full bg-emerald-500/15 blur-3xl" />
 
-        {/* Start workout card */}
-        <motion.button
-          whileHover={{ y: -2 }}
-          whileTap={{ scale: 0.96 }}
-          onClick={() => setCurrentTab("training")}
-          className="shrink-0 flex items-center gap-2 h-[58px] px-4 rounded-2xl bg-card border border-border/60 text-left"
-        >
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-medium leading-none">Treino</p>
-            <p className="text-[14px] font-extrabold text-foreground tracking-wide mt-1">INICIAR</p>
+        <div className="relative flex items-stretch gap-3 p-4">
+          {/* Week pulse bars */}
+          <div className="flex-1 flex justify-between items-end gap-1">
+            {timeline.map((d, i) => {
+              const active = d.trained || d.isToday;
+              return (
+                <motion.button
+                  key={i}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.05 * i, ease: easeApple, duration: 0.45 }}
+                  whileTap={{ scale: 0.94 }}
+                  className="group flex-1 flex flex-col items-center gap-2"
+                >
+                  <span className={`text-[11px] font-semibold tracking-tight ${d.isToday ? "text-primary" : "text-muted-foreground"}`}>
+                    {d.label}
+                  </span>
+                  <div className="relative w-full h-12 rounded-full bg-background/40 border border-border/40 overflow-hidden flex items-end justify-center">
+                    {d.isToday ? (
+                      <motion.div
+                        initial={{ height: "20%" }}
+                        animate={{ height: ["35%", "85%", "55%", "75%"] }}
+                        transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+                        className="w-full bg-gradient-to-t from-primary via-violet-400 to-emerald-400 shadow-[0_0_18px_hsl(var(--primary)/0.55)]"
+                      />
+                    ) : d.trained ? (
+                      <motion.div
+                        initial={{ height: 0 }}
+                        animate={{ height: "100%" }}
+                        transition={{ delay: 0.15 + i * 0.05, duration: 0.5, ease: easeApple }}
+                        className="w-full bg-gradient-to-t from-primary/70 to-emerald-400/80"
+                      />
+                    ) : d.isFuture ? (
+                      <div className="w-1 h-1 mb-2 rounded-full bg-muted-foreground/30" />
+                    ) : (
+                      <div className="w-3 h-[2px] mb-[22px] rounded-full bg-muted-foreground/40" />
+                    )}
+                    {d.isToday && (
+                      <span className="pointer-events-none absolute top-1.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_white]" />
+                    )}
+                  </div>
+                </motion.button>
+              );
+            })}
           </div>
-          <ChevronRight className="w-4 h-4 text-foreground" />
-        </motion.button>
+
+          {/* Start workout — Ev0core CTA */}
+          <motion.button
+            whileHover={{ y: -2 }}
+            whileTap={{ scale: 0.96 }}
+            onClick={() => setCurrentTab("training")}
+            className="relative shrink-0 flex items-center gap-2 px-4 rounded-2xl text-left overflow-hidden bg-gradient-to-br from-primary via-violet-500 to-emerald-400 shadow-[0_10px_30px_-12px_hsl(var(--primary)/0.7)]"
+          >
+            <span className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.25),transparent_60%)] pointer-events-none" />
+            <div className="relative">
+              <p className="text-[10px] uppercase tracking-[0.22em] text-white/80 font-semibold leading-none">Treino</p>
+              <p className="text-[15px] font-extrabold text-white tracking-wide mt-1.5">INICIAR</p>
+            </div>
+            <ChevronRight className="relative w-4 h-4 text-white" strokeWidth={2.6} />
+          </motion.button>
+        </div>
       </motion.section>
 
       {/* ============ Greeting (compacto) ============ */}
