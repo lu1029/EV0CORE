@@ -37,27 +37,27 @@
     --border: 0 0% 16%;
     --input: 0 0% 16%;
 
-    --primary: 142 100% 39%;
+    --primary: 239 84% 67%;
     --primary-foreground: 0 0% 100%;
-    --ring: 142 100% 39%;
+    --ring: 239 84% 67%;
 
     --radius: 0.875rem;
 
     --sidebar-background: 0 0% 7%;
     --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 142 100% 39%;
+    --sidebar-primary: 239 84% 67%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 0 0% 11%;
     --sidebar-accent-foreground: 0 0% 98%;
     --sidebar-border: 0 0% 16%;
-    --sidebar-ring: 142 100% 39%;
+    --sidebar-ring: 239 84% 67%;
 
     --surface: 0 0% 7%;
     --surface-elevated: 0 0% 10%;
 
-    --glow-purple: 142 100% 39%;
-    --glow-blue: 142 100% 39%;
-    --glow-green: 142 100% 39%;
+    --glow-purple: 271 81% 66%;
+    --glow-blue: 217 91% 60%;
+    --glow-green: 239 84% 67%;
   }
 
   /* LIGHT theme */
