@@ -28,9 +28,8 @@ const AppLayout = () => {
       {/* iOS-style header with theme toggle */}
       <div className="sticky top-0 z-40 bg-background/85 backdrop-blur-xl border-b border-border">
         <div className="flex items-center justify-between px-5 py-3 safe-area-top">
-          <button onClick={() => navigate("/home")} className="active:opacity-60 transition-opacity">
-            <img src={evocoreLogo} alt="EvoCore" className="h-7 object-contain" />
-          </button>
+          <div className="w-7" aria-hidden />
+
           <div className="flex items-center gap-2">
             {/* Theme toggle pill — sun/moon */}
             <button
