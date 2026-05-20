@@ -22,6 +22,8 @@ const AppLayout = () => {
   if (!hasOnboarded) return <OnboardingScreen />;
 
   const isProfile = location.pathname.startsWith("/perfil");
+  const SECONDARY_ROUTES = ["/corrida", "/evolucao", "/comunidade", "/clubes"];
+  const hideBottomNav = SECONDARY_ROUTES.some((p) => location.pathname.startsWith(p));
 
   return (
     <div className="min-h-screen bg-background max-w-lg mx-auto relative">
