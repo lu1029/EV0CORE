@@ -23,6 +23,7 @@ import { useStreak } from "@/hooks/useStreak";
 import { useProfileStats } from "@/hooks/useProfileStats";
 import { useActiveWorkoutPlan } from "@/hooks/useActiveWorkoutPlan";
 import { useNavigate } from "react-router-dom";
+import evocoreLogo from "@/assets/evocore-logo.jpeg";
 import { fadeUp, stagger, easeApple } from "@/lib/motion";
 
 const HomeScreen = () => {
@@ -109,13 +110,19 @@ const HomeScreen = () => {
       >
         {/* ============ Header ============ */}
         <motion.header variants={fadeUp} className="flex items-center justify-between mb-7">
-          {/* Brand */}
-          <div className="flex items-center gap-2.5">
-            <div className="relative w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-[0_4px_20px_-4px_rgba(99,102,241,0.6)]">
-              <Dumbbell className="w-4 h-4 text-white" strokeWidth={2.6} />
-            </div>
-            <span className="text-[17px] font-bold tracking-[-0.02em] text-white">EVOCORE</span>
-          </div>
+          {/* Brand — real logo */}
+          <button
+            onClick={() => navigate("/home")}
+            className="flex items-center active:opacity-70 transition-opacity"
+            aria-label="EvoCore"
+          >
+            <img
+              src={evocoreLogo}
+              alt="EvoCore"
+              className="h-10 w-auto object-contain"
+              style={{ filter: "drop-shadow(0 4px 16px rgba(99,102,241,0.35))" }}
+            />
+          </button>
 
           {/* Right actions */}
           <div className="flex items-center gap-2">
