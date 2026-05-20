@@ -69,7 +69,7 @@ const AppLayout = () => {
         <Outlet />
       </PageTransition>
       <EvoAIFab />
-      <BottomNav />
+      {!hideBottomNav && <BottomNav />}
       <InstallPwaPrompt />
       <FreeTrialModal />
     </div>
